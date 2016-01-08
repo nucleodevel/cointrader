@@ -103,6 +103,7 @@ public class MyBtcBrlRobot {
 					decFmt.format(report.getCurrentTopSell().getPrice())
 				);
 				
+				
 				// analise and make orders
 				
 				makeOrders();

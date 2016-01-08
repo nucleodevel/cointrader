@@ -124,7 +124,7 @@ public class Operation implements Serializable, Comparable<Operation> {
 	@Override
 	public String toString() {
 		if (this.type != null) {
-			return "\nOperation [date=" + createdDate + ", price=" + price
+			return "\nOperation [date=" + createdDate.getTime() + ", price=" + price
 					+ ", amount=" + volume + ", tid=" + operationId + ", type="
 					+ type + "]";
 		} else {
