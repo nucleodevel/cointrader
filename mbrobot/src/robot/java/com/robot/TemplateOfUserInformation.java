@@ -10,6 +10,8 @@ package com.robot;
  * User Trade API info
  * 
  * @see https://www.mercadobitcoin.net/trade-api/
+ * 
+ *  Edit para UserInformation
  */
 public class TemplateOfUserInformation {
 
