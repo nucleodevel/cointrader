@@ -21,15 +21,6 @@ public class MyBtcBrlRobot {
 	private static BigDecimal totalBrl;
 	private static BigDecimal totalBtc;
 	
-	private static BigDecimal lastTotalBrl;
-	private static BigDecimal lastTotalBtc;
-	
-	private static Order lastBuyOrder;
-	private static Order lastSellOrder;
-	
-	private static Order lastExecutedBuyOrder;
-	private static Order lastExecutedSellOrder;
-	
 	private static DecimalFormat decFmt;
 	
 	public static void main(String[] args) {
@@ -74,49 +65,6 @@ public class MyBtcBrlRobot {
 				System.out.println("Total BRL: " + decFmt.format(totalBrl));
 				System.out.println("Total BTC: " + decFmt.format(totalBtc));
 				
-				System.out.println("");
-				System.out.println("Last orders by type");
-				if (lastTotalBrl != null && lastTotalBtc != null) {
-					System.out.println("Last total BRL: " + decFmt.format(lastTotalBrl));
-					System.out.println("Last total BTC: " + decFmt.format(lastTotalBtc));
-				}
-				if (lastBuyOrder != null)
-					System.out.println(
-						lastBuyOrder.getType() + " - " + 
-						decFmt.format(lastBuyOrder.getPrice())
-					);
-				if (lastSellOrder != null)
-					System.out.println(
-						lastSellOrder.getType() + " - " + 
-						decFmt.format(lastSellOrder.getPrice()) 
-					);
-				
-				
-				System.out.println("");
-				System.out.println("Last executed orders by type");
-				if (
-					lastTotalBrl != null &&
-					((totalBrl.doubleValue() - 0.01) - lastTotalBrl.doubleValue()) /  
-					lastBuyOrder.getPrice().doubleValue() >= robot.getMinimumCoinAmount() 
-				)
-					lastExecutedBuyOrder = lastBuyOrder;
-				if (
-					lastTotalBtc != null &&
-					((totalBtc.doubleValue() - 0.01) - lastTotalBtc.doubleValue()) >= 
-					robot.getMinimumCoinAmount() 
-				)
-					lastExecutedSellOrder = lastSellOrder;
-				if (lastExecutedBuyOrder != null)
-					System.out.println(
-						lastExecutedBuyOrder.getType() + " - " + 
-						decFmt.format(lastExecutedBuyOrder.getPrice())
-					);
-				if (lastExecutedSellOrder != null)
-					System.out.println(
-						lastExecutedSellOrder.getType() + " - " + 
-						decFmt.format(lastExecutedSellOrder.getPrice()) 
-					);
-				
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
@@ -155,9 +103,6 @@ public class MyBtcBrlRobot {
 				// analise and make orders
 				
 				makeOrders();
-				
-				lastTotalBrl = totalBrl;
-				lastTotalBtc = totalBtc;
 				
 				System.out.println("\n---- Finish reading: " + (new Date()));
 				
@@ -231,7 +176,7 @@ public class MyBtcBrlRobot {
 									o.getType() + " - " + (i + 1) + "° - R$ " + 
 									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 								);
-							lastBuyOrder = report.getTradeApiService().createBuyOrder(
+							report.getTradeApiService().createBuyOrder(
 								myCoinPair, btc.toString(), brl.toString()
 							);
 						}
@@ -292,7 +237,7 @@ public class MyBtcBrlRobot {
 									o.getType() + " - " + (i + 1) + "° - R$ " + 
 									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 								);
-							lastSellOrder = report.getTradeApiService().createSellOrder(
+							report.getTradeApiService().createSellOrder(
 								myCoinPair, btc.toString(), brl.toString()
 							);
 						}
