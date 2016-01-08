@@ -8,6 +8,7 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import net.mercadobitcoin.util.EnumValue;
@@ -89,6 +90,7 @@ public class Order extends TapiBase implements Comparable<Order> {
 	private Long orderId;
 	private String status;
 	private Integer created;
+	private Calendar createdDate;
 	private List<Operation> operations;
 	
 	private Boolean flagSmall = false;
@@ -130,6 +132,9 @@ public class Order extends TapiBase implements Comparable<Order> {
 								jsonObject.get("operations").asObject().get(operationId).asObject() ));
 			}
 		}
+		
+		this.createdDate = Calendar.getInstance();
+		this.createdDate.setTimeInMillis((long)created * 1000);
 	}
 	
 	/**
@@ -176,6 +181,14 @@ public class Order extends TapiBase implements Comparable<Order> {
 		return operations;
 	}
 
+	public Calendar getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(Calendar createdDate) {
+		this.createdDate = createdDate;
+	}
+
 	@Override
 	public String toString() {
 		if (this.flagSmall == true) {
@@ -184,7 +197,7 @@ public class Order extends TapiBase implements Comparable<Order> {
 		} else {
 			return "Order [pair=" + pair + ", type=" + type + ", volume=" + volume
 					+ ", price=" + price + ", orderId=" + orderId + ", status="
-					+ status + ", created=" + created + ", operations="
+					+ status + ", created=" + createdDate.getTime() + ", operations="
 					+ operations + "]";
 		}
 	}

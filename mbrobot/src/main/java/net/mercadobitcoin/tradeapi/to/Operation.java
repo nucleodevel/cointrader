@@ -8,6 +8,7 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Calendar;
 
 import net.mercadobitcoin.tradeapi.to.Order.OrderType;
 
@@ -31,6 +32,7 @@ public class Operation implements Serializable, Comparable<Operation> {
 	private BigDecimal price;
 	private BigDecimal rate;
 	private Integer created;
+	private Calendar createdDate;
 	private OrderType type;
 
 	/**
@@ -47,6 +49,9 @@ public class Operation implements Serializable, Comparable<Operation> {
 				.toUpperCase());
 
 		this.rate = null;
+		
+		this.createdDate = Calendar.getInstance();
+		this.createdDate.setTimeInMillis((long)created * 1000);
 	}
 
 	/**
@@ -63,6 +68,9 @@ public class Operation implements Serializable, Comparable<Operation> {
 		this.created = Integer.valueOf(jsonObject.get("created").asString());
 
 		this.type = null;
+		
+		this.createdDate = Calendar.getInstance();
+		this.createdDate.setTimeInMillis((long)created * 1000);
 	}
 
 	public Integer getDate() {
@@ -105,16 +113,24 @@ public class Operation implements Serializable, Comparable<Operation> {
 		return operationId;
 	}
 
+	public Calendar getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(Calendar createdDate) {
+		this.createdDate = createdDate;
+	}
+
 	@Override
 	public String toString() {
 		if (this.type != null) {
-			return "\nOperation [date=" + created + ", price=" + price
+			return "\nOperation [date=" + createdDate + ", price=" + price
 					+ ", amount=" + volume + ", tid=" + operationId + ", type="
 					+ type + "]";
 		} else {
 			return "Operation [operationId=" + operationId + ", volume="
 					+ volume + ", price=" + price + ", rate=" + rate
-					+ ", created=" + created + "]";
+					+ ", created=" + createdDate.getTime() + "]";
 		}
 	}
 

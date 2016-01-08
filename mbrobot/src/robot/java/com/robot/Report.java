@@ -3,6 +3,7 @@ package com.robot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
@@ -141,6 +142,7 @@ public class Report {
 			myOrders = new ArrayList<Order>();
 			myOrders.addAll(getMyActiveOrders());
 			myOrders.addAll(getMyCompletedOrders());
+			myOrders.addAll(getMyCanceledOrders());
 			Collections.sort(myOrders);
 		}
 		return myOrders;
@@ -152,7 +154,16 @@ public class Report {
 			OrderFilter orderFilter = new OrderFilter(coinPair);
 			orderFilter.setStatus(OrderStatus.CANCELED);
 			
-			myCanceledOrders = getTradeApiService().listOrders(orderFilter);
+			long now = (new Date()).getTime() / 1000;
+			for (long time = now; time > now - 21600; time -= 1800) {
+				orderFilter.setSince(time - 1799);
+				orderFilter.setEnd(now);
+				List<Order> orders = getTradeApiService().listOrders(orderFilter);
+				for (Order order: orders) {
+					if (order.getOperations() != null && order.getOperations().size() > 0)
+						myCanceledOrders.add(order);
+				}
+			}
 			Collections.sort(myCanceledOrders);
 		}
 		return myCanceledOrders;

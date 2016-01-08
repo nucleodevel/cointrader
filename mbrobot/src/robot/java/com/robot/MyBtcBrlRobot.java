@@ -10,6 +10,8 @@ import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.common.exception.NetworkErrorException;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
+import net.mercadobitcoin.tradeapi.to.Order.OrderStatus;
+import net.mercadobitcoin.tradeapi.to.OrderFilter;
 
 public class MyBtcBrlRobot {
 	
@@ -68,37 +70,38 @@ public class MyBtcBrlRobot {
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
-				System.out.print(
+				System.out.println(
 					report.getLastBuy().getType() + " - Price " + 
 					decFmt.format(report.getLastBuy().getPrice()) + 
 					" - BTC " + decFmt.format(report.getLastBuy().getAmount()) + 
 					" - R$ " + 
 					decFmt.format(report.getLastBuy().getPrice().doubleValue() * 
 					report.getLastBuy().getAmount().doubleValue()) +
-					" - Rate " + report.getLastBuy().getRate() + "%"
+					" - Rate " + report.getLastBuy().getRate() + "%" +
+					" - " + report.getLastBuy().getCreatedDate().getTime()
 				);
 				System.out.println(
-					"  /  " + report.getLastSell().getType() + " - Price " + 
+					report.getLastSell().getType() + " - Price " + 
 					decFmt.format(report.getLastSell().getPrice()) + 
 					" - BTC " + decFmt.format(report.getLastSell().getAmount()) + 
 					" - R$ " + 
 					decFmt.format(report.getLastSell().getPrice().doubleValue() * 
 					report.getLastSell().getAmount().doubleValue()) +
-					" - Rate " + report.getLastSell().getRate() + "%"
+					" - Rate " + report.getLastSell().getRate() + "%" +
+					" - " + report.getLastSell().getCreatedDate().getTime()
 				);
 				
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");
-				System.out.print(
+				System.out.println(
 					report.getCurrentTopBuy().getType() + " - " + 
 					decFmt.format(report.getCurrentTopBuy().getPrice())
 				);
 				System.out.println(
-					"  /  " + report.getCurrentTopSell().getType() + " - " + 
-					decFmt.format(report.getCurrentTopSell().getPrice()) 
+					report.getCurrentTopSell().getType() + " - " + 
+					decFmt.format(report.getCurrentTopSell().getPrice())
 				);
-				
 				
 				// analise and make orders
 				
