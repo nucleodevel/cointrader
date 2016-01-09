@@ -4,7 +4,7 @@
  * @see more details in /LICENSE.txt
  */
 
-package com.robot;
+package net.trader.mercadobitcoin;
 
 /**
  * User Trade API info
@@ -13,12 +13,12 @@ package com.robot;
  * 
  *  Edit para UserInformation
  */
-public class TemplateOfUserInformation {
+public class TemplateOfMercadoBitcoinUserInformation {
 
 	public String myTapiKey;
 	public String myTapiCode;
 	
-	public TemplateOfUserInformation() {
+	public TemplateOfMercadoBitcoinUserInformation() {
 		myTapiKey = "";
 		myTapiCode = "";
 	}

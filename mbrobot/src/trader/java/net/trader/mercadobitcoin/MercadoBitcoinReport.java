@@ -1,4 +1,4 @@
-package com.robot;
+package net.trader.mercadobitcoin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,16 +18,18 @@ import net.mercadobitcoin.tradeapi.to.Order.OrderStatus;
 import net.mercadobitcoin.tradeapi.to.Order.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Orderbook;
+import net.mercadobitcoin.tradeapi.to.Ticker;
 
-public class Report {
+public class MercadoBitcoinReport {
 
 	private CoinPair coinPair;
 	
-	private UserInformation userInformation;
+	private MercadoBitcoinUserInformation userInformation;
 	
 	private ApiService apiService;
 	private TradeApiService tradeApiService;
 	
+	private Ticker ticker24h;
 	private AccountBalance accountBalance;
 	private Orderbook orderbook;
 	
@@ -50,7 +52,7 @@ public class Report {
 	private Operation lastBuy;
 	private Operation lastSell;
 	
-	public Report(CoinPair coinPair) {		
+	public MercadoBitcoinReport(CoinPair coinPair) {		
 		this.coinPair = coinPair;
 	}
 
@@ -58,9 +60,9 @@ public class Report {
 		return coinPair;
 	}
 	
-	public UserInformation getUserInformation() {
+	public MercadoBitcoinUserInformation getUserInformation() {
 		if (userInformation == null)
-			userInformation = new UserInformation();
+			userInformation = new MercadoBitcoinUserInformation();
 		return userInformation;
 	}
 
@@ -76,6 +78,12 @@ public class Report {
 				getUserInformation().getMyTapiCode(), getUserInformation().getMyTapiKey()
 			);
 		return tradeApiService;
+	}
+
+	public Ticker getTicker24h() throws MercadoBitcoinException {
+		if (ticker24h == null)
+			ticker24h = getApiService().ticker24h(coinPair);
+		return ticker24h;
 	}
 	
 	public AccountBalance getAccountBalance() throws MercadoBitcoinException, NetworkErrorException {

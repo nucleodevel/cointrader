@@ -1,4 +1,4 @@
-package com.robot;
+package net.trader.mercadobitcoin;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -11,12 +11,12 @@ import net.mercadobitcoin.common.exception.NetworkErrorException;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
 
-public class MyBtcBrlRobot {
+public class MercadoBitcoinBtcBrlRobot {
 	
 	private static CoinPair myCoinPair = CoinPair.BTC_BRL;
 	
-	private static Robot robot;
-	private static Report report;
+	private static MercadoBitcoinRobot robot;
+	private static MercadoBitcoinReport report;
 	
 	private static BigDecimal totalBrl;
 	private static BigDecimal totalBtc;
@@ -25,7 +25,7 @@ public class MyBtcBrlRobot {
 	
 	public static void main(String[] args) {
 		
-		robot = new Robot();
+		robot = new MercadoBitcoinRobot();
 		robot.readParams();
 		
 		for (;;) {
@@ -46,10 +46,11 @@ public class MyBtcBrlRobot {
 				
 				System.out.println("");
 				System.out.println("\n---- Start reading: " + (new Date()));		
-				report = new Report(myCoinPair);
+				report = new MercadoBitcoinReport(myCoinPair);
 				
 				System.out.println("");
 				System.out.println(
+					"Delay time: " + robot.getDelayTime() + "s  /  " +
 					"Minimum rate -> buy: " + (robot.getMinimumBuyRate() * 100) + "%; " +
 					"sell: " + (robot.getMinimumSellRate() * 100) + "%  /  " +
 					"Inc/Dec: " + decFmt.format(robot.getIncDecPrice())
