@@ -10,8 +10,6 @@ import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.common.exception.NetworkErrorException;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
-import net.mercadobitcoin.tradeapi.to.Order.OrderStatus;
-import net.mercadobitcoin.tradeapi.to.OrderFilter;
 
 public class MyBtcBrlRobot {
 	
@@ -106,7 +104,8 @@ public class MyBtcBrlRobot {
 				
 				// analise and make orders
 				
-				makeOrders();
+				makeBuyOrders();
+				makeSellOrders();
 				
 				System.out.println("\n---- Finish reading: " + (new Date()));
 				
@@ -125,7 +124,7 @@ public class MyBtcBrlRobot {
 			} catch (NetworkErrorException e) {
 				System.out.println("Network error: after 10 seconds, try again");
 				try {
-					TimeUnit.SECONDS.sleep(30);
+					TimeUnit.SECONDS.sleep(10);
 				} catch (InterruptedException ex) {
 					ex.printStackTrace();
 				}
@@ -135,20 +134,21 @@ public class MyBtcBrlRobot {
 				
 	}
 	
-	private static void makeOrders() throws NumberFormatException, MercadoBitcoinException, NetworkErrorException {
-		
-		
+	private static void makeBuyOrders() throws NumberFormatException, MercadoBitcoinException, NetworkErrorException {		
 		
 		System.out.println("");
 		System.out.println("Analising buy order");
-		int i = 0;
-		for (Order o: report.getActiveBuyOrders()) {
-			if (
-				o.getPrice().doubleValue() / report.getCurrentTopSell().getPrice().doubleValue() <= 
-				1 - robot.getMinimumBuyRate()
-			) {
+		
+		for (int i = 0; i < report.getActiveBuyOrders().size(); i++) {
+			
+			Order order = report.getActiveBuyOrders().get(i);
+			
+			boolean isAGoodBuyOrder =
+				order.getPrice().doubleValue() / report.getCurrentTopSell().getPrice().doubleValue() <= 
+				1 - robot.getMinimumBuyRate();
+			if (isAGoodBuyOrder) {
 				
-				BigDecimal brl = new BigDecimal(o.getPrice().doubleValue() + robot.getIncDecPrice());
+				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() + robot.getIncDecPrice());
 				BigDecimal btc = new BigDecimal((totalBrl.doubleValue() - 0.01) / brl.doubleValue());
 				
 				// get the unique buy order or null
@@ -158,12 +158,10 @@ public class MyBtcBrlRobot {
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
-					o.getPrice().doubleValue() != myBuyOrder.getPrice().doubleValue()
+					order.getPrice().doubleValue() != myBuyOrder.getPrice().doubleValue()
 				) {
 					
 					try {
-						if (myBuyOrder != null)
-							report.getTradeApiService().cancelOrder(myBuyOrder);
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
 							if (myBuyOrder != null && 
 								decFmt.format(myBuyOrder.getPrice()).
@@ -171,25 +169,31 @@ public class MyBtcBrlRobot {
 							)
 								System.out.println(
 									"Maintaining " +
-									o.getType() + " - " + (i) + "° - R$ " + 
+									myBuyOrder.getType() + " - " + (i) + "° - R$ " + 
 									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 								);
-							else
+							else {
+								if (myBuyOrder != null)
+									report.getTradeApiService().cancelOrder(myBuyOrder);
+								report.getTradeApiService().createBuyOrder(
+									myCoinPair, btc.toString(), brl.toString()
+								);
 								System.out.println(
 									"Buy order created: " +
-									o.getType() + " - " + (i + 1) + "° - R$ " + 
+									order.getType() + " - " + (i + 1) + "° - R$ " + 
 									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 								);
-							report.getTradeApiService().createBuyOrder(
-								myCoinPair, btc.toString(), brl.toString()
-							);
+							}
 						}
-						else
+						else {
+							if (myBuyOrder != null)
+								report.getTradeApiService().cancelOrder(myBuyOrder);
 							System.out.println(
 								"There are no BRL available for " +
-								o.getType() + " - " + (i + 1) + "° - R$ " + 
+								order.getType() + " - " + (i + 1) + "° - R$ " + 
 								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 							);
+						}
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -198,19 +202,23 @@ public class MyBtcBrlRobot {
 			}
 			i++;
 		}
+	}
 		
-		
+	private static void makeSellOrders() throws NumberFormatException, MercadoBitcoinException, NetworkErrorException {	
 		
 		System.out.println("");
 		System.out.println("Analising sell order");
-		i = 0;
-		for (Order o: report.getActiveSellOrders()) {
-			if (
-				o.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
-				1 + robot.getMinimumSellRate()
-			) {
+		
+		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
+			
+			Order order = report.getActiveSellOrders().get(i);
+			
+			boolean isAGoodSellOrder = 
+				order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
+				1 + robot.getMinimumSellRate();
+			if (isAGoodSellOrder) {
 				
-				BigDecimal brl = new BigDecimal(o.getPrice().doubleValue() - robot.getIncDecPrice());
+				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() - robot.getIncDecPrice());
 				BigDecimal btc = totalBtc;
 				
 				// get the unique buy order or null
@@ -220,11 +228,9 @@ public class MyBtcBrlRobot {
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
-					o.getPrice() != mySellOrder.getPrice()
+					order.getPrice() != mySellOrder.getPrice()
 				) {
 					try {
-						if (mySellOrder != null)
-							report.getTradeApiService().cancelOrder(mySellOrder);
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
 							if (mySellOrder != null && 
 								decFmt.format(mySellOrder.getPrice()).
@@ -232,25 +238,31 @@ public class MyBtcBrlRobot {
 							)
 								System.out.println(
 									"Maintaining " +
-									o.getType() + " - " + (i) + "° - R$ " + 
+									order.getType() + " - " + (i) + "° - R$ " + 
 									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 								);
-							else
+							else {
+								if (mySellOrder != null)
+									report.getTradeApiService().cancelOrder(mySellOrder);
+								report.getTradeApiService().createSellOrder(
+									myCoinPair, btc.toString(), brl.toString()
+								);
 								System.out.println(
 									"Sell order created: " +
-									o.getType() + " - " + (i + 1) + "° - R$ " + 
+									order.getType() + " - " + (i + 1) + "° - R$ " + 
 									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 								);
-							report.getTradeApiService().createSellOrder(
-								myCoinPair, btc.toString(), brl.toString()
-							);
+							}
 						}
-						else
+						else {
+							if (mySellOrder != null)
+								report.getTradeApiService().cancelOrder(mySellOrder);
 							System.out.println(
 								"There are no BTC available for " +
-								o.getType() + " - " + (i + 1) + "° - R$ " + 
+								order.getType() + " - " + (i + 1) + "° - R$ " + 
 								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 							);
+						}
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
