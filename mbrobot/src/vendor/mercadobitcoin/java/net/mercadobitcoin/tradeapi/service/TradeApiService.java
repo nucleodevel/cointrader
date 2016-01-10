@@ -24,7 +24,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
 
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
-import net.mercadobitcoin.common.exception.NetworkErrorException;
 import net.mercadobitcoin.tradeapi.to.AccountBalance;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
@@ -32,6 +31,7 @@ import net.mercadobitcoin.tradeapi.to.Order.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Withdrawal;
 import net.mercadobitcoin.util.JsonHashMap;
+import net.trader.exception.NetworkErrorException;
 
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;

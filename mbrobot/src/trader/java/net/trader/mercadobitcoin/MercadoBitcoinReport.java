@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.List;
 
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
-import net.mercadobitcoin.common.exception.NetworkErrorException;
 import net.mercadobitcoin.tradeapi.service.ApiService;
 import net.mercadobitcoin.tradeapi.service.TradeApiService;
 import net.mercadobitcoin.tradeapi.to.AccountBalance;
@@ -19,6 +18,7 @@ import net.mercadobitcoin.tradeapi.to.Order.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Orderbook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
+import net.trader.exception.NetworkErrorException;
 
 public class MercadoBitcoinReport {
 
@@ -179,10 +179,17 @@ public class MercadoBitcoinReport {
 
 	public List<Order> getMyCompletedOrders() throws MercadoBitcoinException, NetworkErrorException {
 		if (myCompletedOrders == null) {
+			
+			// lê uma semana de ordens completas
+			long now = (new Date()).getTime() / 1000;			
 			OrderFilter orderFilter = new OrderFilter(coinPair);
 			orderFilter.setStatus(OrderStatus.COMPLETED);
+			orderFilter.setSince(now - 86400 * 7);
+			orderFilter.setEnd(now);
+			
 			myCompletedOrders = getTradeApiService().listOrders(orderFilter);
 			Collections.sort(myCompletedOrders);
+			
 		}
 		return myCompletedOrders;
 	}

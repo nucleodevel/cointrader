@@ -7,9 +7,9 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
-import net.mercadobitcoin.common.exception.NetworkErrorException;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
+import net.trader.exception.NetworkErrorException;
 
 public class MercadoBitcoinBtcBrlRobot {
 	
@@ -166,12 +166,13 @@ public class MercadoBitcoinBtcBrlRobot {
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
 							if (myBuyOrder != null && 
 								decFmt.format(myBuyOrder.getPrice()).
-								equals(decFmt.format(brl))
+								equals(decFmt.format(brl.doubleValue() - robot.getIncDecPrice()))
 							)
 								System.out.println(
 									"Maintaining " +
-									myBuyOrder.getType() + " - " + (i) + "° - R$ " + 
-									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+									myBuyOrder.getType() + " - " + (i + 1) + "° - R$ " + 
+									decFmt.format(brl.doubleValue() - robot.getIncDecPrice()) + 
+									" - BTC " + decFmt.format(btc)
 								);
 							else {
 								if (myBuyOrder != null)
@@ -201,7 +202,6 @@ public class MercadoBitcoinBtcBrlRobot {
 					break;
 				}
 			}
-			i++;
 		}
 	}
 		
@@ -216,7 +216,7 @@ public class MercadoBitcoinBtcBrlRobot {
 			
 			boolean isAGoodSellOrder = 
 				order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
-				1 + robot.getMinimumSellRate();
+				1 + robot.getMinimumSellRate();				
 			if (isAGoodSellOrder) {
 				
 				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() - robot.getIncDecPrice());
@@ -235,12 +235,13 @@ public class MercadoBitcoinBtcBrlRobot {
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
 							if (mySellOrder != null && 
 								decFmt.format(mySellOrder.getPrice()).
-								equals(decFmt.format(brl))
+								equals(decFmt.format(brl.doubleValue() + robot.getIncDecPrice()))
 							)
 								System.out.println(
 									"Maintaining " +
-									order.getType() + " - " + (i) + "° - R$ " + 
-									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+									order.getType() + " - " + (i + 1) + "° - R$ " + 
+									decFmt.format(brl.doubleValue() + robot.getIncDecPrice()) + 
+									" - BTC " + decFmt.format(btc)
 								);
 							else {
 								if (mySellOrder != null)
@@ -270,7 +271,6 @@ public class MercadoBitcoinBtcBrlRobot {
 					break;
 				}
 			}
-			i++;
 		}
 	}
 

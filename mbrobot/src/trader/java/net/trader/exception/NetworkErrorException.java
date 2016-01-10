@@ -4,7 +4,7 @@
  * @see more details in /LICENSE.txt
  */
 
-package net.mercadobitcoin.common.exception;
+package net.trader.exception;
 
 /**
  * Mercado Bitocin generic exception type used in internal errors.
