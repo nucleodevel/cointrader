@@ -1,8 +1,8 @@
 package net.trader.mercadobitcoin;
 
-import java.util.Locale;
-import java.util.Scanner;
-
+import net.trader.exception.ParamLabelErrorException;
+import net.trader.exception.ParamSyntaxErrorException;
+import net.trader.exception.ParamValueErrorException;
 import net.trader.robot.Robot;
 
 public class MercadoBitcoinRobot extends Robot {
@@ -65,18 +65,52 @@ public class MercadoBitcoinRobot extends Robot {
 		this.incDecPrice = incDecPrice;
 	}
 	
-	public void readParams() {
+	public void readParams(String[] args) throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException {
 		
-		Scanner scanner = new Scanner(System.in );		
-		scanner.useLocale(Locale.US);
+		for (int i = 0; i < args.length; i++) {
+			
+			String paramLabel = args[i];
+			
+			if (i + 1 == args.length)
+				throw new ParamSyntaxErrorException(paramLabel);
+			
+			String paramValue = args[++i];
+			
+			switch (paramLabel) {
+				case "-dt": 
+					try {
+						setDelayTime(Integer.parseInt(paramValue));
+					} catch (NumberFormatException e) {
+						throw new ParamValueErrorException(paramLabel);
+					}
+					break;
+				case "-mbr": 
+					try {
+						minimumBuyRate = Double.parseDouble(paramValue);
+					} catch (NumberFormatException e) {
+						throw new ParamValueErrorException(paramLabel);
+					}
+					break;
+				case "-msr": 
+					try {
+						minimumSellRate = Double.parseDouble(paramValue);
+					} catch (NumberFormatException e) {
+						throw new ParamValueErrorException(paramLabel);
+					}
+					break;
+				case "-idp": 
+					try {
+						incDecPrice = Double.parseDouble(paramValue);
+					} catch (NumberFormatException e) {
+						throw new ParamValueErrorException(paramLabel);
+					}
+					break;
+				default:
+					throw new ParamLabelErrorException(paramLabel);
+			}
+			
+		}
 		
-		super.readParams(scanner);
-		
-		minimumBuyRate = getDoubleFromKeyboard(scanner, minimumBuyRate, "minimum buy rate");
-		minimumSellRate = getDoubleFromKeyboard(scanner, minimumSellRate, "minimum sell rate");
-		incDecPrice = getDoubleFromKeyboard(scanner, incDecPrice, "inc/dec price");
-	    
-	    scanner.close();
 	}
 
 }

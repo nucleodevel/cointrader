@@ -10,6 +10,9 @@ import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
 import net.trader.exception.NetworkErrorException;
+import net.trader.exception.ParamLabelErrorException;
+import net.trader.exception.ParamSyntaxErrorException;
+import net.trader.exception.ParamValueErrorException;
 
 public class MercadoBitcoinBtcBrlRobot {
 	
@@ -26,7 +29,18 @@ public class MercadoBitcoinBtcBrlRobot {
 	public static void main(String[] args) {
 		
 		robot = new MercadoBitcoinRobot();
-		robot.readParams();
+		try {
+			robot.readParams(args);
+		} catch (ParamLabelErrorException e) {
+			System.out.println("There is no parameter " + e.getParamLabel() + "!");
+			return;
+		} catch (ParamSyntaxErrorException e) {
+			System.out.println("There is no value for the parameter " + e.getParamLabel() + "!");
+			return;
+		} catch (ParamValueErrorException e) {
+			System.out.println("The parameter " + e.getParamLabel() + " can't accept this value!");
+			return;
+		}
 		
 		for (;;) {
 			
@@ -51,8 +65,8 @@ public class MercadoBitcoinBtcBrlRobot {
 				System.out.println("");
 				System.out.println(
 					"Delay time: " + robot.getDelayTime() + "s  /  " +
-					"Minimum rate -> buy: " + (robot.getMinimumBuyRate() * 100) + "%; " +
-					"sell: " + (robot.getMinimumSellRate() * 100) + "%  /  " +
+					"Minimum rate -> buy: " + decFmt.format(robot.getMinimumBuyRate() * 100) + "%; " +
+					"sell: " + decFmt.format(robot.getMinimumSellRate() * 100) + "%  /  " +
 					"Inc/Dec: " + decFmt.format(robot.getIncDecPrice())
 				);
 				
