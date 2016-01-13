@@ -178,28 +178,16 @@ public class MercadoBitcoinBtcBrlRobot {
 					
 					try {
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
-							if (myBuyOrder != null && 
-								decFmt.format(myBuyOrder.getPrice()).
-								equals(decFmt.format(brl.doubleValue() - robot.getIncDecPrice()))
-							)
-								System.out.println(
-									"Maintaining " +
-									myBuyOrder.getType() + " - " + (i + 1) + "° - R$ " + 
-									decFmt.format(brl.doubleValue() - robot.getIncDecPrice()) + 
-									" - BTC " + decFmt.format(btc)
-								);
-							else {
-								if (myBuyOrder != null)
-									report.getTradeApiService().cancelOrder(myBuyOrder);
-								report.getTradeApiService().createBuyOrder(
-									myCoinPair, btc.toString(), brl.toString()
-								);
-								System.out.println(
-									"Buy order created: " +
-									order.getType() + " - " + (i + 1) + "° - R$ " + 
-									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
-								);
-							}
+							if (myBuyOrder != null)
+								report.getTradeApiService().cancelOrder(myBuyOrder);
+							report.getTradeApiService().createBuyOrder(
+								myCoinPair, btc.toString(), brl.toString()
+							);
+							System.out.println(
+								"Buy order created: " +
+								order.getType() + " - " + (i + 1) + "° - R$ " + 
+								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+							);
 						}
 						else {
 							if (myBuyOrder != null)
@@ -247,28 +235,16 @@ public class MercadoBitcoinBtcBrlRobot {
 				) {
 					try {
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
-							if (mySellOrder != null && 
-								decFmt.format(mySellOrder.getPrice()).
-								equals(decFmt.format(brl.doubleValue() + robot.getIncDecPrice()))
-							)
-								System.out.println(
-									"Maintaining " +
-									order.getType() + " - " + (i + 1) + "° - R$ " + 
-									decFmt.format(brl.doubleValue() + robot.getIncDecPrice()) + 
-									" - BTC " + decFmt.format(btc)
-								);
-							else {
-								if (mySellOrder != null)
-									report.getTradeApiService().cancelOrder(mySellOrder);
-								report.getTradeApiService().createSellOrder(
-									myCoinPair, btc.toString(), brl.toString()
-								);
-								System.out.println(
-									"Sell order created: " +
-									order.getType() + " - " + (i + 1) + "° - R$ " + 
-									decFmt.format(brl) + " - BTC " + decFmt.format(btc)
-								);
-							}
+							if (mySellOrder != null)
+								report.getTradeApiService().cancelOrder(mySellOrder);
+							report.getTradeApiService().createSellOrder(
+								myCoinPair, btc.toString(), brl.toString()
+							);
+							System.out.println(
+								"Sell order created: " +
+								order.getType() + " - " + (i + 1) + "° - R$ " + 
+								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+							);
 						}
 						else {
 							if (mySellOrder != null)
