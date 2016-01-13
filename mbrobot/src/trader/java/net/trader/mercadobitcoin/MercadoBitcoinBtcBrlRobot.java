@@ -173,13 +173,12 @@ public class MercadoBitcoinBtcBrlRobot {
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
-					order.getPrice().doubleValue() != myBuyOrder.getPrice().doubleValue()
+					!decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
 				) {
-					
+					if (myBuyOrder != null)
+						report.getTradeApiService().cancelOrder(myBuyOrder);
 					try {
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
-							if (myBuyOrder != null)
-								report.getTradeApiService().cancelOrder(myBuyOrder);
 							report.getTradeApiService().createBuyOrder(
 								myCoinPair, btc.toString(), brl.toString()
 							);
@@ -189,15 +188,12 @@ public class MercadoBitcoinBtcBrlRobot {
 								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 							);
 						}
-						else {
-							if (myBuyOrder != null)
-								report.getTradeApiService().cancelOrder(myBuyOrder);
+						else
 							System.out.println(
 								"There are no BRL available for " +
 								order.getType() + " - " + (i + 1) + "° - R$ " + 
 								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 							);
-						}
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -227,16 +223,16 @@ public class MercadoBitcoinBtcBrlRobot {
 				// get the unique buy order or null
 				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
-										
+					
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
-					order.getPrice() != mySellOrder.getPrice()
+					!decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice()))
 				) {
+					if (mySellOrder != null)
+						report.getTradeApiService().cancelOrder(mySellOrder);
 					try {
 						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
-							if (mySellOrder != null)
-								report.getTradeApiService().cancelOrder(mySellOrder);
 							report.getTradeApiService().createSellOrder(
 								myCoinPair, btc.toString(), brl.toString()
 							);
@@ -246,15 +242,12 @@ public class MercadoBitcoinBtcBrlRobot {
 								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 							);
 						}
-						else {
-							if (mySellOrder != null)
-								report.getTradeApiService().cancelOrder(mySellOrder);
+						else
 							System.out.println(
 								"There are no BTC available for " +
 								order.getType() + " - " + (i + 1) + "° - R$ " + 
 								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 							);
-						}
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
