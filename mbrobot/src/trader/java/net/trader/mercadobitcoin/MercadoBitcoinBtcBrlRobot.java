@@ -157,6 +157,7 @@ public class MercadoBitcoinBtcBrlRobot {
 		for (int i = 0; i < report.getActiveBuyOrders().size(); i++) {
 			
 			Order order = report.getActiveBuyOrders().get(i);
+			Order nextOrder = report.getActiveSellOrders().get(i + 1);
 			
 			boolean isAGoodBuyOrder =
 				order.getPrice().doubleValue() / report.getCurrentTopSell().getPrice().doubleValue() <= 
@@ -199,6 +200,19 @@ public class MercadoBitcoinBtcBrlRobot {
 					}
 					break;
 				}
+				else if (
+					decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
+					decFmt.format(order.getVolume()).equals(decFmt.format(myBuyOrder.getVolume())) &&
+					order.getPrice().doubleValue() - nextOrder.getPrice().doubleValue()
+						!= robot.getIncDecPrice()
+				) {
+					System.out.println(
+						"Maintaining previous order " +
+						order.getType() + " - " + (i + 1) + "° - R$ " + 
+						decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+					);
+					break;
+				}
 			}
 		}
 	}
@@ -211,6 +225,7 @@ public class MercadoBitcoinBtcBrlRobot {
 		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
 			
 			Order order = report.getActiveSellOrders().get(i);
+			Order nextOrder = report.getActiveSellOrders().get(i + 1);
 			
 			boolean isAGoodSellOrder = 
 				order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
@@ -251,6 +266,19 @@ public class MercadoBitcoinBtcBrlRobot {
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
+					break;
+				}
+				else if (
+					decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
+					decFmt.format(order.getVolume()).equals(decFmt.format(mySellOrder.getVolume())) &&
+					nextOrder.getPrice().doubleValue() - order.getPrice().doubleValue()
+						!= robot.getIncDecPrice()
+				) {
+					System.out.println(
+						"Maintaining previous order " +
+						order.getType() + " - " + (i + 1) + "° - R$ " + 
+						decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+					);
 					break;
 				}
 			}
