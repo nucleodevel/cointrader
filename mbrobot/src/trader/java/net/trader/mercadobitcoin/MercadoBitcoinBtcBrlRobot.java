@@ -66,8 +66,13 @@ public class MercadoBitcoinBtcBrlRobot {
 				System.out.println(
 					"Delay time: " + robot.getDelayTime() + "s  /  " +
 					"Minimum rate -> buy: " + decFmt.format(robot.getMinimumBuyRate() * 100) + "%; " +
-					"sell: " + decFmt.format(robot.getMinimumSellRate() * 100) + "%  /  " +
-					"Inc/Dec: " + decFmt.format(robot.getIncDecPrice())
+					"sell: " + decFmt.format(robot.getMinimumSellRate() * 100) + "%  /  "
+				);
+
+				System.out.println(
+					"Inc/Dec: " + decFmt.format(robot.getIncDecPrice()) + "  /  " +
+					"Sell rate after breakdown: " + 
+					decFmt.format(robot.getSellRateAfterBreakdown())
 				);
 				
 				
@@ -204,7 +209,7 @@ public class MercadoBitcoinBtcBrlRobot {
 					decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
 					decFmt.format(order.getVolume()).equals(decFmt.format(btc)) &&
 					order.getPrice().doubleValue() - nextOrder.getPrice().doubleValue()
-						!= robot.getIncDecPrice()
+						== robot.getIncDecPrice()
 				) {
 					System.out.println(
 						"Maintaining previous order " +
@@ -222,8 +227,6 @@ public class MercadoBitcoinBtcBrlRobot {
 		System.out.println("");
 		System.out.println("Analising sell order");
 		
-		double sellRateAfterBreakdown = 0.006;
-		
 		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
 			
 			Order order = report.getActiveSellOrders().get(i);
@@ -235,7 +238,7 @@ public class MercadoBitcoinBtcBrlRobot {
 				
 			boolean isToSellSoon = 
 					order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() <= 
-					1 - sellRateAfterBreakdown;
+					1 + robot.getSellRateAfterBreakdown();
 				
 			if (isAGoodSellOrder || isToSellSoon) {
 				
@@ -279,7 +282,7 @@ public class MercadoBitcoinBtcBrlRobot {
 					decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
 					decFmt.format(order.getVolume()).equals(decFmt.format(btc)) &&
 					nextOrder.getPrice().doubleValue() - order.getPrice().doubleValue()
-						!= robot.getIncDecPrice()
+						== robot.getIncDecPrice()
 				) {
 					System.out.println(
 						"Maintaining previous order " +

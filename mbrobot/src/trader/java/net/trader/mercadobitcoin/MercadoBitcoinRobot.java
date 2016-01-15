@@ -11,6 +11,7 @@ public class MercadoBitcoinRobot extends Robot {
 	private Double minimumSellRate;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
+	private Double sellRateAfterBreakdown;
 	
 	public MercadoBitcoinRobot() {		
 		super(10);
@@ -19,11 +20,12 @@ public class MercadoBitcoinRobot extends Robot {
 		minimumSellRate = 0.008;
 		minimumCoinAmount = 0.01;
 		incDecPrice = 0.00001;		
+		sellRateAfterBreakdown = -0.006;
 	}
 	
 	public MercadoBitcoinRobot(
 		int delayTime, Double minimumBuyRate, Double minimumSellRate, 
-		Double minimumCoinAmount, Double incDecPrice 
+		Double minimumCoinAmount, Double incDecPrice, Double sellRateAfterBreakdown
 	) {
 		super(delayTime);
 		
@@ -31,6 +33,7 @@ public class MercadoBitcoinRobot extends Robot {
 		this.minimumSellRate = minimumSellRate;
 		this.minimumCoinAmount = minimumCoinAmount;
 		this.incDecPrice = incDecPrice;
+		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 
 	public Double getMinimumBuyRate() {
@@ -63,6 +66,14 @@ public class MercadoBitcoinRobot extends Robot {
 
 	public void setIncDecPrice(Double incDecPrice) {
 		this.incDecPrice = incDecPrice;
+	}
+
+	public double getSellRateAfterBreakdown() {
+		return sellRateAfterBreakdown;
+	}
+
+	public void setSellRateAfterBreakdown(double sellRateAfterBreakdown) {
+		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 	
 	public void readParams(String[] args) throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException {
@@ -101,6 +112,13 @@ public class MercadoBitcoinRobot extends Robot {
 				case "-idp": 
 					try {
 						incDecPrice = Double.parseDouble(paramValue);
+					} catch (NumberFormatException e) {
+						throw new ParamValueErrorException(paramLabel);
+					}
+					break;
+				case "-srab": 
+					try {
+						sellRateAfterBreakdown = Double.parseDouble(paramValue);
 					} catch (NumberFormatException e) {
 						throw new ParamValueErrorException(paramLabel);
 					}
