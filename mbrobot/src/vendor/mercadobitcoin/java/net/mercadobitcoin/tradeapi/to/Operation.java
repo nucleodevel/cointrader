@@ -135,9 +135,7 @@ public class Operation implements Serializable, Comparable<Operation> {
 	}
 
 	public int compareTo(Operation another) {
-		return 
-			this.created == another.created? 0: 
-			(this.created < another.created? 1: -1);
+		return -1 * this.created.compareTo(another.created);
 	}
 
 }

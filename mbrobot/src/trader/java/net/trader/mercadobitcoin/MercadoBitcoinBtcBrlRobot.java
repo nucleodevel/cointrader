@@ -202,7 +202,7 @@ public class MercadoBitcoinBtcBrlRobot {
 				}
 				else if (
 					decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
-					decFmt.format(order.getVolume()).equals(decFmt.format(myBuyOrder.getVolume())) &&
+					decFmt.format(order.getVolume()).equals(decFmt.format(btc)) &&
 					order.getPrice().doubleValue() - nextOrder.getPrice().doubleValue()
 						!= robot.getIncDecPrice()
 				) {
@@ -222,6 +222,8 @@ public class MercadoBitcoinBtcBrlRobot {
 		System.out.println("");
 		System.out.println("Analising sell order");
 		
+		double sellRateAfterBreakdown = 0.006;
+		
 		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
 			
 			Order order = report.getActiveSellOrders().get(i);
@@ -229,8 +231,13 @@ public class MercadoBitcoinBtcBrlRobot {
 			
 			boolean isAGoodSellOrder = 
 				order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
-				1 + robot.getMinimumSellRate();				
-			if (isAGoodSellOrder) {
+				1 + robot.getMinimumSellRate();
+				
+			boolean isToSellSoon = 
+					order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() <= 
+					1 - sellRateAfterBreakdown;
+				
+			if (isAGoodSellOrder || isToSellSoon) {
 				
 				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() - robot.getIncDecPrice());
 				BigDecimal btc = totalBtc;
@@ -270,13 +277,13 @@ public class MercadoBitcoinBtcBrlRobot {
 				}
 				else if (
 					decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
-					decFmt.format(order.getVolume()).equals(decFmt.format(mySellOrder.getVolume())) &&
+					decFmt.format(order.getVolume()).equals(decFmt.format(btc)) &&
 					nextOrder.getPrice().doubleValue() - order.getPrice().doubleValue()
 						!= robot.getIncDecPrice()
 				) {
 					System.out.println(
 						"Maintaining previous order " +
-						order.getType() + " - " + (i + 1) + "° - R$ " + 
+						order.getType() + " - " + i + "° - R$ " + 
 						decFmt.format(brl) + " - BTC " + decFmt.format(btc)
 					);
 					break;

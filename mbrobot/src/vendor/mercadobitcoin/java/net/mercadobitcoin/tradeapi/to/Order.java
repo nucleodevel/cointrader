@@ -203,9 +203,7 @@ public class Order extends TapiBase implements Comparable<Order> {
 	}
 
 	public int compareTo(Order another) {
-		return 
-			this.created == another.created? 0: 
-			(this.created < another.created? 1: -1);
+		return -1 * this.created.compareTo(another.created);
 	}
 	
 }

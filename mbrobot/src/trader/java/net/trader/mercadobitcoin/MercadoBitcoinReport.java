@@ -110,8 +110,10 @@ public class MercadoBitcoinReport {
 
 	public List<Order> getActiveBuyOrders() throws MercadoBitcoinException {
 		if (activeBuyOrders == null) {
-			activeBuyOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getBids()));
-			Collections.sort(activeBuyOrders);
+			activeBuyOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getBids()));/*
+			System.out.println("----" + activeBuyOrders.size() + "----");
+			if (activeBuyOrders != null)
+				Collections.sort(activeBuyOrders);*/
 		}
 		return activeBuyOrders;
 	}
@@ -119,7 +121,7 @@ public class MercadoBitcoinReport {
 	public List<Order> getActiveSellOrders() throws MercadoBitcoinException {
 		if (activeSellOrders == null) {
 			activeSellOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getAsks()));
-			Collections.sort(activeSellOrders);
+			//Collections.sort(activeSellOrders);
 		}
 		return activeSellOrders;
 	}
