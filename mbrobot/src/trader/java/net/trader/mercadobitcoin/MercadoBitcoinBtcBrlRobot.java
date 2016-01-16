@@ -72,7 +72,7 @@ public class MercadoBitcoinBtcBrlRobot {
 				System.out.println(
 					"Inc/Dec: " + decFmt.format(robot.getIncDecPrice()) + "  /  " +
 					"Sell rate after breakdown: " + 
-					decFmt.format(robot.getSellRateAfterBreakdown())
+					decFmt.format(robot.getSellRateAfterBreakdown() * 100) + "%"
 				);
 				
 				
@@ -85,6 +85,9 @@ public class MercadoBitcoinBtcBrlRobot {
 				System.out.println("Total BRL: " + decFmt.format(totalBrl));
 				System.out.println("Total BTC: " + decFmt.format(totalBtc));
 				
+				System.out.println("");
+				System.out.println("Reading my last orders... ");
+				System.out.println("Número de ordens lidas: " + report.getMyOrders().size());
 				
 				System.out.println("");
 				System.out.println("My last operations by type");

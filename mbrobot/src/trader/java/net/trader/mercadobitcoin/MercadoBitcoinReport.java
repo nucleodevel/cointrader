@@ -21,6 +21,11 @@ import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.trader.exception.NetworkErrorException;
 
 public class MercadoBitcoinReport {
+	
+	private static long intervalToReadMyCanceledOrders = 1800;
+	private static long totalTimeToReadMyCanceledOrders = 86400;
+	private static long lastTimeByReadingMyCanceledOrders = 0;
+	private static long totalTimeToReadMyCompletedOrders = 86400;
 
 	private CoinPair coinPair;
 	
@@ -42,7 +47,7 @@ public class MercadoBitcoinReport {
 	private Order currentTopSell;
 	
 	private List<Order> myOrders;
-	private List<Order> myCanceledOrders;
+	private static List<Order> myCanceledOrders;
 	private List<Order> myCompletedOrders;
 	private List<Order> myActiveOrders;
 	private List<Order> myActiveBuyOrders;
@@ -110,10 +115,7 @@ public class MercadoBitcoinReport {
 
 	public List<Order> getActiveBuyOrders() throws MercadoBitcoinException {
 		if (activeBuyOrders == null) {
-			activeBuyOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getBids()));/*
-			System.out.println("----" + activeBuyOrders.size() + "----");
-			if (activeBuyOrders != null)
-				Collections.sort(activeBuyOrders);*/
+			activeBuyOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getBids()));
 		}
 		return activeBuyOrders;
 	}
@@ -121,7 +123,6 @@ public class MercadoBitcoinReport {
 	public List<Order> getActiveSellOrders() throws MercadoBitcoinException {
 		if (activeSellOrders == null) {
 			activeSellOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getAsks()));
-			//Collections.sort(activeSellOrders);
 		}
 		return activeSellOrders;
 	}
@@ -149,6 +150,8 @@ public class MercadoBitcoinReport {
 
 	public List<Order> getMyOrders() throws MercadoBitcoinException, NetworkErrorException {
 		if (myOrders == null) {
+			if (myCanceledOrders == null)
+				System.out.println("The first reading can take a lot of seconds. Wait, please!");
 			myOrders = new ArrayList<Order>();
 			myOrders.addAll(getMyActiveOrders());
 			myOrders.addAll(getMyCompletedOrders());
@@ -159,14 +162,16 @@ public class MercadoBitcoinReport {
 	}
 	
 	public List<Order> getMyCanceledOrders() throws MercadoBitcoinException, NetworkErrorException {
+		long now = (new Date()).getTime() / 1000;
+		
+		OrderFilter orderFilter = new OrderFilter(coinPair);
+		orderFilter.setStatus(OrderStatus.CANCELED);
+		
 		if (myCanceledOrders == null) {
 			myCanceledOrders = new ArrayList<Order>();
-			OrderFilter orderFilter = new OrderFilter(coinPair);
-			orderFilter.setStatus(OrderStatus.CANCELED);
 			
-			long now = (new Date()).getTime() / 1000;
-			for (long time = now; time > now - 21600; time -= 1800) {
-				orderFilter.setSince(time - 1799);
+			for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
+				orderFilter.setSince(time - intervalToReadMyCanceledOrders - 1);
 				orderFilter.setEnd(now);
 				List<Order> orders = getTradeApiService().listOrders(orderFilter);
 				for (Order order: orders) {
@@ -176,6 +181,21 @@ public class MercadoBitcoinReport {
 			}
 			Collections.sort(myCanceledOrders);
 		}
+		else {
+			orderFilter.setSince(lastTimeByReadingMyCanceledOrders + 1);
+			orderFilter.setEnd(now);
+			
+			List<Order> orders = getTradeApiService().listOrders(orderFilter);
+			int i = 0;
+			for (Order order: orders) {
+				if (order.getOperations() != null && order.getOperations().size() > 0) {
+					myCanceledOrders.add(i, order);
+					i++;
+				}
+			}
+		}
+		lastTimeByReadingMyCanceledOrders = now;
+		
 		return myCanceledOrders;
 	}
 
@@ -186,7 +206,7 @@ public class MercadoBitcoinReport {
 			long now = (new Date()).getTime() / 1000;			
 			OrderFilter orderFilter = new OrderFilter(coinPair);
 			orderFilter.setStatus(OrderStatus.COMPLETED);
-			orderFilter.setSince(now - 86400 * 7);
+			orderFilter.setSince(now - totalTimeToReadMyCompletedOrders);
 			orderFilter.setEnd(now);
 			
 			myCompletedOrders = getTradeApiService().listOrders(orderFilter);
