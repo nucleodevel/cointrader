@@ -218,7 +218,8 @@ public class MercadoBitcoinBtcBrlRobot {
 					System.out.println(
 						"Maintaining previous order " +
 						order.getType() + " - " + (i + 1) + "° - R$ " + 
-						decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+						decFmt.format(order.getPrice()) + " - BTC " + 
+						decFmt.format(order.getVolume())
 					);
 					break;
 				}
@@ -292,7 +293,8 @@ public class MercadoBitcoinBtcBrlRobot {
 					System.out.println(
 						"Maintaining previous order " +
 						order.getType() + " - " + (i + 1) + "° - R$ " + 
-						decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+						decFmt.format(order.getPrice()) + " - BTC " + 
+						decFmt.format(order.getVolume())
 					);
 					break;
 				}
