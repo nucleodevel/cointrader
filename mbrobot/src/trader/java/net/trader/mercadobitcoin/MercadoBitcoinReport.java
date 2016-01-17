@@ -22,7 +22,7 @@ import net.trader.exception.NetworkErrorException;
 
 public class MercadoBitcoinReport {
 	
-	private static long intervalToReadMyCanceledOrders = 1800;
+	private static long intervalToReadMyCanceledOrders = 900;
 	private static long totalTimeToReadMyCanceledOrders = 86400;
 	private static long lastTimeByReadingMyCanceledOrders = 0;
 	private static long totalTimeToReadMyCompletedOrders = 86400;
