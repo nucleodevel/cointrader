@@ -20,7 +20,7 @@ public class MercadoBitcoinRobot extends Robot {
 		minimumSellRate = 0.008;
 		minimumCoinAmount = 0.01;
 		incDecPrice = 0.00001;		
-		sellRateAfterBreakdown = -0.006;
+		sellRateAfterBreakdown = -0.05;
 	}
 	
 	public MercadoBitcoinRobot(
