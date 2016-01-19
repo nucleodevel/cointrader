@@ -91,7 +91,7 @@ public class MercadoBitcoinBtcBrlRobot {
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
-				if (report.getLastBuy() == null) {
+				if (report.getLastBuy() != null) {
 					System.out.println(
 						report.getLastBuy().getType() + " - Price " + 
 						decFmt.format(report.getLastBuy().getPrice()) + 
@@ -103,7 +103,7 @@ public class MercadoBitcoinBtcBrlRobot {
 						" - " + report.getLastBuy().getCreatedDate().getTime()
 					);
 				}
-				if (report.getLastSell() == null) {
+				if (report.getLastSell() != null) {
 					System.out.println(
 						report.getLastSell().getType() + " - Price " + 
 						decFmt.format(report.getLastSell().getPrice()) + 
