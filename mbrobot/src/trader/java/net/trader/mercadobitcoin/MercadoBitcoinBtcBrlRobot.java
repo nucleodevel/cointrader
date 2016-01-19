@@ -91,26 +91,30 @@ public class MercadoBitcoinBtcBrlRobot {
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
-				System.out.println(
-					report.getLastBuy().getType() + " - Price " + 
-					decFmt.format(report.getLastBuy().getPrice()) + 
-					" - BTC " + decFmt.format(report.getLastBuy().getAmount()) + 
-					" - R$ " + 
-					decFmt.format(report.getLastBuy().getPrice().doubleValue() * 
-					report.getLastBuy().getAmount().doubleValue()) +
-					" - Rate " + report.getLastBuy().getRate() + "%" +
-					" - " + report.getLastBuy().getCreatedDate().getTime()
-				);
-				System.out.println(
-					report.getLastSell().getType() + " - Price " + 
-					decFmt.format(report.getLastSell().getPrice()) + 
-					" - BTC " + decFmt.format(report.getLastSell().getAmount()) + 
-					" - R$ " + 
-					decFmt.format(report.getLastSell().getPrice().doubleValue() * 
-					report.getLastSell().getAmount().doubleValue()) +
-					" - Rate " + report.getLastSell().getRate() + "%" +
-					" - " + report.getLastSell().getCreatedDate().getTime()
-				);
+				if (report.getLastBuy() == null) {
+					System.out.println(
+						report.getLastBuy().getType() + " - Price " + 
+						decFmt.format(report.getLastBuy().getPrice()) + 
+						" - BTC " + decFmt.format(report.getLastBuy().getAmount()) + 
+						" - R$ " + 
+						decFmt.format(report.getLastBuy().getPrice().doubleValue() * 
+						report.getLastBuy().getAmount().doubleValue()) +
+						" - Rate " + report.getLastBuy().getRate() + "%" +
+						" - " + report.getLastBuy().getCreatedDate().getTime()
+					);
+				}
+				if (report.getLastSell() == null) {
+					System.out.println(
+						report.getLastSell().getType() + " - Price " + 
+						decFmt.format(report.getLastSell().getPrice()) + 
+						" - BTC " + decFmt.format(report.getLastSell().getAmount()) + 
+						" - R$ " + 
+						decFmt.format(report.getLastSell().getPrice().doubleValue() * 
+						report.getLastSell().getAmount().doubleValue()) +
+						" - Rate " + report.getLastSell().getRate() + "%" +
+						" - " + report.getLastSell().getCreatedDate().getTime()
+					);
+				}
 				
 				
 				System.out.println("");
@@ -238,13 +242,13 @@ public class MercadoBitcoinBtcBrlRobot {
 			Order nextOrder = report.getActiveSellOrders().size() - 1 == i? 
 				null: report.getActiveSellOrders().get(i + 1);
 			
-			boolean isAGoodSellOrder = 
-				order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
-				1 + robot.getMinimumSellRate();
+			boolean isAGoodSellOrder = report.getLastBuy() != null?
+				(order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
+				1 + robot.getMinimumSellRate()): true;
 				
-			boolean isToSellSoon = 
-					order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() <= 
-					1 + robot.getSellRateAfterBreakdown();
+			boolean isToSellSoon = report.getLastBuy() != null?
+				(order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() <= 
+				1 + robot.getSellRateAfterBreakdown()): true;
 				
 			if (isAGoodSellOrder || isToSellSoon) {
 				
