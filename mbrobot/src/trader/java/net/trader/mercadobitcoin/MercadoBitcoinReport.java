@@ -288,29 +288,6 @@ public class MercadoBitcoinReport {
 		return lastSell;
 	}
 	
-	public Operation getLastGoodBuy() throws MercadoBitcoinException, NetworkErrorException {
-		long now = (new Date()).getTime() / 1000;
-		double totalBrl = 
-			getAccountBalance().getFunds().getBrlWithOpenOrders().doubleValue() +
-			getAccountBalance().getFunds().getBtcWithOpenOrders().doubleValue() * 
-			getCurrentTopSell().getPrice().doubleValue();
-		if (lastBuy == null) {
-			lastBuy = null;
-			for (Operation operation: getMyOperations()) {
-				if (lastBuy != null)
-					break;
-				if (
-					operation.getType() == OrderType.BUY && 
-					operation.getAmount().doubleValue() * operation.getPrice().doubleValue() /
-					totalBrl > 0.5 &&
-					now - operation.getCreated() < 3600 * 3  
-				)
-					lastBuy = operation;
-			}
-		}
-		return lastBuy;
-	}
-	
 	public BigDecimal getLastRelevantBuyPrice() throws MercadoBitcoinException, NetworkErrorException {
 		if (lastRelevantBuyPrice == null) {
 			
@@ -323,29 +300,38 @@ public class MercadoBitcoinReport {
 			double sumOfBtc = 0;
 			
 			for (Operation operation: getMyOperations()) {
-				if (
-					btcWithOpenOrders - sumOfBtc < 0.01 || 
-					sumOfBtc > btcWithOpenOrders
-				)
-					break;
 				if (operation.getType() == OrderType.BUY) {
-					sumOfBtc += operation.getAmount().doubleValue();
-					groupOfOperations.add(operation);
+					if (sumOfBtc + operation.getAmount().doubleValue() <= btcWithOpenOrders) {
+						sumOfBtc += operation.getAmount().doubleValue();
+						groupOfOperations.add(operation);
+					}
+					else {
+						Operation newOperation = new Operation(operation);
+						newOperation.setAmount(new BigDecimal(btcWithOpenOrders - sumOfBtc));
+						groupOfOperations.add(newOperation);
+						sumOfBtc += btcWithOpenOrders - sumOfBtc;
+						break;
+					}
 				}
 			}
-			
-			for (Operation operation: groupOfOperations) {
-				lastRelevantBuyPrice = new BigDecimal(
-					lastRelevantBuyPrice.doubleValue() +	
-					(operation.getAmount().doubleValue() * 
-					operation.getPrice().doubleValue() / sumOfBtc)
-				); 
+			if (sumOfBtc != 0) {
+				for (Operation operation: groupOfOperations) {
+					System.out.println(sumOfBtc);
+					lastRelevantBuyPrice = new BigDecimal(
+						lastRelevantBuyPrice.doubleValue() +	
+						(operation.getAmount().doubleValue() * 
+						operation.getPrice().doubleValue() / sumOfBtc)
+					); 
+				}
 			}
 			System.out.println("Calculating last relevant buy price: ");
-			System.out.println("BTC with open orders: " + btcWithOpenOrders);
-			System.out.println("Considered BTC sum: " + sumOfBtc);
-			System.out.println("Considered buy orders: " + groupOfOperations.size());
-			System.out.println("Last relevant buy price: " + lastRelevantBuyPrice);
+			System.out.println("  BTC with open orders: " + btcWithOpenOrders);
+			System.out.println("  Considered BTC sum: " + sumOfBtc);
+			System.out.println("  Considered buy orders: " + groupOfOperations.size());
+			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
+			System.out.println("  Considered operations: ");
+			for (Operation operation: groupOfOperations)
+				System.out.println("    " + operation); 
 		}
 		return lastRelevantBuyPrice;
 	}

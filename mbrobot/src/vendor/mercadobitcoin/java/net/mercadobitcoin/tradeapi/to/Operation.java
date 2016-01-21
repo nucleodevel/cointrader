@@ -53,6 +53,18 @@ public class Operation implements Serializable, Comparable<Operation> {
 		this.createdDate = Calendar.getInstance();
 		this.createdDate.setTimeInMillis((long)created * 1000);
 	}
+	
+	public Operation(Operation another) {
+		this.created = another.getCreated();
+		this.price = another.getPrice();
+		this.volume = another.getVolume();
+		this.operationId = another.getOperationId();
+		this.type = another.getType();
+
+		this.rate = another.getRate();
+		
+		this.createdDate = another.getCreatedDate();
+	}
 
 	/**
 	 * Constructor based on JSON response.
@@ -79,6 +91,10 @@ public class Operation implements Serializable, Comparable<Operation> {
 
 	public BigDecimal getAmount() {
 		return volume;
+	}
+
+	public void setAmount(BigDecimal volume) {
+		this.volume = volume;
 	}
 
 	public Long getTid() {
@@ -134,6 +150,7 @@ public class Operation implements Serializable, Comparable<Operation> {
 		}
 	}
 
+	@Override
 	public int compareTo(Operation another) {
 		return -1 * this.created.compareTo(another.created);
 	}
