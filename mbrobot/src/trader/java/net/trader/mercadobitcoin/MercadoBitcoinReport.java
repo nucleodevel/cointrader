@@ -1,5 +1,6 @@
 package net.trader.mercadobitcoin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,6 +57,8 @@ public class MercadoBitcoinReport {
 	
 	private Operation lastBuy;
 	private Operation lastSell;
+	
+	private BigDecimal lastRelevantBuyPrice;
 	
 	public MercadoBitcoinReport(CoinPair coinPair) {		
 		this.coinPair = coinPair;
@@ -151,7 +154,7 @@ public class MercadoBitcoinReport {
 	public List<Order> getMyOrders() throws MercadoBitcoinException, NetworkErrorException {
 		if (myOrders == null) {
 			if (myCanceledOrders == null)
-				System.out.println("The first reading can take a lot of seconds. Wait, please!");
+				System.out.println("The first reading can take a lot of seconds. Please wait!");
 			myOrders = new ArrayList<Order>();
 			myOrders.addAll(getMyActiveOrders());
 			myOrders.addAll(getMyCompletedOrders());
@@ -272,7 +275,7 @@ public class MercadoBitcoinReport {
 		}
 		return lastBuy;
 	}
-
+	
 	public Operation getLastSell() throws MercadoBitcoinException, NetworkErrorException {
 		if (lastSell == null) {
 			lastSell = null;
@@ -284,6 +287,68 @@ public class MercadoBitcoinReport {
 			}
 		}
 		return lastSell;
+	}
+	
+	public Operation getLastGoodBuy() throws MercadoBitcoinException, NetworkErrorException {
+		long now = (new Date()).getTime() / 1000;
+		double totalBrl = 
+			getAccountBalance().getFunds().getBrlWithOpenOrders().doubleValue() +
+			getAccountBalance().getFunds().getBtcWithOpenOrders().doubleValue() * 
+			getCurrentTopSell().getPrice().doubleValue();
+		if (lastBuy == null) {
+			lastBuy = null;
+			for (Operation operation: getMyOperations()) {
+				if (lastBuy != null)
+					break;
+				if (
+					operation.getType() == OrderType.BUY && 
+					operation.getAmount().doubleValue() * operation.getPrice().doubleValue() /
+					totalBrl > 0.5 &&
+					now - operation.getCreated() < 3600 * 3  
+				)
+					lastBuy = operation;
+			}
+		}
+		return lastBuy;
+	}
+	
+	public BigDecimal getLastRelevantBuyPrice() throws MercadoBitcoinException, NetworkErrorException {
+		if (lastRelevantBuyPrice == null) {
+			
+			lastRelevantBuyPrice = new BigDecimal(0);
+			
+			double btcWithOpenOrders = 
+				getAccountBalance().getFunds().getBtcWithOpenOrders().doubleValue();
+			
+			List<Operation> groupOfOperations = new ArrayList<Operation>(); 
+			double sumOfBtc = 0;
+			
+			for (Operation operation: getMyOperations()) {
+				if (
+					btcWithOpenOrders - sumOfBtc < 0.01 || 
+					sumOfBtc > btcWithOpenOrders
+				)
+					break;
+				if (operation.getType() == OrderType.BUY) {
+					sumOfBtc += operation.getAmount().doubleValue();
+					groupOfOperations.add(operation);
+				}
+			}
+			
+			for (Operation operation: groupOfOperations) {
+				lastRelevantBuyPrice = new BigDecimal(
+					lastRelevantBuyPrice.doubleValue() +	
+					(operation.getAmount().doubleValue() * 
+					operation.getPrice().doubleValue() / sumOfBtc)
+				); 
+			}
+			System.out.println("Calculating last relevant buy price: ");
+			System.out.println("BTC with open orders: " + btcWithOpenOrders);
+			System.out.println("Considered BTC sum: " + sumOfBtc);
+			System.out.println("Considered buy orders: " + groupOfOperations.size());
+			System.out.println("Last relevant buy price: " + lastRelevantBuyPrice);
+		}
+		return lastRelevantBuyPrice;
 	}
 
 }

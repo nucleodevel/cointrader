@@ -115,6 +115,8 @@ public class MercadoBitcoinBtcBrlRobot {
 						" - " + report.getLastSell().getCreatedDate().getTime()
 					);
 				}
+				if (report.getLastRelevantBuyPrice() != null)
+					System.out.println("");
 				
 				
 				System.out.println("");
@@ -242,13 +244,19 @@ public class MercadoBitcoinBtcBrlRobot {
 			Order nextOrder = report.getActiveSellOrders().size() - 1 == i? 
 				null: report.getActiveSellOrders().get(i + 1);
 			
-			boolean isAGoodSellOrder = report.getLastBuy() != null?
-				(order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() >= 
-				1 + robot.getMinimumSellRate()): true;
+			boolean isAGoodSellOrder = 
+				report.getLastRelevantBuyPrice() != null && 
+				report.getLastRelevantBuyPrice().doubleValue() > 0 ?
+					(order.getPrice().doubleValue() / 
+					report.getLastRelevantBuyPrice().doubleValue() >= 
+					1 + robot.getMinimumSellRate()): true;
 				
-			boolean isToSellSoon = report.getLastBuy() != null?
-				(order.getPrice().doubleValue() / report.getLastBuy().getPrice().doubleValue() <= 
-				1 + robot.getSellRateAfterBreakdown()): true;
+			boolean isToSellSoon = 
+				report.getLastRelevantBuyPrice() != null && 
+				report.getLastRelevantBuyPrice().doubleValue() > 0 ?
+					(order.getPrice().doubleValue() / 
+					report.getLastRelevantBuyPrice().doubleValue() <= 
+					1 + robot.getSellRateAfterBreakdown()): true;
 				
 			if (isAGoodSellOrder || isToSellSoon) {
 				
