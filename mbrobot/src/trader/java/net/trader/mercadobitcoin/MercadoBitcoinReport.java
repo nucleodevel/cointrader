@@ -258,7 +258,6 @@ public class MercadoBitcoinReport {
 						operation.setType(order.getType());
 						myOperations.add(operation);
 					}
-			//Collections.sort(myOperations);
 		}
 		return myOperations;
 	}
