@@ -117,6 +117,8 @@ public class MercadoBitcoinBtcBrlRobot {
 				}
 				if (report.getLastRelevantBuyPrice() != null)
 					System.out.println("");
+				if (report.getLastRelevantSellPrice() != null)
+					System.out.println("");
 				
 				
 				System.out.println("");

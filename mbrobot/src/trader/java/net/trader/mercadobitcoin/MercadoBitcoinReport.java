@@ -27,6 +27,7 @@ public class MercadoBitcoinReport {
 	private static long totalTimeToReadMyCanceledOrders = 86400;
 	private static long lastTimeByReadingMyCanceledOrders = 0;
 	private static long totalTimeToReadMyCompletedOrders = 86400;
+	private static long numOfConsideredOrdersForLastRelevantSellPrice = 3;
 
 	private CoinPair coinPair;
 	
@@ -59,6 +60,7 @@ public class MercadoBitcoinReport {
 	private Operation lastSell;
 	
 	private BigDecimal lastRelevantBuyPrice;
+	private BigDecimal lastRelevantSellPrice;
 	
 	public MercadoBitcoinReport(CoinPair coinPair) {		
 		this.coinPair = coinPair;
@@ -316,7 +318,6 @@ public class MercadoBitcoinReport {
 			}
 			if (sumOfBtc != 0) {
 				for (Operation operation: groupOfOperations) {
-					System.out.println(sumOfBtc);
 					lastRelevantBuyPrice = new BigDecimal(
 						lastRelevantBuyPrice.doubleValue() +	
 						(operation.getAmount().doubleValue() * 
@@ -327,13 +328,47 @@ public class MercadoBitcoinReport {
 			System.out.println("Calculating last relevant buy price: ");
 			System.out.println("  BTC with open orders: " + btcWithOpenOrders);
 			System.out.println("  Considered BTC sum: " + sumOfBtc);
-			System.out.println("  Considered buy orders: " + groupOfOperations.size());
+			System.out.println("  Considered buy operations: " + groupOfOperations.size());
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
 			for (Operation operation: groupOfOperations)
 				System.out.println("    " + operation); 
 		}
 		return lastRelevantBuyPrice;
+	}
+	
+	public BigDecimal getLastRelevantSellPrice() throws MercadoBitcoinException, NetworkErrorException {
+		if (lastRelevantSellPrice == null) {
+			
+			lastRelevantSellPrice = new BigDecimal(0);
+			
+			double sumOfBtc = 0;
+			double sumOfNumerators = 0;
+			
+			List<Order> groupOfOrders = new ArrayList<Order>();
+			
+			for (int i = 0; i < numOfConsideredOrdersForLastRelevantSellPrice; i++) {
+				Order order = getActiveSellOrders().get(i);				
+				sumOfBtc +=  order.getVolume().doubleValue();
+				sumOfNumerators += 
+					order.getVolume().doubleValue() * order.getPrice().doubleValue();
+				groupOfOrders.add(order);
+			}
+			
+			if (sumOfBtc != 0) {
+				lastRelevantSellPrice = new BigDecimal(sumOfNumerators / sumOfBtc);
+			}
+			
+			System.out.println("Calculating last relevant buy price: ");
+			System.out.println("  Considered numerator sum: " + sumOfNumerators);
+			System.out.println("  Considered denominator sum: " + sumOfBtc);
+			System.out.println("  Considered sell orders: " + groupOfOrders.size());
+			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
+			System.out.println("  Considered orders: ");
+			for (Order order: groupOfOrders)
+				System.out.println("    " + order); 
+		}
+		return lastRelevantSellPrice;
 	}
 
 }
