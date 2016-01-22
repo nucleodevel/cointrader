@@ -176,9 +176,11 @@ public class MercadoBitcoinBtcBrlRobot {
 			Order nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
 				null: report.getActiveBuyOrders().get(i + 1);
 			
-			boolean isAGoodBuyOrder =
-				order.getPrice().doubleValue() / report.getCurrentTopSell().getPrice().doubleValue() <= 
-				1 - robot.getMinimumBuyRate();
+			boolean isAGoodBuyOrder =  
+					order.getPrice().doubleValue() / 
+					report.getLastRelevantSellPrice().doubleValue() <= 
+					1 - robot.getMinimumBuyRate();
+			
 			if (isAGoodBuyOrder) {
 				
 				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() + robot.getIncDecPrice());
