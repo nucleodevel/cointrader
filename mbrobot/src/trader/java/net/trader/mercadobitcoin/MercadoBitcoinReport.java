@@ -332,7 +332,8 @@ public class MercadoBitcoinReport {
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
 			for (Operation operation: groupOfOperations)
-				System.out.println("    " + operation); 
+				System.out.print("    " + operation); 
+			System.out.println("");
 		}
 		return lastRelevantBuyPrice;
 	}
@@ -359,14 +360,15 @@ public class MercadoBitcoinReport {
 				lastRelevantSellPrice = new BigDecimal(sumOfNumerators / sumOfBtc);
 			}
 			
-			System.out.println("Calculating last relevant buy price: ");
+			System.out.println("Calculating last relevant sell price: ");
 			System.out.println("  Considered numerator sum: " + sumOfNumerators);
 			System.out.println("  Considered denominator sum: " + sumOfBtc);
 			System.out.println("  Considered sell orders: " + groupOfOrders.size());
 			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
 			System.out.println("  Considered orders: ");
 			for (Order order: groupOfOrders)
-				System.out.println("    " + order); 
+				System.out.print("    " + order); 
+			System.out.println("");
 		}
 		return lastRelevantSellPrice;
 	}

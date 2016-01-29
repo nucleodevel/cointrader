@@ -4,9 +4,11 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
+import net.mercadobitcoin.tradeapi.to.Operation;
 import net.mercadobitcoin.tradeapi.to.Order;
 import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
 import net.trader.exception.NetworkErrorException;
@@ -87,7 +89,7 @@ public class MercadoBitcoinBtcBrlRobot {
 				
 				System.out.println("");
 				System.out.println("Reading my last orders... ");
-				System.out.println("Número de ordens lidas: " + report.getMyOrders().size());
+				System.out.println("Number of new orders: " + report.getMyOrders().size());
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
@@ -120,6 +122,13 @@ public class MercadoBitcoinBtcBrlRobot {
 				if (report.getLastRelevantSellPrice() != null)
 					System.out.println("");
 				
+				System.out.println("");
+				System.out.println("My 10 last operations");
+				List<Operation> operations = report.getMyOperations();
+				for (int i = 0; i < 10; i++) {
+					System.out.print(operations.get(i));
+				}
+				System.out.println("");
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");
