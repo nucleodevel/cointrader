@@ -122,13 +122,15 @@ public class MercadoBitcoinBtcBrlRobot {
 				if (report.getLastRelevantSellPrice() != null)
 					System.out.println("");
 				
-				System.out.println("");
-				System.out.println("My 10 last operations");
 				List<Operation> operations = report.getMyOperations();
-				for (int i = 0; i < 10; i++) {
-					System.out.print(operations.get(i));
+				if (operations != null) {
+					System.out.println("");
+					System.out.println("My 10 last operations");
+					for (Operation operation: operations) {
+						System.out.print(operation);
+					}
+					System.out.println("");
 				}
-				System.out.println("");
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");
