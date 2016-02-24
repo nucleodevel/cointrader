@@ -23,7 +23,7 @@ import net.trader.exception.NetworkErrorException;
 
 public class MercadoBitcoinReport {
 	
-	private static long intervalToReadMyCanceledOrders = 900;
+	private static long intervalToReadMyCanceledOrders = 1200;
 	private static long totalTimeToReadMyCanceledOrders = 86400;
 	private static long lastTimeByReadingMyCanceledOrders = 0;
 	private static long totalTimeToReadMyCompletedOrders = 86400;
@@ -176,8 +176,8 @@ public class MercadoBitcoinReport {
 			myCanceledOrders = new ArrayList<Order>();
 			
 			for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
-				orderFilter.setSince(time - intervalToReadMyCanceledOrders - 1);
-				orderFilter.setEnd(now);
+				orderFilter.setSince(time - intervalToReadMyCanceledOrders);
+				orderFilter.setEnd(time - 1);
 				List<Order> orders = getTradeApiService().listOrders(orderFilter);
 				for (Order order: orders) {
 					if (order.getOperations() != null && order.getOperations().size() > 0)

@@ -18,6 +18,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -251,6 +252,14 @@ public class TradeApiService extends AbstractApiService {
 		}
 		
 		JsonValue returnData = jsonObject.get("return");
+		
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(1010);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		return (returnData == null) ? null : returnData.asObject();
 	}
 	

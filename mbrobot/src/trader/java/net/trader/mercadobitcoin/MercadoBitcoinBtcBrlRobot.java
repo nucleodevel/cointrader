@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
@@ -133,6 +132,10 @@ public class MercadoBitcoinBtcBrlRobot {
 					decFmt.format(report.getCurrentTopSell().getPrice())
 				);
 				
+				for (Operation operation: report.getMyOperations()) {
+					System.out.print(operation);
+				}
+				
 				
 				// analise and make orders
 				
@@ -140,16 +143,6 @@ public class MercadoBitcoinBtcBrlRobot {
 				makeSellOrders();
 				
 				System.out.println("\n---- Finish reading: " + (new Date()));
-				
-				
-				// putting delay time
-				
-				try {
-					TimeUnit.SECONDS.sleep(robot.getDelayTime());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
 				
 			} catch (MercadoBitcoinException e) {
 				e.printStackTrace();
@@ -160,6 +153,14 @@ public class MercadoBitcoinBtcBrlRobot {
 				} catch (InterruptedException ex) {
 					ex.printStackTrace();
 				}
+			}
+			
+			// putting delay time
+			
+			try {
+				TimeUnit.SECONDS.sleep(robot.getDelayTime());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 			
 		}
