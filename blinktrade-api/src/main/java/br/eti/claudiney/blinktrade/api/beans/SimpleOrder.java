@@ -40,10 +40,9 @@ public class SimpleOrder implements Serializable {
 		
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(getClass().getSimpleName());
 		sb.append('{');
 		sb.append("currencyPrice=").append(currencyPrice);
-		sb.append(", bitcoins=").append(bitcoins);
+		sb.append(", bitcoins=").append(bitcoins.divide(new BigDecimal(100000000)));
 		sb.append(", clientID=").append(clientID);
 		sb.append('}');
 		

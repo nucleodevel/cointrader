@@ -26,7 +26,7 @@ public class MercadoBitcoinReport {
 	private static long intervalToReadMyCanceledOrders = 1200;
 	private static long totalTimeToReadMyCanceledOrders = 86400;
 	private static long lastTimeByReadingMyCanceledOrders = 0;
-	private static long totalTimeToReadMyCompletedOrders = 86400;
+	private static long totalTimeToReadMyCompletedOrders = 43200;
 	private static long numOfConsideredOrdersForLastRelevantSellPrice = 3;
 
 	private CoinPair coinPair;

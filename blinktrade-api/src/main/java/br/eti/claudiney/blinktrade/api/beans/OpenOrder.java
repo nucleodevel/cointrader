@@ -24,11 +24,38 @@ public class OpenOrder implements Serializable {
 	private BigDecimal volume;
 	private String timeInForce;
 	
+	public OpenOrder() {
+		
+	}
+	
+	
+	
+	public OpenOrder(OpenOrder another) {
+		super();
+		this.clientCustomOrderID = another.getClientCustomOrderID();
+		this.orderID = another.getOrderID();
+		this.cumQty = another.getCumQty();
+		this.ordStatus = another.getOrdStatus();
+		this.leavesQty = another.getLeavesQty();
+		this.cxlQty = another.getCxlQty();
+		this.avgPx = another.getAvgPx();
+		this.symbol = another.getSymbol();
+		this.side = another.getSide();
+		this.ordType = another.getOrdType();
+		this.orderQty = another.getOrderQty();
+		this.price = another.getPrice();
+		this.orderDate = another.getOrderDate();
+		this.volume = another.getVolume();
+		this.timeInForce = another.getTimeInForce();
+	}
+
+
+
 	public BigInteger getClientCustomOrderID() {
 		return clientCustomOrderID;
 	}
 	
-	void setClientCustomOrderID(BigInteger clientCustomOrderID) {
+	public void setClientCustomOrderID(BigInteger clientCustomOrderID) {
 		this.clientCustomOrderID = clientCustomOrderID;
 	}
 
@@ -36,7 +63,7 @@ public class OpenOrder implements Serializable {
 		return orderID;
 	}
 
-	void setOrderID(String orderID) {
+	public void setOrderID(String orderID) {
 		this.orderID = orderID;
 	}
 
@@ -44,7 +71,7 @@ public class OpenOrder implements Serializable {
 		return cumQty;
 	}
 
-	void setCumQty(BigDecimal cumQty) {
+	public void setCumQty(BigDecimal cumQty) {
 		this.cumQty = cumQty;
 	}
 
@@ -52,7 +79,7 @@ public class OpenOrder implements Serializable {
 		return ordStatus;
 	}
 
-	void setOrdStatus(String ordStatus) {
+	public void setOrdStatus(String ordStatus) {
 		this.ordStatus = ordStatus;
 	}
 
@@ -60,7 +87,7 @@ public class OpenOrder implements Serializable {
 		return leavesQty;
 	}
 
-	void setLeavesQty(BigDecimal leavesQty) {
+	public void setLeavesQty(BigDecimal leavesQty) {
 		this.leavesQty = leavesQty;
 	}
 
@@ -68,7 +95,7 @@ public class OpenOrder implements Serializable {
 		return cxlQty;
 	}
 
-	void setCxlQty(BigDecimal cxlQty) {
+	public void setCxlQty(BigDecimal cxlQty) {
 		this.cxlQty = cxlQty;
 	}
 
@@ -76,7 +103,7 @@ public class OpenOrder implements Serializable {
 		return avgPx;
 	}
 
-	void setAvgPx(BigDecimal avgPx) {
+	public void setAvgPx(BigDecimal avgPx) {
 		this.avgPx = avgPx;
 	}
 
@@ -84,7 +111,7 @@ public class OpenOrder implements Serializable {
 		return symbol;
 	}
 
-	void setSymbol(String symbol) {
+	public void setSymbol(String symbol) {
 		this.symbol = symbol;
 	}
 
@@ -92,7 +119,7 @@ public class OpenOrder implements Serializable {
 		return side;
 	}
 
-	void setSide(String side) {
+	public void setSide(String side) {
 		this.side = side;
 	}
 
@@ -100,7 +127,7 @@ public class OpenOrder implements Serializable {
 		return ordType;
 	}
 
-	void setOrdType(String ordType) {
+	public void setOrdType(String ordType) {
 		this.ordType = ordType;
 	}
 
@@ -108,7 +135,7 @@ public class OpenOrder implements Serializable {
 		return orderQty;
 	}
 
-	void setOrderQty(BigDecimal orderQty) {
+	public void setOrderQty(BigDecimal orderQty) {
 		this.orderQty = orderQty;
 	}
 
@@ -116,7 +143,7 @@ public class OpenOrder implements Serializable {
 		return price;
 	}
 
-	void setPrice(BigDecimal price) {
+	public void setPrice(BigDecimal price) {
 		this.price = price;
 	}
 
@@ -124,7 +151,7 @@ public class OpenOrder implements Serializable {
 		return orderDate;
 	}
 
-	void setOrderDate(Calendar orderDate) {
+	public void setOrderDate(Calendar orderDate) {
 		this.orderDate = orderDate;
 	}
 
@@ -132,7 +159,7 @@ public class OpenOrder implements Serializable {
 		return volume;
 	}
 
-	void setVolume(BigDecimal volume) {
+	public void setVolume(BigDecimal volume) {
 		this.volume = volume;
 	}
 
@@ -140,7 +167,7 @@ public class OpenOrder implements Serializable {
 		return timeInForce;
 	}
 
-	void setTimeInForce(String timeInForce) {
+	public void setTimeInForce(String timeInForce) {
 		this.timeInForce = timeInForce;
 	}
 	
@@ -177,23 +204,22 @@ public class OpenOrder implements Serializable {
 		
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(getClass().getSimpleName());
-		
 		sb.append('{');
-		sb.append("clientCustomOrderID=").append(clientCustomOrderID);
-		sb.append("\n\torderID=").append(orderID);
-		sb.append("\n\tprice=").append(price);
-		sb.append("\n\tcumQty=").append(cumQty);
-		sb.append("\n\tordStatus=").append(ordStatus);
-		sb.append("\n\tleavesQty=").append(leavesQty);
-		sb.append("\n\tcxlQty=").append(cxlQty);
-		sb.append("\n\tavgPx=").append(avgPx);
-		sb.append("\n\tsymbol=").append(symbol);
-		sb.append("\n\tside=").append(side);
-		sb.append("\n\tordType=").append(ordType);
-		sb.append("\n\torderQty=").append(orderQty);
-		sb.append("\n\tvolume=").append(volume);
-		sb.append("\n}");
+		//sb.append("clientCustomOrderID=").append(clientCustomOrderID);
+		//sb.append(", orderID=").append(orderID);
+		sb.append("orderDate=").append(orderDate.getTime());
+		sb.append(", side=").append(side.equals("1")? "BUY": "SELL");
+		sb.append(", ordStatus=").append(ordStatus.equals("2")? "FINISHED": "NOT FINISHED");
+		sb.append(", price=").append(price);
+		sb.append(", volume=").append(volume.divide(new BigDecimal(100000000)));
+		/*sb.append(", cumQty=").append(cumQty);
+		sb.append(", leavesQty=").append(leavesQty);
+		sb.append(", cxlQty=").append(cxlQty);
+		sb.append(", avgPx=").append(avgPx);
+		sb.append(", symbol=").append(symbol);
+		sb.append(", ordType=").append(ordType);
+		sb.append(", orderQty=").append(orderQty);*/
+		sb.append("}");
 		
 		return sb.toString();
 		

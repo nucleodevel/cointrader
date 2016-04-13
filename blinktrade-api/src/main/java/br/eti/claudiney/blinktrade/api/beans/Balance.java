@@ -9,54 +9,45 @@ public class Balance implements Serializable {
 	
 	private BigInteger btcLocked;
 	private BigDecimal currencyAmount;
-	private BigInteger bitcoinAmount;
+	private BigInteger btcAmount;
 	private BigDecimal currencyLocked;
 	private String clientID;
 	private Integer balanceRequestID;
 	
-	Balance(Integer balanceRequestId) {
-		this.balanceRequestID = balanceRequestId;
-	}
-	
-	Balance setBtcLocked(BigInteger btcLocked) {
+	public void setBtcLocked(BigInteger btcLocked) {
 		this.btcLocked = btcLocked;
-		return this;
 	}
 	
 	public BigInteger getBtcLocked() {
 		return btcLocked;
 	}
 	
-	Balance setCurrencyAmount(BigDecimal currencyAmount) {
+	public void  setCurrencyAmount(BigDecimal currencyAmount) {
 		this.currencyAmount = currencyAmount;
-		return this;
 	}
 	
 	public BigDecimal getCurrencyAmount() {
 		return currencyAmount;
 	}
 	
-	Balance setBitcoinAmount(BigInteger bitcoinAmount) {
-		this.bitcoinAmount = bitcoinAmount;
-		return this;
+	public void setBtcAmount(BigInteger btcAmount) {
+		this.btcAmount = btcAmount;
 	}
 	
-	public BigInteger getBitcoinAmount() {
-		return bitcoinAmount;
+	public BigInteger getBtcAmount() {
+		return btcAmount;
 	}
 	
-	Balance setCurrencyLocked(BigDecimal currencyLocked) {
+	public void setCurrencyLocked(BigDecimal currencyLocked) {
 		this.currencyLocked = currencyLocked;
-		return this;
 	}
 	
 	public BigDecimal getCurrencyLocked() {
 		return currencyLocked;
 	}
 	
-	Balance setClientID(String clientID) {
+	public void setClientID(String clientID) {
 		this.clientID = clientID;
-		return this;
 	}
 	
 	public String getClientID() {
@@ -67,15 +58,18 @@ public class Balance implements Serializable {
 		return balanceRequestID;
 	}
 	
+	public void setBalanceRequestID(Integer balanceRequestID) {
+		this.balanceRequestID = balanceRequestID;
+	}
+
 	public String toString() {
 		
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(getClass().getSimpleName());
 		sb.append('{');
 		sb.append("btcLocked=").append(btcLocked);
 		sb.append(", currencyAmount=").append(currencyAmount);
-		sb.append(", bitcoinAmount=").append(bitcoinAmount);
+		sb.append(", btcAmount=").append(btcAmount);
 		sb.append(", currencyLocked=").append(currencyLocked);
 		sb.append(", clientID=").append(clientID);
 		sb.append(", balanceRequestID=").append(balanceRequestID);

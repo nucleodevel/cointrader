@@ -18,6 +18,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
+import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
@@ -131,6 +132,37 @@ public class BlinktradeAPI {
 
 		List<String> filters = new ArrayList<String>(1);
 		filters.add("has_leaves_qty eq 1");
+
+		request.put("MsgType", "U4");
+		request.put("OrdersReqID", orderRequestID);
+		request.put("Page", new Integer(0));
+		request.put("PageSize", new Integer(100));
+		request.put("Filter", filters);
+
+		return sendMessage(GSON.toJson(request));
+
+	}
+
+	/**
+	 * Request Completed Orders.
+	 * 
+	 * @param orderRequestID
+	 *            An ID assigned by you. It can be any number. The response
+	 *            message associated with this request will contain the same ID.
+	 * 
+	 * @return JSON Message which contains information about open orders
+	 *         requested.
+	 * 
+	 * @throws BlinktradeAPIException
+	 *             Throws an exception if some error occurs.
+	 */
+	public String requestCompletedOrders(Integer orderRequestID)
+			throws BlinktradeAPIException {
+
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		List<String> filters = new ArrayList<String>(1);
+		filters.add("has_cum_qty eq 1");
 
 		request.put("MsgType", "U4");
 		request.put("OrdersReqID", orderRequestID);
@@ -259,6 +291,19 @@ public class BlinktradeAPI {
 
 		request.put("MsgType", "F");
 		request.put("ClOrdID", clientOrderId);
+		request.put("BrokerID", broker.getBrokerID());
+
+		return sendMessage(GSON.toJson(request));
+
+	}
+	
+	public String cancelOrder(OpenOrder order)
+			throws BlinktradeAPIException {
+
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		request.put("MsgType", "F");
+		request.put("ClOrdID", order.getClientCustomOrderID());
 		request.put("BrokerID", broker.getBrokerID());
 
 		return sendMessage(GSON.toJson(request));
