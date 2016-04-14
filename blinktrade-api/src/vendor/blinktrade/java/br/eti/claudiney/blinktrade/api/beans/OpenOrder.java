@@ -212,8 +212,8 @@ public class OpenOrder implements Serializable {
 		sb.append(", ordStatus=").append(ordStatus.equals("2")? "FINISHED": "NOT FINISHED");
 		sb.append(", price=").append(price);
 		sb.append(", volume=").append(volume.divide(new BigDecimal(100000000)));
-		/*sb.append(", cumQty=").append(cumQty);
-		sb.append(", leavesQty=").append(leavesQty);
+		sb.append(", cumQty=").append(cumQty);
+		/*sb.append(", leavesQty=").append(leavesQty);
 		sb.append(", cxlQty=").append(cxlQty);
 		sb.append(", avgPx=").append(avgPx);
 		sb.append(", symbol=").append(symbol);

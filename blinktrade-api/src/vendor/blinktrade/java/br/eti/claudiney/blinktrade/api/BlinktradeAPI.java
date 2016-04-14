@@ -257,8 +257,6 @@ public class BlinktradeAPI {
 		}
 
 		currencyPrice = currencyPrice.multiply(new BigDecimal("100000001"));
-		
-		System.out.println("----------" + currencyPrice);
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 

@@ -24,7 +24,7 @@ import br.eti.claudiney.blinktrade.utils.Utils;
 
 public class BlinktradeReport {
 	
-	private static long numOfConsideredOrdersForLastRelevantSellPrice = 3;
+	private static long numOfConsideredOrdersForLastRelevantSellPrice = 5;
 	
 	private BlinktradeUserInformation userInformation;
 	private BlinktradeSymbol blinktradeSymbol;
@@ -240,8 +240,8 @@ public class BlinktradeReport {
 			
 			for (OpenOrder operation: getCompletedOrders()) {
 				if (operation.getSide().equals("1")) {
-					if (sumOfBtc + operation.getVolume().doubleValue() <= btcWithOpenOrders) {
-						sumOfBtc += operation.getVolume().doubleValue();
+					if (sumOfBtc + operation.getCumQty().doubleValue() <= btcWithOpenOrders) {
+						sumOfBtc += operation.getCumQty().doubleValue();
 						groupOfOperations.add(operation);
 					}
 					else {
@@ -257,7 +257,7 @@ public class BlinktradeReport {
 				for (OpenOrder operation: groupOfOperations) {
 					lastRelevantBuyPrice = new BigDecimal(
 						lastRelevantBuyPrice.doubleValue() +	
-						(operation.getVolume().doubleValue() * 
+						(operation.getCumQty().doubleValue() * 
 						operation.getPrice().doubleValue() / sumOfBtc)
 					); 
 				}
@@ -269,7 +269,7 @@ public class BlinktradeReport {
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
 			for (OpenOrder operation: groupOfOperations)
-				System.out.print("    " + operation.toDisplayString()); 
+				System.out.println("    " + operation.toDisplayString()); 
 			System.out.println("");
 		}
 		return lastRelevantBuyPrice;
@@ -304,7 +304,7 @@ public class BlinktradeReport {
 			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
 			System.out.println("  Considered orders: ");
 			for (SimpleOrder order: groupOfOrders)
-				System.out.print("    " + order); 
+				System.out.println("    " + order); 
 			System.out.println("");
 		}
 		return lastRelevantSellPrice;
