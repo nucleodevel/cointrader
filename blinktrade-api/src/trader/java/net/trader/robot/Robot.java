@@ -5,7 +5,7 @@ public class Robot {
 	private Integer delayTime;
 	
 	public Robot() {		
-		delayTime = 10;		
+		delayTime = 60;		
 	}
 
 	public Robot(Integer delayTime) {

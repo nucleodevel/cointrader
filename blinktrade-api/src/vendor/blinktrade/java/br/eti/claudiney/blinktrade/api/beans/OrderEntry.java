@@ -2,12 +2,10 @@ package br.eti.claudiney.blinktrade.api.beans;
 
 import java.io.Serializable;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 import br.eti.claudiney.blinktrade.utils.Utils;
 

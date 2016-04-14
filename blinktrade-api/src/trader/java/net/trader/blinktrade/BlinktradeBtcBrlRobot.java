@@ -6,10 +6,12 @@ import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import net.blinktrade.common.exception.BlinktradeException;
-import net.blinktrade.tradeapi.to.Operation;
-import net.blinktrade.tradeapi.to.Order;
-import net.blinktrade.tradeapi.to.Order.CoinPair;
+import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
+import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
+import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
+import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
+import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
+import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 import net.trader.exception.NetworkErrorException;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
@@ -17,15 +19,10 @@ import net.trader.exception.ParamValueErrorException;
 
 public class BlinktradeBtcBrlRobot {
 	
-	private static CoinPair myCoinPair = CoinPair.BTC_BRL;
+	private static BlinktradeSymbol myCoinPair = BlinktradeSymbol.BTCBRL;
 	
 	private static BlinktradeRobot robot;
 	private static BlinktradeReport report;
-	
-	private static BigDecimal totalBrl;
-	private static BigDecimal totalBtc;
-	
-	private static DecimalFormat decFmt;
 	
 	public static void main(String[] args) {
 		
@@ -49,7 +46,7 @@ public class BlinktradeBtcBrlRobot {
 			
 				// configurations
 				
-				decFmt = new DecimalFormat();
+				DecimalFormat decFmt = new DecimalFormat();
 				decFmt.setMaximumFractionDigits(5);
 				DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
 				symbols.setDecimalSeparator('.');
@@ -81,41 +78,19 @@ public class BlinktradeBtcBrlRobot {
 				
 				System.out.println("");
 				System.out.println("My account");
-				totalBrl = report.getAccountBalance().getFunds().getBrlWithOpenOrders();
-				totalBtc = report.getAccountBalance().getFunds().getBtcWithOpenOrders();
-				System.out.println("Total BRL: " + decFmt.format(totalBrl));
-				System.out.println("Total BTC: " + decFmt.format(totalBtc));
+				System.out.println(report.getBalance());
 				
 				System.out.println("");
 				System.out.println("Reading my last orders... ");
-				System.out.println("Number of new orders: " + report.getMyOrders().size());
+	            System.out.println("Number of open orders: " + report.getOpenOrders().size());
+	            System.out.println("Number of completed orders: " + report.getCompletedOrders().size());
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
-				if (report.getLastBuy() != null) {
-					System.out.println(
-						report.getLastBuy().getType() + " - Price " + 
-						decFmt.format(report.getLastBuy().getPrice()) + 
-						" - BTC " + decFmt.format(report.getLastBuy().getAmount()) + 
-						" - R$ " + 
-						decFmt.format(report.getLastBuy().getPrice().doubleValue() * 
-						report.getLastBuy().getAmount().doubleValue()) +
-						" - Rate " + report.getLastBuy().getRate() + "%" +
-						" - " + report.getLastBuy().getCreatedDate().getTime()
-					);
-				}
-				if (report.getLastSell() != null) {
-					System.out.println(
-						report.getLastSell().getType() + " - Price " + 
-						decFmt.format(report.getLastSell().getPrice()) + 
-						" - BTC " + decFmt.format(report.getLastSell().getAmount()) + 
-						" - R$ " + 
-						decFmt.format(report.getLastSell().getPrice().doubleValue() * 
-						report.getLastSell().getAmount().doubleValue()) +
-						" - Rate " + report.getLastSell().getRate() + "%" +
-						" - " + report.getLastSell().getCreatedDate().getTime()
-					);
-				}
+				if (report.getLastBuy() != null)
+					System.out.println(report.getLastBuy().toDisplayString());
+				if (report.getLastSell() != null)
+					System.out.println(report.getLastSell().toDisplayString());
 				if (report.getLastRelevantBuyPrice() != null)
 					System.out.println("");
 				if (report.getLastRelevantSellPrice() != null)
@@ -124,17 +99,11 @@ public class BlinktradeBtcBrlRobot {
 				System.out.println("");
 				System.out.println("Current top orders by type");
 				System.out.println(
-					report.getCurrentTopBuy().getType() + " - " + 
-					decFmt.format(report.getCurrentTopBuy().getPrice())
+					"BUY - " + decFmt.format(report.getCurrentTopBuy().getCurrencyPrice())
 				);
 				System.out.println(
-					report.getCurrentTopSell().getType() + " - " + 
-					decFmt.format(report.getCurrentTopSell().getPrice())
+					"SELL - " + decFmt.format(report.getCurrentTopSell().getCurrencyPrice())
 				);
-				
-				for (Operation operation: report.getMyOperations()) {
-					System.out.print(operation);
-				}
 				
 				
 				// analise and make orders
@@ -144,8 +113,6 @@ public class BlinktradeBtcBrlRobot {
 				
 				System.out.println("\n---- Finish reading: " + (new Date()));
 				
-			} catch (BlinktradeException e) {
-				e.printStackTrace();
 			} catch (NetworkErrorException e) {
 				System.out.println("Network error: after 10 seconds, try again");
 				try {
@@ -153,6 +120,12 @@ public class BlinktradeBtcBrlRobot {
 				} catch (InterruptedException ex) {
 					ex.printStackTrace();
 				}
+			} catch (BlinktradeAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			
 			// putting delay time
@@ -167,54 +140,70 @@ public class BlinktradeBtcBrlRobot {
 				
 	}
 	
-	private static void makeBuyOrders() throws NumberFormatException, BlinktradeException, NetworkErrorException {		
+	private static void makeBuyOrders() throws BlinktradeAPIException, Exception {		
+		
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(8);
+		
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
 		
 		System.out.println("");
 		System.out.println("Analising buy order");
 		
 		for (int i = 0; i < report.getActiveBuyOrders().size(); i++) {
 			
-			Order order = report.getActiveBuyOrders().get(i);
-			Order nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
+			SimpleOrder order = report.getActiveBuyOrders().get(i);
+			SimpleOrder nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
 				null: report.getActiveBuyOrders().get(i + 1);
 			
 			boolean isAGoodBuyOrder =  
-					order.getPrice().doubleValue() / 
+					order.getCurrencyPrice().doubleValue() / 
 					report.getLastRelevantSellPrice().doubleValue() <= 
 					1 - robot.getMinimumBuyRate();
 			
 			if (isAGoodBuyOrder) {
 				
-				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() + robot.getIncDecPrice());
-				BigDecimal btc = new BigDecimal((totalBrl.doubleValue() - 0.01) / brl.doubleValue());
+				BigDecimal brl = new BigDecimal(order.getCurrencyPrice().doubleValue() + robot.getIncDecPrice());
+				Double btcDouble = (report.getBalance().getCurrencyAmount().doubleValue() - 0.01) / brl.doubleValue();
+				BigDecimal btc = new BigDecimal(btcDouble);
 				
 				// get the unique buy order or null
-				Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+				OpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				
+				System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getPrice())));
+				System.out.println(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000));
+				System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
-					!decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
+					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
 				) {
 					if (myBuyOrder != null)
-						report.getTradeApiService().cancelOrder(myBuyOrder);
+						report.getApi().cancelOrder(myBuyOrder);
 					try {
-						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.getTradeApiService().createBuyOrder(
-								myCoinPair, btc.toString(), brl.toString()
+						if (btc.doubleValue() / 100000000 > robot.getMinimumCoinAmount()) {
+							report.getApi().sendNewOrder(
+								new Integer((int)(System.currentTimeMillis()/1000)),
+								BlinktradeSymbol.BTCBRL,
+								BlinktradeOrderSide.BUY,
+								BlinktradeOrderType.LIMITED,
+								brl, btc.toBigInteger()
 							);
 							System.out.println(
 								"Buy order created: " +
-								order.getType() + " - " + (i + 1) + "° - R$ " + 
-								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+								(i + 1) + "° - R$ " + 
+								decFmt.format(brl) + " - BTC " + btc.divide(new BigDecimal(100000000))
 							);
 						}
 						else
 							System.out.println(
 								"There are no BRL available for " +
-								order.getType() + " - " + (i + 1) + "° - R$ " + 
-								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+								(i + 1) + "° - R$ " + 
+								decFmt.format(brl) + " - BTC " + btc.divide(new BigDecimal(100000000))
 							);
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -222,16 +211,15 @@ public class BlinktradeBtcBrlRobot {
 					break;
 				}
 				else if (
-					decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
-					decFmt.format(order.getVolume()).equals(decFmt.format(btc)) &&
-					decFmt.format(order.getPrice().doubleValue() - nextOrder.getPrice().doubleValue()).
-						equals(decFmt.format(robot.getIncDecPrice()))
+					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
+					order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000) <= robot.getMinimumCoinAmount() &&
+					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(
 						"Maintaining previous order " +
-						order.getType() + " - " + (i + 1) + "° - R$ " + 
-						decFmt.format(order.getPrice()) + " - BTC " + 
-						decFmt.format(order.getVolume())
+						(i + 1) + "° - R$ " + 
+						decFmt.format(order.getCurrencyPrice()) + " - BTC " + 
+						order.getBitcoins().divide(new BigDecimal(100000000))
 					);
 					break;
 				}
@@ -239,63 +227,74 @@ public class BlinktradeBtcBrlRobot {
 		}
 	}
 		
-	private static void makeSellOrders() throws NumberFormatException, BlinktradeException, NetworkErrorException {	
+	private static void makeSellOrders() throws Exception {	
+		
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(8);
+		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
 		
 		System.out.println("");
 		System.out.println("Analising sell order");
 		
 		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
 			
-			Order order = report.getActiveSellOrders().get(i);
-			Order nextOrder = report.getActiveSellOrders().size() - 1 == i? 
+			SimpleOrder order = report.getActiveSellOrders().get(i);
+			SimpleOrder nextOrder = report.getActiveSellOrders().size() - 1 == i? 
 				null: report.getActiveSellOrders().get(i + 1);
 			
 			boolean isAGoodSellOrder = 
 				report.getLastRelevantBuyPrice() != null && 
 				report.getLastRelevantBuyPrice().doubleValue() > 0 ?
-					(order.getPrice().doubleValue() / 
+					(order.getCurrencyPrice().doubleValue() / 
 					report.getLastRelevantBuyPrice().doubleValue() >= 
 					1 + robot.getMinimumSellRate()): true;
 				
 			boolean isToSellSoon = 
 				report.getLastRelevantBuyPrice() != null && 
 				report.getLastRelevantBuyPrice().doubleValue() > 0 ?
-					(order.getPrice().doubleValue() / 
+					(order.getCurrencyPrice().doubleValue() / 
 					report.getLastRelevantBuyPrice().doubleValue() <= 
 					1 + robot.getSellRateAfterBreakdown()): true;
 				
 			if (isAGoodSellOrder || isToSellSoon) {
 				
-				BigDecimal brl = new BigDecimal(order.getPrice().doubleValue() - robot.getIncDecPrice());
-				BigDecimal btc = totalBtc;
+				BigDecimal brl = new BigDecimal(order.getCurrencyPrice().doubleValue() - robot.getIncDecPrice());
+				BigDecimal btc = new BigDecimal(report.getBalance().getBtcAmount().doubleValue());
 				
 				// get the unique buy order or null
-				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
+				OpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 					
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
-					!decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice()))
+					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice()))
 				) {
 					if (mySellOrder != null)
-						report.getTradeApiService().cancelOrder(mySellOrder);
+						report.getApi().cancelOrder(mySellOrder);
 					try {
-						if (btc.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.getTradeApiService().createSellOrder(
-								myCoinPair, btc.toString(), brl.toString()
+						if (btc.doubleValue() / 100000000 > robot.getMinimumCoinAmount()) {
+							report.getApi().sendNewOrder(
+								new Integer((int)(System.currentTimeMillis()/1000)),
+								BlinktradeSymbol.BTCBRL,
+								BlinktradeOrderSide.SELL,
+								BlinktradeOrderType.LIMITED,
+								brl, btc.toBigInteger()
 							);
 							System.out.println(
 								"Sell order created: " +
-								order.getType() + " - " + (i + 1) + "° - R$ " + 
-								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+								(i + 1) + "° - R$ " + 
+								decFmt.format(brl) + " - BTC " + btc.divide(new BigDecimal(100000000))
 							);
 						}
 						else
 							System.out.println(
 								"There are no BTC available for " +
-								order.getType() + " - " + (i + 1) + "° - R$ " + 
-								decFmt.format(brl) + " - BTC " + decFmt.format(btc)
+								(i + 1) + "° - R$ " + 
+								decFmt.format(brl) + " - BTC " + btc.divide(new BigDecimal(100000000))
 							);
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -303,16 +302,15 @@ public class BlinktradeBtcBrlRobot {
 					break;
 				}
 				else if (
-					decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
-					decFmt.format(order.getVolume()).equals(decFmt.format(btc)) &&
-					decFmt.format(nextOrder.getPrice().doubleValue() - order.getPrice().doubleValue()).
-						equals(decFmt.format(robot.getIncDecPrice()))
+					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
+					order.getBitcoins().toString().equals(decFmt.format(btc.doubleValue() / 100000000)) &&
+					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(
 						"Maintaining previous order " +
-						order.getType() + " - " + (i + 1) + "° - R$ " + 
-						decFmt.format(order.getPrice()) + " - BTC " + 
-						decFmt.format(order.getVolume())
+						(i + 1) + "° - R$ " + 
+						decFmt.format(order.getCurrencyPrice()) + " - BTC " + 
+						order.getBitcoins().divide(new BigDecimal(100000000))
 					);
 					break;
 				}

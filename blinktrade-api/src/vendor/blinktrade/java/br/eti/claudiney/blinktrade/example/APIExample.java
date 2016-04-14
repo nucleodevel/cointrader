@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import net.trader.blinktrade.BlinktradeUserInformation;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -21,7 +23,6 @@ import br.eti.claudiney.blinktrade.api.beans.BlinktradeCurrency;
 import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
 import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
-import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
@@ -40,11 +41,9 @@ import br.eti.claudiney.blinktrade.utils.Utils;
  */
 public class APIExample {
 	
-	private static final String API_KEY = "vXTiWeOGgT3O3Aa6h53BcqaVP41PwqOXygr3KPZbM7Q";
-	private static final String API_SECRET = "Ri095LLsAhwCLwS9xgRBDKaOq0LlQ6Zv1hoCOq2jJMQ";
-	
 	private static long numOfConsideredOrdersForLastRelevantSellPrice = 3;
 	
+	private static BlinktradeUserInformation userInformation;
 	private static BlinktradeAPI api;
 	
 	private static Balance balance;
@@ -162,15 +161,9 @@ public class APIExample {
 			System.out.println("");
 			System.out.println("My account");
 			System.out.println(getBalance());
-            /*BigDecimal totalBrl = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BRL").getAsBigDecimal().divide(new BigDecimal(100000000));
-            BigDecimal totalBtc = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigDecimal().divide(new BigDecimal(100000000));
-            System.out.println("Total BRL: " + totalBrl);
-			System.out.println("Total BTC: " + totalBtc);*/
 			
 			System.out.println("");
 			System.out.println("Reading my last orders... ");
-			/*for (OpenOrder order: getOpenOrders())
-				System.out.println(order.toDisplayString());*/
             System.out.println("Number of open orders: " + getOpenOrders().size());
             System.out.println("Number of completed orders: " + getCompletedOrders().size());
 			
@@ -207,10 +200,19 @@ public class APIExample {
 		}
 		
 	}
+
+	public static BlinktradeUserInformation getUserInformation() {
+		if (userInformation == null)
+			userInformation = new BlinktradeUserInformation();
+		return userInformation;
+	}
 	
 	public static BlinktradeAPI getApi() throws BlinktradeAPIException {
 		if (api == null)
-			api = new BlinktradeAPI(API_KEY, API_SECRET, BlinktradeBroker.FOXBIT);
+			api = new BlinktradeAPI(
+				getUserInformation().getMyApiKey(), getUserInformation().getMyApiSecret(), 
+				getUserInformation().getBroker()
+			);
 		return api;
 	}
 	
@@ -605,7 +607,7 @@ public class APIExample {
 					if (mySellOrder != null)
 						getApi().cancelOrder(mySellOrder);
 					try {
-						if (btc.doubleValue() > getMinimumCoinAmount()) {
+						if (btc.doubleValue() / 100000000 > getMinimumCoinAmount()) {
 							getApi().sendNewOrder(
 								new Integer((int)(System.currentTimeMillis()/1000)),
 								BlinktradeSymbol.BTCBRL,
@@ -661,7 +663,7 @@ public class APIExample {
 	}
 
 	public static Double getMinimumCoinAmount() {
-		return 0.01;
+		return 0.0001;
 	}
 
 	public static double getSellRateAfterBreakdown() {

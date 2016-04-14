@@ -50,7 +50,7 @@ public class BlinktradeAPI {
 	private static final String BLINKTRADE_API_TESTNET_URL = "https://api.testnet.blinktrade.com/tapi/v1/message";
 	
 	private static final String BLINKTRADE_PUBLIC_API_ORDERBOOK = "https://api.blinktrade.com/api/v1/BRL/orderbook";
-	private static final String BLINKTRADE_PUBLIC_API_TRADES = "https://api.blinktrade.com/api/v1/BRL/trades";
+	//private static final String BLINKTRADE_PUBLIC_API_TRADES = "https://api.blinktrade.com/api/v1/BRL/trades";
 	
 	private String apiKey;
 	private String apiSecret;
@@ -256,7 +256,9 @@ public class BlinktradeAPI {
 			throw new BlinktradeAPIException("Amount (satoshi) cannot be null");
 		}
 
-		currencyPrice = currencyPrice.multiply(new BigDecimal("100000000"));
+		currencyPrice = currencyPrice.multiply(new BigDecimal("100000001"));
+		
+		System.out.println("----------" + currencyPrice);
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 

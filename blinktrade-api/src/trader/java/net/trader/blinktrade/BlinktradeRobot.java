@@ -16,10 +16,10 @@ public class BlinktradeRobot extends Robot {
 	public BlinktradeRobot() {		
 		super(10);
 		
-		minimumBuyRate = 0.01;
-		minimumSellRate = 0.008;
-		minimumCoinAmount = 0.01;
-		incDecPrice = 0.00001;		
+		minimumBuyRate = 0.009;
+		minimumSellRate = 0.007;
+		minimumCoinAmount = 0.0001;
+		incDecPrice = 0.01;		
 		sellRateAfterBreakdown = -0.05;
 	}
 	

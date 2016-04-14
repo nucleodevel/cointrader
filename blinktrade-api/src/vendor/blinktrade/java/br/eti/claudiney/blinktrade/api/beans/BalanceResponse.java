@@ -31,7 +31,7 @@ public class BalanceResponse implements Serializable {
 		for(Map<String, Object> m: Responses) {
 			
 			Map<String, ?> entry = (Map<String, ?>) m.get("4");
-			Integer balanceRequestId = new Integer( ((Number)m.get("BalanceReqID")).intValue() );
+			//Integer balanceRequestId = new Integer( ((Number)m.get("BalanceReqID")).intValue() );
 			
 			Balance b = new Balance();
 			b.setBtcLocked(Utils.getBigInteger(entry.get("BTC_locked")));
