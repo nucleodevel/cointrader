@@ -174,9 +174,11 @@ public class BlinktradeBtcBrlRobot {
 				OpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				
-				System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getPrice())));
-				System.out.println(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000));
-				System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
+				if (myBuyOrder != null) {
+					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getPrice())));
+					System.out.println(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000));
+					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
+				}
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
@@ -268,6 +270,11 @@ public class BlinktradeBtcBrlRobot {
 				OpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 					
+				if (mySellOrder != null) {
+					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(mySellOrder.getPrice())));
+					System.out.println(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000));
+					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
+				}
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
@@ -303,7 +310,7 @@ public class BlinktradeBtcBrlRobot {
 				}
 				else if (
 					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
-					order.getBitcoins().toString().equals(decFmt.format(btc.doubleValue() / 100000000)) &&
+					order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000) <= robot.getMinimumCoinAmount() &&
 					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(
