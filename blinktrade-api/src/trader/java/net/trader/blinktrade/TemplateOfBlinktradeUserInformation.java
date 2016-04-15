@@ -17,22 +17,22 @@ import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
  */
 public class TemplateOfBlinktradeUserInformation {
 
-	private String myTapiKey;
-	private String myTapiCode;
+	private String myApiKey;
+	private String myApiSecret;
 	private BlinktradeBroker broker;
 	
 	public TemplateOfBlinktradeUserInformation() {
-		myTapiKey = "";
-		myTapiCode = "";
+		myApiKey = "";
+		myApiSecret = "";
 		broker = BlinktradeBroker.FOXBIT;
 	}
 
-	public String getMyTapiKey() {
-		return myTapiKey;
+	public String getMyApiKey() {
+		return myApiKey;
 	}
 
-	public String getMyTapiCode() {
-		return myTapiCode;
+	public String getMyApiSecret() {
+		return myApiSecret;
 	}
 
 	public BlinktradeBroker getBroker() {

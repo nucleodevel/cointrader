@@ -176,7 +176,7 @@ public class BlinktradeBtcBrlRobot {
 				
 				if (myBuyOrder != null) {
 					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getPrice())));
-					System.out.println(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000));
+					System.out.println(Math.abs(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000)));
 					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 
@@ -214,7 +214,7 @@ public class BlinktradeBtcBrlRobot {
 				}
 				else if (
 					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
-					order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000) <= robot.getMinimumCoinAmount() &&
+					Math.abs(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000)) <= robot.getMinimumCoinAmount() &&
 					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(
@@ -272,8 +272,8 @@ public class BlinktradeBtcBrlRobot {
 					
 				if (mySellOrder != null) {
 					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(mySellOrder.getPrice())));
-					System.out.println(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000));
-					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
+					System.out.println(Math.abs(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000)));
+					System.out.println(nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 
 				if (
@@ -310,8 +310,8 @@ public class BlinktradeBtcBrlRobot {
 				}
 				else if (
 					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
-					order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000) <= robot.getMinimumCoinAmount() &&
-					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
+					Math.abs(order.getBitcoins().doubleValue() - (btc.doubleValue() / 100000000)) <= robot.getMinimumCoinAmount() &&
+					nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(
 						"Maintaining previous order " +
