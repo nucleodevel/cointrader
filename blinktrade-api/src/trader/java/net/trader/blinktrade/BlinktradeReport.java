@@ -246,7 +246,7 @@ public class BlinktradeReport {
 					}
 					else {
 						OpenOrder newOperation = new OpenOrder(operation);
-						newOperation.setVolume(new BigDecimal(btcWithOpenOrders - sumOfBtc));
+						newOperation.setCumQty(new BigDecimal(btcWithOpenOrders - sumOfBtc));
 						groupOfOperations.add(newOperation);
 						sumOfBtc += btcWithOpenOrders - sumOfBtc;
 						break;
