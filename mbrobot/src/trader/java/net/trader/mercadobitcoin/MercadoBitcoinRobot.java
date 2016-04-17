@@ -1,12 +1,18 @@
 package net.trader.mercadobitcoin;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
 import net.trader.exception.ParamValueErrorException;
 import net.trader.robot.Robot;
 
 public class MercadoBitcoinRobot extends Robot {
-
+	
+	private String operationMode;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double minimumCoinAmount;
@@ -14,26 +20,22 @@ public class MercadoBitcoinRobot extends Robot {
 	private Double sellRateAfterBreakdown;
 	
 	public MercadoBitcoinRobot() {		
-		super(10);
+		super();
 		
-		minimumBuyRate = 0.01;
-		minimumSellRate = 0.008;
-		minimumCoinAmount = 0.01;
-		incDecPrice = 0.00001;		
+		operationMode = "bs";
+		minimumBuyRate = 0.009;
+		minimumSellRate = 0.007;
+		minimumCoinAmount = 0.0001;
+		incDecPrice = 0.01;		
 		sellRateAfterBreakdown = -0.05;
 	}
-	
-	public MercadoBitcoinRobot(
-		int delayTime, Double minimumBuyRate, Double minimumSellRate, 
-		Double minimumCoinAmount, Double incDecPrice, Double sellRateAfterBreakdown
-	) {
-		super(delayTime);
-		
-		this.minimumBuyRate = minimumBuyRate;
-		this.minimumSellRate = minimumSellRate;
-		this.minimumCoinAmount = minimumCoinAmount;
-		this.incDecPrice = incDecPrice;
-		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
+
+	public String getOperationMode() {
+		return operationMode;
+	}
+
+	public void setOperationMode(String operationMode) {
+		this.operationMode = operationMode;
 	}
 
 	public Double getMinimumBuyRate() {
@@ -68,11 +70,11 @@ public class MercadoBitcoinRobot extends Robot {
 		this.incDecPrice = incDecPrice;
 	}
 
-	public double getSellRateAfterBreakdown() {
+	public Double getSellRateAfterBreakdown() {
 		return sellRateAfterBreakdown;
 	}
 
-	public void setSellRateAfterBreakdown(double sellRateAfterBreakdown) {
+	public void setSellRateAfterBreakdown(Double sellRateAfterBreakdown) {
 		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 	
@@ -88,12 +90,23 @@ public class MercadoBitcoinRobot extends Robot {
 			String paramValue = args[++i];
 			
 			switch (paramLabel) {
+				case "-f": 
+					setFileName(paramValue);
+					break;
 				case "-dt": 
 					try {
 						setDelayTime(Integer.parseInt(paramValue));
 					} catch (NumberFormatException e) {
 						throw new ParamValueErrorException(paramLabel);
 					}
+					break;
+				case "-om":
+					if (
+						!paramValue.equals("b") || !paramValue.equals("s") ||
+						!paramValue.equals("bs")
+					)
+						throw new ParamValueErrorException(paramLabel);
+					operationMode = paramValue;					
 					break;
 				case "-mbr": 
 					try {
@@ -128,6 +141,87 @@ public class MercadoBitcoinRobot extends Robot {
 			}
 			
 		}
+		
+	}
+	
+
+	
+	public void readParamsFromFile() throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException, IOException {
+		
+		if (getFileName().equals(""))
+			return;
+		File file = getFile();
+		
+		if (!file.exists())
+			throw new IOException();
+		else {		
+			// Construct BufferedReader from FileReader
+			BufferedReader br = new BufferedReader(new FileReader(getFileName()));
+			
+			try { 
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					String[] args = line.split("\\s+");
+					if (args.length < 1)
+						return;
+					String paramLabel = args[0];
+					if (args.length < 2)
+						throw new ParamSyntaxErrorException(paramLabel);
+					String paramValue = args[1];
+					
+					switch (paramLabel) {
+						case "-dt": 
+							try {
+								setDelayTime(Integer.parseInt(paramValue));
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						case "-om":
+							if (
+								!paramValue.equals("b") && !paramValue.equals("s") &&
+								!paramValue.equals("bs")
+							)
+								throw new ParamValueErrorException(paramLabel);
+							operationMode = paramValue;					
+							break;
+						case "-mbr": 
+							try {
+								minimumBuyRate = Double.parseDouble(paramValue);
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						case "-msr": 
+							try {
+								minimumSellRate = Double.parseDouble(paramValue);
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						case "-idp": 
+							try {
+								incDecPrice = Double.parseDouble(paramValue);
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						case "-srab": 
+							try {
+								sellRateAfterBreakdown = Double.parseDouble(paramValue);
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						default:
+							throw new ParamLabelErrorException(paramLabel);
+					}
+				}
+			}
+			finally {
+				br.close();
+			}
+	    }
 		
 	}
 

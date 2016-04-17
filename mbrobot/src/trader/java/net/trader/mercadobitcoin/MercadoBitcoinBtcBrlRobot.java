@@ -1,5 +1,6 @@
 package net.trader.mercadobitcoin;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -44,6 +45,22 @@ public class MercadoBitcoinBtcBrlRobot {
 		}
 		
 		for (;;) {
+			try {
+				robot.readParamsFromFile();
+			} catch (ParamLabelErrorException e) {
+				System.out.println("There is no parameter " + e.getParamLabel() + "!");
+				return;
+			} catch (ParamSyntaxErrorException e) {
+				System.out.println("There is no value for the parameter " + e.getParamLabel() + "!");
+				return;
+			} catch (ParamValueErrorException e) {
+				System.out.println("The parameter " + e.getParamLabel() + " can't accept this value!");
+				return;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("The file " + robot.getFileName() + " doesn't exist!");
+				return;
+			}
 			
 			try {
 			
@@ -66,6 +83,7 @@ public class MercadoBitcoinBtcBrlRobot {
 				System.out.println("");
 				System.out.println(
 					"Delay time: " + robot.getDelayTime() + "s  /  " +
+					"Operation mode: " + robot.getOperationMode() + "  /  " +
 					"Minimum rate -> buy: " + decFmt.format(robot.getMinimumBuyRate() * 100) + "%; " +
 					"sell: " + decFmt.format(robot.getMinimumSellRate() * 100) + "%  /  "
 				);
@@ -138,9 +156,27 @@ public class MercadoBitcoinBtcBrlRobot {
 				
 				
 				// analise and make orders
-				
-				makeBuyOrders();
-				makeSellOrders();
+				if (!robot.getOperationMode().contains("b")) {
+					// get the unique buy order or null
+					Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+						report.getMyActiveBuyOrders().get(0): null;
+					if (myBuyOrder != null)
+						report.getTradeApiService().cancelOrder(myBuyOrder);
+					System.out.println("\nDon't make buy order but cancel any!");
+				}
+				else
+					makeBuyOrders();
+
+				if (!robot.getOperationMode().contains("s")) {
+					// get the unique buy order or null
+					Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
+						report.getMyActiveSellOrders().get(0): null;
+					if (mySellOrder != null)
+						report.getTradeApiService().cancelOrder(mySellOrder);
+					System.out.println("\nDon't make sell order but cancel any!");
+				}
+				else
+					makeSellOrders();
 				
 				System.out.println("\n---- Finish reading: " + (new Date()));
 				
