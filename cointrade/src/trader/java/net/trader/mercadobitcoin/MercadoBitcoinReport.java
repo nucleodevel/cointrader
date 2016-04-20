@@ -1,12 +1,16 @@
 package net.trader.mercadobitcoin;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
+import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
+import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.tradeapi.service.ApiService;
 import net.mercadobitcoin.tradeapi.service.TradeApiService;
@@ -69,13 +73,13 @@ public class MercadoBitcoinReport extends RobotReport {
 			CoinPair.BTC_BRL: null;
 	}
 
-	public ApiService getApiService() throws MercadoBitcoinException {
+	private ApiService getApiService() throws MercadoBitcoinException {
 		if (apiService == null)
 			apiService = new ApiService();
 		return apiService;
 	}
 	
-	public TradeApiService getTradeApiService() throws MercadoBitcoinException {
+	private TradeApiService getTradeApiService() throws MercadoBitcoinException {
 		if (tradeApiService == null)
 			tradeApiService = new TradeApiService(
 				getUserConfiguration().getSecret(), getUserConfiguration().getKey()
@@ -383,6 +387,22 @@ public class MercadoBitcoinReport extends RobotReport {
 			System.out.println("");
 		}
 		return lastRelevantSellPrice;
+	}
+	
+	public void cancelOrder(Order order) throws MercadoBitcoinException, NetworkErrorException {
+		getTradeApiService().cancelOrder(order);
+	}
+
+	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws MercadoBitcoinException, NetworkErrorException {
+		getTradeApiService().createBuyOrder(
+			getCoinPair(), coin.toString(), currency.toString()
+		);
+	}
+
+	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws MercadoBitcoinException, NetworkErrorException {
+		getTradeApiService().createSellOrder(
+			getCoinPair(), coin.toString(), currency.toString()
+		);
 	}
 
 }

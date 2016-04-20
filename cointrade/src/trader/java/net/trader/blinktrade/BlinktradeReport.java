@@ -1,10 +1,14 @@
 package net.trader.blinktrade;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.mercadobitcoin.common.exception.MercadoBitcoinException;
+import net.mercadobitcoin.tradeapi.to.Order;
+import net.trader.exception.NetworkErrorException;
 import net.trader.robot.RobotReport;
 import net.trader.robot.UserConfiguration;
 
@@ -22,6 +26,8 @@ import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
 import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
+import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
+import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
 import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 import br.eti.claudiney.blinktrade.utils.Utils;
@@ -60,7 +66,7 @@ public class BlinktradeReport extends RobotReport {
 			BlinktradeSymbol.BTCBRL: null;
 	}
 	
-	public BlinktradeAPI getApi() throws BlinktradeAPIException {
+	private BlinktradeAPI getApi() throws BlinktradeAPIException {
 		if (api == null) {
 			BlinktradeBroker broker = getUserConfiguration().getBroker().equals("Foxbit")?
 				BlinktradeBroker.FOXBIT: null;
@@ -340,6 +346,30 @@ public class BlinktradeReport extends RobotReport {
 					myActiveSellOrders.add(order);
 		}
 		return myActiveSellOrders;
+	}
+	
+	public void cancelOrder(OpenOrder order) throws BlinktradeAPIException {
+		getApi().cancelOrder(order);
+	}
+
+	public void createBuyOrder(BigDecimal currency, BigInteger coin) throws BlinktradeAPIException {
+		getApi().sendNewOrder(
+			new Integer((int)(System.currentTimeMillis()/1000)),
+			getCoinPair(),
+			BlinktradeOrderSide.BUY,
+			BlinktradeOrderType.LIMITED,
+			currency, coin
+		);
+	}
+
+	public void createSellOrder(BigDecimal currency, BigInteger coin) throws BlinktradeAPIException {
+		getApi().sendNewOrder(
+			new Integer((int)(System.currentTimeMillis()/1000)),
+			getCoinPair(),
+			BlinktradeOrderSide.SELL,
+			BlinktradeOrderType.LIMITED,
+			currency, coin
+		);
 	}
 
 }

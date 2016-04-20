@@ -9,8 +9,6 @@ import java.util.concurrent.TimeUnit;
 
 import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.tradeapi.to.Operation;
@@ -138,7 +136,7 @@ public class Main {
 				OpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				if (myBuyOrder != null)
-					report.getApi().cancelOrder(myBuyOrder);
+					report.cancelOrder(myBuyOrder);
 				System.out.println("\nDon't make buy order but cancel any!");
 			}
 			else
@@ -149,7 +147,7 @@ public class Main {
 				OpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 				if (mySellOrder != null)
-					report.getApi().cancelOrder(mySellOrder);
+					report.cancelOrder(mySellOrder);
 				System.out.println("\nDon't make sell order but cancel any!");
 			}
 			else
@@ -267,7 +265,7 @@ public class Main {
 				Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				if (myBuyOrder != null)
-					report.getTradeApiService().cancelOrder(myBuyOrder);
+					report.cancelOrder(myBuyOrder);
 				System.out.println("\nDon't make buy order but cancel any!");
 			}
 			else
@@ -278,7 +276,7 @@ public class Main {
 				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 				if (mySellOrder != null)
-					report.getTradeApiService().cancelOrder(mySellOrder);
+					report.cancelOrder(mySellOrder);
 				System.out.println("\nDon't make sell order but cancel any!");
 			}
 			else
@@ -353,16 +351,10 @@ public class Main {
 					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
 				) {
 					if (myBuyOrder != null)
-						report.getApi().cancelOrder(myBuyOrder);
+						report.cancelOrder(myBuyOrder);
 					try {
 						if (coin.doubleValue() / 100000000 > robot.getMinimumCoinAmount()) {
-							report.getApi().sendNewOrder(
-								new Integer((int)(System.currentTimeMillis()/1000)),
-								report.getCoinPair(),
-								BlinktradeOrderSide.BUY,
-								BlinktradeOrderType.LIMITED,
-								currency, coin.toBigInteger()
-							);
+							report.createBuyOrder(currency, coin.toBigInteger());
 							System.out.println(
 								"Buy order created: " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
@@ -450,16 +442,10 @@ public class Main {
 					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice()))
 				) {
 					if (mySellOrder != null)
-						report.getApi().cancelOrder(mySellOrder);
+						report.cancelOrder(mySellOrder);
 					try {
 						if (coin.doubleValue() / 100000000 > robot.getMinimumCoinAmount()) {
-							report.getApi().sendNewOrder(
-								new Integer((int)(System.currentTimeMillis()/1000)),
-								report.getCoinPair(),
-								BlinktradeOrderSide.SELL,
-								BlinktradeOrderType.LIMITED,
-								currency, coin.toBigInteger()
-							);
+							report.createSellOrder(currency, coin.toBigInteger());
 							System.out.println(
 								"Sell order created: " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
@@ -538,12 +524,10 @@ public class Main {
 					!decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
 				) {
 					if (myBuyOrder != null)
-						report.getTradeApiService().cancelOrder(myBuyOrder);
+						report.cancelOrder(myBuyOrder);
 					try {
 						if (coin.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.getTradeApiService().createBuyOrder(
-								report.getCoinPair(), coin.toString(), currency.toString()
-							);
+							report.createBuyOrder(coin, currency);
 							System.out.println(
 								"Buy order created: " +
 								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
@@ -631,12 +615,10 @@ public class Main {
 					!decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice()))
 				) {
 					if (mySellOrder != null)
-						report.getTradeApiService().cancelOrder(mySellOrder);
+						report.cancelOrder(mySellOrder);
 					try {
 						if (coin.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.getTradeApiService().createSellOrder(
-								report.getCoinPair(), coin.toString(), currency.toString()
-							);
+							report.createSellOrder(coin, currency);
 							System.out.println(
 								"Sell order created: " +
 								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
