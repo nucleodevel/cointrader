@@ -19,20 +19,10 @@ public class Robot {
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
 	private Double sellRateAfterBreakdown;
+	private UserInformation userInformation;
 
-	public Robot(
-		File file, Integer delayTime, String operationMode, Double minimumBuyRate, 
-		Double minimumSellRate, Double minimumCoinAmount, Double incDecPrice,
-		Double sellRateAfterBreakdown
-	) {
-		this.file = file;
-		this.delayTime = delayTime;
-		this.operationMode = operationMode;
-		this.minimumBuyRate = minimumBuyRate;
-		this.minimumSellRate = minimumSellRate;
-		this.minimumCoinAmount = minimumCoinAmount;
-		this.incDecPrice = incDecPrice;
-		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
+	public Robot() {
+		userInformation = new UserInformation();
 	}
 
 	public Robot(String fileName, Integer delayTime) {
@@ -113,6 +103,14 @@ public class Robot {
 	public void setSellRateAfterBreakdown(Double sellRateAfterBreakdown) {
 		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
+
+	public UserInformation getUserInformation() {
+		return userInformation;
+	}
+
+	public void setUserInformation(UserInformation userInformation) {
+		this.userInformation = userInformation;
+	}
 	
 	public void readParams(String[] args) throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException {
 		
@@ -129,56 +127,6 @@ public class Robot {
 				case "-f": 
 					setFileName(paramValue);
 					break;
-				case "-dt": 
-					try {
-						setDelayTime(Integer.parseInt(paramValue));
-					} catch (NumberFormatException e) {
-						throw new ParamValueErrorException(paramLabel);
-					}
-					break;
-				case "-om":
-					if (
-						!paramValue.equals("b") || !paramValue.equals("s") ||
-						!paramValue.equals("bs")
-					)
-						throw new ParamValueErrorException(paramLabel);
-					operationMode = paramValue;					
-					break;
-				case "-mbr": 
-					try {
-						minimumBuyRate = Double.parseDouble(paramValue);
-					} catch (NumberFormatException e) {
-						throw new ParamValueErrorException(paramLabel);
-					}
-					break;
-				case "-msr": 
-					try {
-						minimumSellRate = Double.parseDouble(paramValue);
-					} catch (NumberFormatException e) {
-						throw new ParamValueErrorException(paramLabel);
-					}
-					break;
-				case "-mca": 
-					try {
-						minimumCoinAmount = Double.parseDouble(paramValue);
-					} catch (NumberFormatException e) {
-						throw new ParamValueErrorException(paramLabel);
-					}
-					break;
-				case "-idp": 
-					try {
-						incDecPrice = Double.parseDouble(paramValue);
-					} catch (NumberFormatException e) {
-						throw new ParamValueErrorException(paramLabel);
-					}
-					break;
-				case "-srab": 
-					try {
-						sellRateAfterBreakdown = Double.parseDouble(paramValue);
-					} catch (NumberFormatException e) {
-						throw new ParamValueErrorException(paramLabel);
-					}
-					break;
 				default:
 					throw new ParamLabelErrorException(paramLabel);
 			}
@@ -186,8 +134,6 @@ public class Robot {
 		}
 		
 	}
-	
-
 	
 	public void readParamsFromFile() throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException, IOException {
 		
@@ -262,6 +208,18 @@ public class Robot {
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
+							break;
+						case "-uk": 
+							userInformation.setKey(paramValue);
+							break;
+						case "-us": 
+							userInformation.setSecret(paramValue);
+							break;
+						case "-up": 
+							userInformation.setProvider(paramValue);
+							break;
+						case "-ub": 
+							userInformation.setBroker(paramValue);
 							break;
 						default:
 							throw new ParamLabelErrorException(paramLabel);

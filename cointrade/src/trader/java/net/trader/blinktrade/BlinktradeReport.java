@@ -5,6 +5,9 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.trader.robot.RobotReport;
+import net.trader.robot.UserInformation;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,16 +21,14 @@ import br.eti.claudiney.blinktrade.api.beans.BlinktradeCurrency;
 import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
 import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
+import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
 import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 import br.eti.claudiney.blinktrade.utils.Utils;
 
-public class BlinktradeReport {
+public class BlinktradeReport extends RobotReport {
 	
 	private static long numOfConsideredOrdersForLastRelevantSellPrice = 5;
-	
-	private BlinktradeUserInformation userInformation;
-	private BlinktradeSymbol blinktradeSymbol;
 	
 	private BlinktradeAPI api;
 	
@@ -50,32 +51,24 @@ public class BlinktradeReport {
 	private BigDecimal lastRelevantBuyPrice;
 	private BigDecimal lastRelevantSellPrice;
 	
+	public BlinktradeReport(UserInformation userInformation, String currency, String coin) {
+		super(userInformation, currency, coin);
+	}
 	
-	
-	public BlinktradeReport(BlinktradeSymbol blinktradeSymbol) {
-		this.blinktradeSymbol = blinktradeSymbol;
-	}
-
-	public BlinktradeSymbol getBlinktradeSymbol() {
-		return blinktradeSymbol;
-	}
-
-	public void setBlinktradeSymbol(BlinktradeSymbol blinktradeSymbol) {
-		this.blinktradeSymbol = blinktradeSymbol;
-	}
-
-	public BlinktradeUserInformation getUserInformation() {
-		if (userInformation == null)
-			userInformation = new BlinktradeUserInformation();
-		return userInformation;
+	public BlinktradeSymbol getCoinPair() {
+		return getCurrency().equals("BRL") && getCoin().equals("BTC")?
+			BlinktradeSymbol.BTCBRL: null;
 	}
 	
 	public BlinktradeAPI getApi() throws BlinktradeAPIException {
-		if (api == null)
+		if (api == null) {
+			BlinktradeBroker broker = getUserInformation().getBroker().equals("Foxbit")?
+				BlinktradeBroker.FOXBIT: null;
 			api = new BlinktradeAPI(
-				getUserInformation().getMyApiKey(), getUserInformation().getMyApiSecret(), 
-				getUserInformation().getBroker()
+				getUserInformation().getKey(), getUserInformation().getSecret(), broker
+				
 			);
+		}
 		return api;
 	}
 	
@@ -89,10 +82,10 @@ public class BlinktradeReport {
 	        balance.setClientID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("ClientID").getAsString());
 	        balance.setBalanceRequestID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("BalanceReqID").getAsInt());
 	        
-	        balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BRL").getAsBigDecimal());
-	        balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BRL_locked").getAsBigDecimal());
-	        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigInteger());
-	        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC_locked").getAsBigInteger());
+	        balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCurrency()).getAsBigDecimal());
+	        balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCurrency() + "_locked").getAsBigDecimal());
+	        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCoin()).getAsBigInteger());
+	        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCoin() + "_locked").getAsBigInteger());
 		}
 		return balance;
 	}
