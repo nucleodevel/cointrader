@@ -19,10 +19,10 @@ public class Robot {
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
 	private Double sellRateAfterBreakdown;
-	private UserInformation userInformation;
+	private UserConfiguration userConfiguration;
 
 	public Robot() {
-		userInformation = new UserInformation();
+		userConfiguration = new UserConfiguration();
 	}
 
 	public Robot(String fileName, Integer delayTime) {
@@ -104,12 +104,12 @@ public class Robot {
 		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 
-	public UserInformation getUserInformation() {
-		return userInformation;
+	public UserConfiguration getUserConfiguration() {
+		return userConfiguration;
 	}
 
-	public void setUserInformation(UserInformation userInformation) {
-		this.userInformation = userInformation;
+	public void setUserConfiguration(UserConfiguration userConfiguration) {
+		this.userConfiguration = userConfiguration;
 	}
 	
 	public void readParams(String[] args) throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException {
@@ -210,16 +210,16 @@ public class Robot {
 							}
 							break;
 						case "-uk": 
-							userInformation.setKey(paramValue);
+							userConfiguration.setKey(paramValue);
 							break;
 						case "-us": 
-							userInformation.setSecret(paramValue);
+							userConfiguration.setSecret(paramValue);
 							break;
 						case "-up": 
-							userInformation.setProvider(paramValue);
+							userConfiguration.setProvider(paramValue);
 							break;
 						case "-ub": 
-							userInformation.setBroker(paramValue);
+							userConfiguration.setBroker(paramValue);
 							break;
 						default:
 							throw new ParamLabelErrorException(paramLabel);

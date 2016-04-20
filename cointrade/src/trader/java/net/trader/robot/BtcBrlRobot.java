@@ -61,9 +61,9 @@ public class BtcBrlRobot {
 				return;
 			}
 			
-			if (robot.getUserInformation().getProvider().equals("Blinktrade"))
+			if (robot.getUserConfiguration().getProvider().equals("Blinktrade"))
 				runBlinktrade();
-			else if (robot.getUserInformation().getProvider().equals("MercadoBitcoin"))
+			else if (robot.getUserConfiguration().getProvider().equals("MercadoBitcoin"))
 				runMercadoBitcoin();
 		}
 				
@@ -86,7 +86,7 @@ public class BtcBrlRobot {
 			
 			System.out.println("");
 			System.out.println("\n---- Start reading: " + (new Date()));		
-			BlinktradeReport report = new BlinktradeReport(robot.getUserInformation(), "BRL", "BTC");
+			BlinktradeReport report = new BlinktradeReport(robot.getUserConfiguration(), "BRL", "BTC");
 			
 			System.out.println("");
 			System.out.println(
@@ -200,7 +200,7 @@ public class BtcBrlRobot {
 			
 			System.out.println("");
 			System.out.println("\n---- Start reading: " + (new Date()));		
-			MercadoBitcoinReport report = new MercadoBitcoinReport(robot.getUserInformation(), "BRL", "BTC");
+			MercadoBitcoinReport report = new MercadoBitcoinReport(robot.getUserConfiguration(), "BRL", "BTC");
 			
 			System.out.println("");
 			System.out.println(

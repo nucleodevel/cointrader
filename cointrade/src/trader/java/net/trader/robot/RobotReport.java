@@ -2,22 +2,22 @@ package net.trader.robot;
 
 public abstract class RobotReport {
 	
-	private UserInformation userInformation;
+	private UserConfiguration userConfiguration;
 	private String currency;
 	private String coin;
 	
-	public RobotReport(UserInformation userInformation, String currency, String coin) {
-		this.userInformation = userInformation;
+	public RobotReport(UserConfiguration userConfiguration, String currency, String coin) {
+		this.userConfiguration = userConfiguration;
 		this.currency = currency;
 		this.coin = coin;
 	}
 	
-	public UserInformation getUserInformation() {
-		return userInformation;
+	public UserConfiguration getUserConfiguration() {
+		return userConfiguration;
 	}
 
-	public void setUserInformation(UserInformation userInformation) {
-		this.userInformation = userInformation;
+	public void setUserConfiguration(UserConfiguration userConfiguration) {
+		this.userConfiguration = userConfiguration;
 	}
 
 	public String getCurrency() {

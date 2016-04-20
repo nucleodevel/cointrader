@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.trader.robot.RobotReport;
-import net.trader.robot.UserInformation;
+import net.trader.robot.UserConfiguration;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -51,8 +51,8 @@ public class BlinktradeReport extends RobotReport {
 	private BigDecimal lastRelevantBuyPrice;
 	private BigDecimal lastRelevantSellPrice;
 	
-	public BlinktradeReport(UserInformation userInformation, String currency, String coin) {
-		super(userInformation, currency, coin);
+	public BlinktradeReport(UserConfiguration userConfiguration, String currency, String coin) {
+		super(userConfiguration, currency, coin);
 	}
 	
 	public BlinktradeSymbol getCoinPair() {
@@ -62,10 +62,10 @@ public class BlinktradeReport extends RobotReport {
 	
 	public BlinktradeAPI getApi() throws BlinktradeAPIException {
 		if (api == null) {
-			BlinktradeBroker broker = getUserInformation().getBroker().equals("Foxbit")?
+			BlinktradeBroker broker = getUserConfiguration().getBroker().equals("Foxbit")?
 				BlinktradeBroker.FOXBIT: null;
 			api = new BlinktradeAPI(
-				getUserInformation().getKey(), getUserInformation().getSecret(), broker
+				getUserConfiguration().getKey(), getUserConfiguration().getSecret(), broker
 				
 			);
 		}

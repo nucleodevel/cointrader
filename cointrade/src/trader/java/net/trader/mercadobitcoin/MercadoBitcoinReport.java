@@ -21,7 +21,7 @@ import net.mercadobitcoin.tradeapi.to.Orderbook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.trader.exception.NetworkErrorException;
 import net.trader.robot.RobotReport;
-import net.trader.robot.UserInformation;
+import net.trader.robot.UserConfiguration;
 
 public class MercadoBitcoinReport extends RobotReport {
 
@@ -60,8 +60,8 @@ public class MercadoBitcoinReport extends RobotReport {
 	private BigDecimal lastRelevantBuyPrice;
 	private BigDecimal lastRelevantSellPrice;
 	
-	public MercadoBitcoinReport(UserInformation userInformation, String currency, String coin) {
-		super(userInformation, currency, coin);
+	public MercadoBitcoinReport(UserConfiguration userConfiguration, String currency, String coin) {
+		super(userConfiguration, currency, coin);
 	}
 	
 	public CoinPair getCoinPair() {
@@ -78,7 +78,7 @@ public class MercadoBitcoinReport extends RobotReport {
 	public TradeApiService getTradeApiService() throws MercadoBitcoinException {
 		if (tradeApiService == null)
 			tradeApiService = new TradeApiService(
-				getUserInformation().getSecret(), getUserInformation().getKey()
+				getUserConfiguration().getSecret(), getUserConfiguration().getKey()
 			);
 		return tradeApiService;
 	}
