@@ -7,45 +7,45 @@ import java.math.BigInteger;
 @SuppressWarnings("serial")
 public class Balance implements Serializable {
 	
-	private BigInteger btcLocked;
 	private BigDecimal currencyAmount;
-	private BigInteger btcAmount;
 	private BigDecimal currencyLocked;
+	private BigInteger btcAmount;
+	private BigInteger btcLocked;
 	private String clientID;
 	private Integer balanceRequestID;
-	
-	public void setBtcLocked(BigInteger btcLocked) {
-		this.btcLocked = btcLocked;
-	}
-	
-	public BigInteger getBtcLocked() {
-		return btcLocked;
-	}
-	
-	public void  setCurrencyAmount(BigDecimal currencyAmount) {
-		this.currencyAmount = currencyAmount;
-	}
 	
 	public BigDecimal getCurrencyAmount() {
 		return currencyAmount;
 	}
-	
-	public void setBtcAmount(BigInteger btcAmount) {
-		this.btcAmount = btcAmount;
+
+	public void setCurrencyAmount(BigDecimal currencyAmount) {
+		this.currencyAmount = currencyAmount;
 	}
-	
-	public BigInteger getBtcAmount() {
-		return btcAmount;
-	}
-	
-	public void setCurrencyLocked(BigDecimal currencyLocked) {
-		this.currencyLocked = currencyLocked;
-	}
-	
+
 	public BigDecimal getCurrencyLocked() {
 		return currencyLocked;
 	}
-	
+
+	public void setCurrencyLocked(BigDecimal currencyLocked) {
+		this.currencyLocked = currencyLocked;
+	}
+
+	public BigInteger getBtcAmount() {
+		return btcAmount;
+	}
+
+	public void setBtcAmount(BigInteger btcAmount) {
+		this.btcAmount = btcAmount;
+	}
+
+	public BigInteger getBtcLocked() {
+		return btcLocked;
+	}
+
+	public void setBtcLocked(BigInteger btcLocked) {
+		this.btcLocked = btcLocked;
+	}
+
 	public void setClientID(String clientID) {
 		this.clientID = clientID;
 	}

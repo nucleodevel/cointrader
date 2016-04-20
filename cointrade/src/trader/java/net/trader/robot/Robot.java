@@ -251,5 +251,20 @@ public class Robot {
 	    }
 		
 	}
+	
+	public String getFileContent() throws IOException {
+		// Construct BufferedReader from FileReader
+		BufferedReader br = new BufferedReader(new FileReader(getFileName()));
+		String fileContent = "";
+		try { 
+			String line = null;
+			while ((line = br.readLine()) != null)
+				fileContent += line + "\n";
+		}
+		finally {
+			br.close();
+		}
+		return fileContent;
+	}
 
 }

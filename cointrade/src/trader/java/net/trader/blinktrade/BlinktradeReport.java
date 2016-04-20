@@ -84,10 +84,23 @@ public class BlinktradeReport extends RobotReport {
 	        
 	        balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCurrency()).getAsBigDecimal());
 	        balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCurrency() + "_locked").getAsBigDecimal());
-	        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCoin()).getAsBigInteger());
-	        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(getCoin() + "_locked").getAsBigInteger());
+	        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigInteger());
+	        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC_locked").getAsBigInteger());
 		}
 		return balance;
+	}
+	
+	public BigDecimal getCurrencyAmount() throws BlinktradeAPIException, Exception {
+		return getBalance().getCurrencyAmount();
+	}
+	
+	public BigDecimal getCoinAmount() throws BlinktradeAPIException, Exception {
+		BigDecimal coinAmount;
+		if (getCoin().equals("BTC"))
+			coinAmount = new BigDecimal(getBalance().getBtcAmount().doubleValue());
+		else
+			coinAmount = null;
+		return coinAmount;
 	}
 	
 	public OrderBookResponse getOrderBook() throws BlinktradeAPIException {
@@ -225,39 +238,38 @@ public class BlinktradeReport extends RobotReport {
 			
 			lastRelevantBuyPrice = new BigDecimal(0);
 			
-			double btcWithOpenOrders = 
-				getBalance().getBtcAmount().doubleValue();
+			double coinWithOpenOrders = getCoinAmount().doubleValue();
 			
 			List<OpenOrder> groupOfOperations = new ArrayList<OpenOrder>(); 
-			double sumOfBtc = 0;
+			double sumOfCoin = 0;
 			
 			for (OpenOrder operation: getCompletedOrders()) {
 				if (operation.getSide().equals("1")) {
-					if (sumOfBtc + operation.getCumQty().doubleValue() <= btcWithOpenOrders) {
-						sumOfBtc += operation.getCumQty().doubleValue();
+					if (sumOfCoin + operation.getCumQty().doubleValue() <= coinWithOpenOrders) {
+						sumOfCoin += operation.getCumQty().doubleValue();
 						groupOfOperations.add(operation);
 					}
 					else {
 						OpenOrder newOperation = new OpenOrder(operation);
-						newOperation.setCumQty(new BigDecimal(btcWithOpenOrders - sumOfBtc));
+						newOperation.setCumQty(new BigDecimal(coinWithOpenOrders - sumOfCoin));
 						groupOfOperations.add(newOperation);
-						sumOfBtc += btcWithOpenOrders - sumOfBtc;
+						sumOfCoin += coinWithOpenOrders - sumOfCoin;
 						break;
 					}
 				}
 			}
-			if (sumOfBtc != 0) {
+			if (sumOfCoin != 0) {
 				for (OpenOrder operation: groupOfOperations) {
 					lastRelevantBuyPrice = new BigDecimal(
 						lastRelevantBuyPrice.doubleValue() +	
 						(operation.getCumQty().doubleValue() * 
-						operation.getPrice().doubleValue() / sumOfBtc)
+						operation.getPrice().doubleValue() / sumOfCoin)
 					); 
 				}
 			}
 			System.out.println("Calculating last relevant buy price: ");
-			System.out.println("  BTC with open orders: " + btcWithOpenOrders);
-			System.out.println("  Considered BTC sum: " + sumOfBtc);
+			System.out.println("  " + getCoin() + " with open orders: " + coinWithOpenOrders);
+			System.out.println("  Considered " + getCoin() + " sum: " + sumOfCoin);
 			System.out.println("  Considered buy operations: " + groupOfOperations.size());
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
@@ -273,26 +285,26 @@ public class BlinktradeReport extends RobotReport {
 			
 			lastRelevantSellPrice = new BigDecimal(0);
 			
-			double sumOfBtc = 0;
+			double sumOfCoin = 0;
 			double sumOfNumerators = 0;
 			
 			List<SimpleOrder> groupOfOrders = new ArrayList<SimpleOrder>();
 			
 			for (int i = 0; i < numOfConsideredOrdersForLastRelevantSellPrice; i++) {
 				SimpleOrder order = getActiveSellOrders().get(i);				
-				sumOfBtc +=  order.getBitcoins().doubleValue();
+				sumOfCoin +=  order.getBitcoins().doubleValue();
 				sumOfNumerators += 
 					order.getBitcoins().doubleValue() * order.getCurrencyPrice().doubleValue();
 				groupOfOrders.add(order);
 			}
 			
-			if (sumOfBtc != 0) {
-				lastRelevantSellPrice = new BigDecimal(sumOfNumerators / sumOfBtc);
+			if (sumOfCoin != 0) {
+				lastRelevantSellPrice = new BigDecimal(sumOfNumerators / sumOfCoin);
 			}
 			
 			System.out.println("Calculating last relevant sell price: ");
 			System.out.println("  Considered numerator sum: " + sumOfNumerators);
-			System.out.println("  Considered denominator sum: " + sumOfBtc);
+			System.out.println("  Considered denominator sum: " + sumOfCoin);
 			System.out.println("  Considered sell orders: " + groupOfOrders.size());
 			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
 			System.out.println("  Considered orders: ");

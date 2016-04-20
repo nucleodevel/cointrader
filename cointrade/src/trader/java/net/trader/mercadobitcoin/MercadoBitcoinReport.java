@@ -94,6 +94,26 @@ public class MercadoBitcoinReport extends RobotReport {
 			accountBalance = getTradeApiService().getAccountInfo();
 		return accountBalance;
 	}
+	
+	public BigDecimal getCurrencyAmount() throws MercadoBitcoinException, NetworkErrorException {
+		BigDecimal currencyAmount;
+		if (getCurrency().equals("BRL"))
+			currencyAmount = getAccountBalance().getFunds().getBrlWithOpenOrders();
+		else
+			currencyAmount = null;
+		return currencyAmount;
+	}
+	
+	public BigDecimal getCoinAmount() throws MercadoBitcoinException, NetworkErrorException {
+		BigDecimal coinAmount;
+		if (getCoin().equals("BTC"))
+			coinAmount = getAccountBalance().getFunds().getBtcWithOpenOrders();
+		else if (getCoin().equals("LTC"))
+			coinAmount = getAccountBalance().getFunds().getLtcWithOpenOrders();
+		else
+			coinAmount = null;
+		return coinAmount;
+	}
 
 	public Orderbook getOrderbook() throws MercadoBitcoinException {
 		if (orderbook == null)
@@ -288,39 +308,38 @@ public class MercadoBitcoinReport extends RobotReport {
 			
 			lastRelevantBuyPrice = new BigDecimal(0);
 			
-			double btcWithOpenOrders = 
-				getAccountBalance().getFunds().getBtcWithOpenOrders().doubleValue();
+			double coinWithOpenOrders = getCoinAmount().doubleValue();
 			
 			List<Operation> groupOfOperations = new ArrayList<Operation>(); 
-			double sumOfBtc = 0;
+			double sumOfCoin = 0;
 			
 			for (Operation operation: getMyOperations()) {
 				if (operation.getType() == OrderType.BUY) {
-					if (sumOfBtc + operation.getAmount().doubleValue() <= btcWithOpenOrders) {
-						sumOfBtc += operation.getAmount().doubleValue();
+					if (sumOfCoin + operation.getAmount().doubleValue() <= coinWithOpenOrders) {
+						sumOfCoin += operation.getAmount().doubleValue();
 						groupOfOperations.add(operation);
 					}
 					else {
 						Operation newOperation = new Operation(operation);
-						newOperation.setAmount(new BigDecimal(btcWithOpenOrders - sumOfBtc));
+						newOperation.setAmount(new BigDecimal(coinWithOpenOrders - sumOfCoin));
 						groupOfOperations.add(newOperation);
-						sumOfBtc += btcWithOpenOrders - sumOfBtc;
+						sumOfCoin += coinWithOpenOrders - sumOfCoin;
 						break;
 					}
 				}
 			}
-			if (sumOfBtc != 0) {
+			if (sumOfCoin != 0) {
 				for (Operation operation: groupOfOperations) {
 					lastRelevantBuyPrice = new BigDecimal(
 						lastRelevantBuyPrice.doubleValue() +	
 						(operation.getAmount().doubleValue() * 
-						operation.getPrice().doubleValue() / sumOfBtc)
+						operation.getPrice().doubleValue() / sumOfCoin)
 					); 
 				}
 			}
 			System.out.println("Calculating last relevant buy price: ");
-			System.out.println("  BTC with open orders: " + btcWithOpenOrders);
-			System.out.println("  Considered BTC sum: " + sumOfBtc);
+			System.out.println("  " + getCoin() + " with open orders: " + coinWithOpenOrders);
+			System.out.println("  Considered " + getCoin() + " sum: " + sumOfCoin);
 			System.out.println("  Considered buy operations: " + groupOfOperations.size());
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
@@ -336,26 +355,26 @@ public class MercadoBitcoinReport extends RobotReport {
 			
 			lastRelevantSellPrice = new BigDecimal(0);
 			
-			double sumOfBtc = 0;
+			double sumOfCoin = 0;
 			double sumOfNumerators = 0;
 			
 			List<Order> groupOfOrders = new ArrayList<Order>();
 			
 			for (int i = 0; i < numOfConsideredOrdersForLastRelevantSellPrice; i++) {
 				Order order = getActiveSellOrders().get(i);				
-				sumOfBtc +=  order.getVolume().doubleValue();
+				sumOfCoin +=  order.getVolume().doubleValue();
 				sumOfNumerators += 
 					order.getVolume().doubleValue() * order.getPrice().doubleValue();
 				groupOfOrders.add(order);
 			}
 			
-			if (sumOfBtc != 0) {
-				lastRelevantSellPrice = new BigDecimal(sumOfNumerators / sumOfBtc);
+			if (sumOfCoin != 0) {
+				lastRelevantSellPrice = new BigDecimal(sumOfNumerators / sumOfCoin);
 			}
 			
 			System.out.println("Calculating last relevant sell price: ");
 			System.out.println("  Considered numerator sum: " + sumOfNumerators);
-			System.out.println("  Considered denominator sum: " + sumOfBtc);
+			System.out.println("  Considered denominator sum: " + sumOfCoin);
 			System.out.println("  Considered sell orders: " + groupOfOrders.size());
 			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
 			System.out.println("  Considered orders: ");
