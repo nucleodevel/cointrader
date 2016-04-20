@@ -1,0 +1,11 @@
+-dt 12
+-om bs
+-mbr 0.01
+-msr 0.008
+-mca 0.01
+-idp 0.01
+-srab -0.05
+-uk key
+-us secretcode
+-up MercadoBitcoin
+-ub MercadoBitcoin

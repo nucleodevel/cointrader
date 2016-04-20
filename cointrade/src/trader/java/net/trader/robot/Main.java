@@ -23,7 +23,7 @@ import net.trader.exception.ParamValueErrorException;
 import net.trader.mercadobitcoin.MercadoBitcoinReport;
 import net.trader.robot.Robot;
 
-public class BtcBrlRobot {
+public class Main {
 	
 	private static Robot robot;
 	
@@ -86,7 +86,9 @@ public class BtcBrlRobot {
 			
 			System.out.println("");
 			System.out.println("\n---- Start reading: " + (new Date()));		
-			BlinktradeReport report = new BlinktradeReport(robot.getUserConfiguration(), "BRL", "BTC");
+			BlinktradeReport report = new BlinktradeReport(
+				robot.getUserConfiguration(), robot.getCurrency(), robot.getCoin() 
+			);
 			
 			System.out.println("");
 			System.out.println(
@@ -200,7 +202,9 @@ public class BtcBrlRobot {
 			
 			System.out.println("");
 			System.out.println("\n---- Start reading: " + (new Date()));		
-			MercadoBitcoinReport report = new MercadoBitcoinReport(robot.getUserConfiguration(), "BRL", "BTC");
+			MercadoBitcoinReport report = new MercadoBitcoinReport(
+				robot.getUserConfiguration(), robot.getCurrency(), robot.getCoin() 
+			);
 			
 			System.out.println("");
 			System.out.println(

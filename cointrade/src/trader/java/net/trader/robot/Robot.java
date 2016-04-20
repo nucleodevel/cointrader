@@ -14,6 +14,8 @@ public class Robot {
 	private File file;
 	private Integer delayTime;
 	private String operationMode;
+	private String currency;
+	private String coin;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double minimumCoinAmount;
@@ -23,11 +25,6 @@ public class Robot {
 
 	public Robot() {
 		userConfiguration = new UserConfiguration();
-	}
-
-	public Robot(String fileName, Integer delayTime) {
-		this.file = new File(fileName);
-		this.delayTime = delayTime;
 	}
 
 	public File getFile() {
@@ -62,6 +59,22 @@ public class Robot {
 
 	public void setOperationMode(String operationMode) {
 		this.operationMode = operationMode;
+	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
+
+	public String getCoin() {
+		return coin;
+	}
+
+	public void setCoin(String coin) {
+		this.coin = coin;
 	}
 
 	public Double getMinimumBuyRate() {
@@ -173,6 +186,12 @@ public class Robot {
 							)
 								throw new ParamValueErrorException(paramLabel);
 							operationMode = paramValue;					
+							break;
+						case "-curr": 
+							currency = paramValue;
+							break;
+						case "-coin": 
+							coin = paramValue;
 							break;
 						case "-mbr": 
 							try {

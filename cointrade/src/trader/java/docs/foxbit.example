@@ -1,0 +1,11 @@
+-dt 10
+-om bs
+-mbr 0.008
+-msr 0.006
+-mca 0.0001
+-idp 0.01
+-srab -0.05
+-uk key
+-us secret
+-up Blinktrade
+-ub Foxbit
