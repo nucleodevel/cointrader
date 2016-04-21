@@ -16,12 +16,12 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.tradeapi.to.Operation;
-import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
+import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 import net.mercadobitcoin.tradeapi.to.Orderbook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.mercadobitcoin.util.TimestampInterval;
+import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -34,7 +34,7 @@ public class ApiService extends AbstractApiService {
 
 	private static final String API_PATH = "/api/";
 
-	public ApiService() throws MercadoBitcoinException {
+	public ApiService() throws ApiProviderException {
 		super();
 	}
 
@@ -47,9 +47,9 @@ public class ApiService extends AbstractApiService {
 	 * 
 	 * @param coinPair Pair of coins to be used
 	 * @return Ticker object with the information retrieved.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Ticker ticker24h(CoinPair coinPair) throws MercadoBitcoinException {
+	public Ticker ticker24h(CoinPair coinPair) throws ApiProviderException {
 		String url = assemblyUrl(coinPair, "ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
@@ -60,9 +60,9 @@ public class ApiService extends AbstractApiService {
 	 * Get a Ticker with informations about trades since midnight.
 	 * 
 	 * @return Ticker object with the information retrieved.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Ticker tickerOfToday(CoinPair coinPair) throws MercadoBitcoinException {
+	public Ticker tickerOfToday(CoinPair coinPair) throws ApiProviderException {
 		String url = assemblyUrl(coinPair, "v1/ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
@@ -73,9 +73,9 @@ public class ApiService extends AbstractApiService {
 	 * Get the list of the price and volume of the open orders.
 	 * 
 	 * @return Orderbook object with an Array of the open Orders.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Orderbook orderbook(CoinPair coinPair) throws MercadoBitcoinException {
+	public Orderbook orderbook(CoinPair coinPair) throws ApiProviderException {
 		String url = assemblyUrl(coinPair, "orderbook");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		return new Orderbook(jsonObject, CoinPair.BTC_BRL);
@@ -85,9 +85,9 @@ public class ApiService extends AbstractApiService {
 	 * Get the list of executed trades. 
 	 * 
 	 * @return Trades object with an Array of the operations.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Operation[] tradeList(CoinPair coinPair) throws MercadoBitcoinException {
+	public Operation[] tradeList(CoinPair coinPair) throws ApiProviderException {
 		return tradeList(coinPair, "");
 	}
 
@@ -95,11 +95,11 @@ public class ApiService extends AbstractApiService {
 	 * Get the list of executed trades since the initial timestamp. 
 	 * 
 	 * @return Trades object with an Array of the operations.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Operation[] tradeList(CoinPair coinPair, long initialTid) throws MercadoBitcoinException {
+	public Operation[] tradeList(CoinPair coinPair, long initialTid) throws ApiProviderException {
 		if (initialTid < 0) {
-			throw new MercadoBitcoinException("Invalid initial tid.");
+			throw new ApiProviderException("Invalid initial tid.");
 		}
 		return tradeList(coinPair, String.valueOf("?tid=" + initialTid));
 	}
@@ -108,11 +108,11 @@ public class ApiService extends AbstractApiService {
 	 * Get the list of executed trades from the initial timestamp to the final timestamp. 
 	 * 
 	 * @return Trades object with an Array of the operations.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Operation[] tradeList(CoinPair coinPair, TimestampInterval interval) throws MercadoBitcoinException {
+	public Operation[] tradeList(CoinPair coinPair, TimestampInterval interval) throws ApiProviderException {
 		if (interval == null) {
-			throw new MercadoBitcoinException("Invalid date interval.");
+			throw new ApiProviderException("Invalid date interval.");
 		}
 		
 		List<String> paths = new ArrayList<String>();
@@ -125,7 +125,7 @@ public class ApiService extends AbstractApiService {
 		return tradeList(coinPair, paths.toArray(new String[0]));
 	}
 
-	private Operation[] tradeList(CoinPair coinPair, String ... complements) throws MercadoBitcoinException {
+	private Operation[] tradeList(CoinPair coinPair, String ... complements) throws ApiProviderException {
 		String url = assemblyUrl(coinPair, "trades", complements);
 		String response = invokeApiMethod(url.toString());
 		JsonArray jsonObject = JsonArray.readFrom(response);
@@ -141,9 +141,9 @@ public class ApiService extends AbstractApiService {
 	/*
 	 * Assembly url to be invoked based on coin pair and parameters
 	 */
-	private String assemblyUrl(CoinPair coinPair, String method, String ... pathParams) throws MercadoBitcoinException {
+	private String assemblyUrl(CoinPair coinPair, String method, String ... pathParams) throws ApiProviderException {
 		if (coinPair == null) {
-			throw new MercadoBitcoinException("Invalid coin pair.");
+			throw new ApiProviderException("Invalid coin pair.");
 		}
 
 		StringBuffer url = new StringBuffer(method);
@@ -160,17 +160,17 @@ public class ApiService extends AbstractApiService {
 		return url.toString();
 	}
 
-	private String invokeApiMethod(String params) throws MercadoBitcoinException {
+	private String invokeApiMethod(String params) throws ApiProviderException {
 		try {
 			URL url = generateApiUrl(params);
 			HttpsURLConnection conn = getHttpGetConnection(url);
 			getRequestToServer(conn);
 			return getResponseFromServer(conn);
 		} catch (MalformedURLException e) {
-			throw new MercadoBitcoinException("Internal error: Invalid URL.");
+			throw new ApiProviderException("Internal error: Invalid URL.");
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new MercadoBitcoinException("Internal error: Failure in connection.");
+			throw new ApiProviderException("Internal error: Failure in connection.");
 		}
 	}
 	

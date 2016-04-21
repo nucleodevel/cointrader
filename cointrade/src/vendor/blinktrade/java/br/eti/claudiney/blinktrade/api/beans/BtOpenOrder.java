@@ -5,8 +5,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Calendar;
 
+import net.trader.beans.Order;
+
 @SuppressWarnings("serial")
-public class OpenOrder implements Serializable {
+public class BtOpenOrder extends Order implements Serializable {
 
 	private BigInteger clientCustomOrderID;
 	private String orderID;
@@ -24,13 +26,13 @@ public class OpenOrder implements Serializable {
 	private BigDecimal volume;
 	private String timeInForce;
 	
-	public OpenOrder() {
+	public BtOpenOrder() {
 		
 	}
 	
 	
 	
-	public OpenOrder(OpenOrder another) {
+	public BtOpenOrder(BtOpenOrder another) {
 		super();
 		this.clientCustomOrderID = another.getClientCustomOrderID();
 		this.orderID = another.getOrderID();

@@ -15,16 +15,17 @@ import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import net.trader.exception.ApiProviderException;
+
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
-import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
+import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
-import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 
 import com.google.gson.Gson;
 
@@ -69,18 +70,18 @@ public class BlinktradeAPI {
 	 *            Broker (exchange) ID.
 	 */
 	public BlinktradeAPI(String apiKey, String apiSecret,
-			BlinktradeBroker broker) throws BlinktradeAPIException {
+			BlinktradeBroker broker) throws ApiProviderException {
 
 		if (apiKey == null) {
-			throw new BlinktradeAPIException("APIKey cannot be null");
+			throw new ApiProviderException("APIKey cannot be null");
 		}
 
 		if (apiSecret == null) {
-			throw new BlinktradeAPIException("APISecret cannot be null");
+			throw new ApiProviderException("APISecret cannot be null");
 		}
 
 		if (broker == null) {
-			throw new BlinktradeAPIException("Broker cannot be null");
+			throw new ApiProviderException("Broker cannot be null");
 		}
 
 		this.apiKey = apiKey;
@@ -98,10 +99,10 @@ public class BlinktradeAPI {
 	 * 
 	 * @return JSON message which contains information about balance requested.
 	 * 
-	 * @throws BlinktradeAPIException
+	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
-	public String getBalance(Integer balanceRequestID) throws Exception {
+	public String getBalance(Integer balanceRequestID) throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -122,11 +123,11 @@ public class BlinktradeAPI {
 	 * @return JSON Message which contains information about open orders
 	 *         requested.
 	 * 
-	 * @throws BlinktradeAPIException
+	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
 	public String requestOpenOrders(Integer orderRequestID)
-			throws BlinktradeAPIException {
+			throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -153,11 +154,11 @@ public class BlinktradeAPI {
 	 * @return JSON Message which contains information about open orders
 	 *         requested.
 	 * 
-	 * @throws BlinktradeAPIException
+	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
 	public String requestCompletedOrders(Integer orderRequestID)
-			throws BlinktradeAPIException {
+			throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -184,11 +185,11 @@ public class BlinktradeAPI {
 	 * @return JSON Message which contains information about bitcoin address
 	 *         generated.
 	 * 
-	 * @throws BlinktradeAPIException
+	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
 	public String createBitcoinAddressForDeposit(Integer depositRequestID)
-			throws BlinktradeAPIException {
+			throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -222,38 +223,38 @@ public class BlinktradeAPI {
 	 *            
 	 * @return JSON message which contains information about performed order.
 	 * 
-	 * @throws BlinktradeAPIException
+	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 * 
 	 */
 	public String sendNewOrder(Integer clientOrderId, BlinktradeSymbol symbol,
 			BlinktradeOrderSide side, BlinktradeOrderType type,
 			BigDecimal currencyPrice, BigInteger satoshiAmount)
-			throws BlinktradeAPIException {
+			throws ApiProviderException {
 
 		if (clientOrderId == null) {
-			throw new BlinktradeAPIException("ClientOrderID  cannot be null");
+			throw new ApiProviderException("ClientOrderID  cannot be null");
 		}
 
 		if (symbol == null) {
-			throw new BlinktradeAPIException("Symbol (currency) cannot be null");
+			throw new ApiProviderException("Symbol (currency) cannot be null");
 		}
 
 		if (side == null) {
-			throw new BlinktradeAPIException("Side (buy/sell) cannot be null");
+			throw new ApiProviderException("Side (buy/sell) cannot be null");
 		}
 
 		if (type == null) {
-			throw new BlinktradeAPIException(
+			throw new ApiProviderException(
 					"Type (market/limited) cannot be null");
 		}
 
 		if (currencyPrice == null) {
-			throw new BlinktradeAPIException("Price cannot be null");
+			throw new ApiProviderException("Price cannot be null");
 		}
 
 		if (satoshiAmount == null) {
-			throw new BlinktradeAPIException("Amount (satoshi) cannot be null");
+			throw new ApiProviderException("Amount (satoshi) cannot be null");
 		}
 
 		currencyPrice = currencyPrice.multiply(new BigDecimal("100000001"));
@@ -281,11 +282,11 @@ public class BlinktradeAPI {
 	 *            
 	 * @return JSON message which contains information about order cancelled.
 	 * 
-	 * @throws BlinktradeAPIException
+	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
 	public String cancelOrder(Integer clientOrderId)
-			throws BlinktradeAPIException {
+			throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -297,8 +298,8 @@ public class BlinktradeAPI {
 
 	}
 	
-	public String cancelOrder(OpenOrder order)
-			throws BlinktradeAPIException {
+	public String cancelOrder(BtOpenOrder order)
+			throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -314,7 +315,7 @@ public class BlinktradeAPI {
 	 * Perform API requests.
 	 */
 	private String sendMessage(String requestMessage)
-			throws BlinktradeAPIException {
+			throws ApiProviderException {
 
 		/*
 		 * Generate unique nonce
@@ -328,7 +329,7 @@ public class BlinktradeAPI {
 		try {
 			signature = hash(apiSecret, nonce);
 		} catch (Exception e) {
-			throw new BlinktradeAPIException("Message signature fail", e);
+			throw new ApiProviderException("Message signature fail", e);
 		}
 
 		/*
@@ -349,7 +350,7 @@ public class BlinktradeAPI {
 			http = url.openConnection();
 
 		} catch (Exception e) {
-			throw new BlinktradeAPIException("API URL initialization fail", e);
+			throw new ApiProviderException("API URL initialization fail", e);
 		}
 
 		/*
@@ -386,7 +387,7 @@ public class BlinktradeAPI {
 			os.write(requestMessage.getBytes());
 			os.flush();
 		} catch (Exception e) {
-			throw new BlinktradeAPIException("API Request fail", e);
+			throw new ApiProviderException("API Request fail", e);
 		}
 
 		/*
@@ -398,7 +399,7 @@ public class BlinktradeAPI {
 			is = http.getInputStream();
 			responseMessage = IOUtils.toString(is);
 		} catch (Exception e) {
-			throw new BlinktradeAPIException("API response retrieve fail", e);
+			throw new ApiProviderException("API response retrieve fail", e);
 		}
 
 		return responseMessage;
@@ -408,7 +409,7 @@ public class BlinktradeAPI {
 	/*
 	 * API Message signatures using HMAC-SHA256.
 	 */
-	private static String hash(String secret, String message) throws Exception {
+	private static String hash(String secret, String message) {
 
 		final String ALGORITHM = "HmacSHA256";
 
@@ -433,7 +434,7 @@ public class BlinktradeAPI {
 
 	}
 
-	public OrderBookResponse getOrderBook() throws BlinktradeAPIException {
+	public OrderBookResponse getOrderBook() throws ApiProviderException {
 
 		/*
 		 * API URL initialzation
@@ -446,7 +447,7 @@ public class BlinktradeAPI {
 			url = new URL(BLINKTRADE_PUBLIC_API_ORDERBOOK);
 			http = url.openConnection();
 		} catch (Exception e) {
-			throw new BlinktradeAPIException("API URL initialization fail", e);
+			throw new ApiProviderException("API URL initialization fail", e);
 		}
 
 		/*
@@ -467,7 +468,7 @@ public class BlinktradeAPI {
 			is = http.getInputStream();
 			responseMessage = IOUtils.toString(is);
 		} catch (Exception e) {
-			throw new BlinktradeAPIException("API response retrieve fail", e);
+			throw new ApiProviderException("API response retrieve fail", e);
 		}
 
 		return GSON.fromJson(responseMessage, OrderBookResponse.class);

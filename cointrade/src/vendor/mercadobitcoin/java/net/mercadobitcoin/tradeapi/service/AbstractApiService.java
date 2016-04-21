@@ -13,11 +13,10 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.common.security.HostnameVerifierBag;
 import net.mercadobitcoin.common.security.TrustManagerBag;
 import net.mercadobitcoin.common.security.TrustManagerBag.SslContextTrustManager;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import net.trader.exception.ApiProviderException;
 
 
 /**
@@ -38,17 +37,18 @@ public abstract class AbstractApiService {
 	
 	/**
 	 * Starts a SSL connection for HTTPS Requests
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException 
+	 * @throws Exception 
 	 */
-	public AbstractApiService() throws MercadoBitcoinException {
+	public AbstractApiService() throws ApiProviderException {
 		try {
 			if (usingHttps()) {
 				setSslContext(SslContextTrustManager.DEFAULT);
 			}
 		} catch (KeyManagementException e) {
-			throw new MercadoBitcoinException("Internal error: Invalid SSL Connection.");
+			throw new ApiProviderException("Internal error: Invalid SSL Connection.");
 		} catch (NoSuchAlgorithmException e) {
-			throw new MercadoBitcoinException("Internal error: Invalid SSL Algorithm.");
+			throw new ApiProviderException("Internal error: Invalid SSL Algorithm.");
 		}
 	}
 	
@@ -62,9 +62,12 @@ public abstract class AbstractApiService {
 	 * Setup SSL Context to perform HTTPS communication.
 	 * 
 	 * @param sctm Selected way to validate certificates
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyManagementException 
+	 * @throws Exception 
 	 */
-	private final void setSslContext(SslContextTrustManager sctm)
-					throws NoSuchAlgorithmException, KeyManagementException {
+	@SuppressWarnings("incomplete-switch")
+	private final void setSslContext(SslContextTrustManager sctm) throws NoSuchAlgorithmException, KeyManagementException {
 		// Enables protocols "TLSv1", "TLSv1.1" and "TLSv1.2"
 		SSLContext sc = SSLContext.getInstance("TLS");
 
@@ -77,10 +80,6 @@ public abstract class AbstractApiService {
 			case DEFAULT:
 				HttpsURLConnection.setDefaultSSLSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault());
 				break;
-			case CUSTOM:
-				throw new NotImplementedException();
-			default:
-				throw new NotImplementedException();
 		}
 	}
 	

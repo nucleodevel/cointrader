@@ -6,9 +6,9 @@
 
 package net.mercadobitcoin.tradeapi.to;
 
-import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
-import net.mercadobitcoin.tradeapi.to.Order.OrderStatus;
-import net.mercadobitcoin.tradeapi.to.Order.OrderType;
+import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 
 /**
  * Filter object to be used on order list request.

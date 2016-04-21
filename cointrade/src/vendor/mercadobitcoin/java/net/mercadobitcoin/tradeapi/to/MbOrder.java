@@ -6,12 +6,17 @@
 
 package net.mercadobitcoin.tradeapi.to;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import net.mercadobitcoin.util.EnumValue;
+import net.mercadobitcoin.util.JsonHashMap;
+import net.mercadobitcoin.util.ReflectionUtils;
+import net.trader.beans.Order;
+import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -19,7 +24,7 @@ import com.eclipsesource.json.JsonObject;
 /**
  * Order information.
  */
-public class Order extends TapiBase implements Comparable<Order> {
+public class MbOrder extends Order implements Serializable, Comparable<MbOrder> {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -103,7 +108,7 @@ public class Order extends TapiBase implements Comparable<Order> {
 	 * @param volume The amount to be exchanged.
 	 * @param price The price the exchange should be dealt.
 	 */
-	public Order(CoinPair pair, OrderType type, BigDecimal volume, BigDecimal price) {
+	public MbOrder(CoinPair pair, OrderType type, BigDecimal volume, BigDecimal price) {
 		this.price = price;
 		this.volume = volume;
 		this.pair = pair;
@@ -115,7 +120,7 @@ public class Order extends TapiBase implements Comparable<Order> {
 	/**
 	 * Constructor. Response from the Trade API, sent to the User.
 	 */
-	public Order(Long orderId, JsonObject jsonObject) {
+	public MbOrder(Long orderId, JsonObject jsonObject) {
 		this.orderId = orderId;
 		this.pair = CoinPair.valueOf(jsonObject.get("pair").asString().toUpperCase());
 		this.type = OrderType.valueOf(jsonObject.get("type").asString().toUpperCase());
@@ -140,7 +145,7 @@ public class Order extends TapiBase implements Comparable<Order> {
 	/**
 	 * Constructor. Response from the API, used by Orderbook.
 	 */
-	public Order(JsonArray jsonArray, CoinPair pair, OrderType type) {
+	public MbOrder(JsonArray jsonArray, CoinPair pair, OrderType type) {
 		this.price = new BigDecimal(jsonArray.get(0).toString());
 		this.volume = new BigDecimal(jsonArray.get(1).toString());
 		this.pair = pair;
@@ -202,8 +207,23 @@ public class Order extends TapiBase implements Comparable<Order> {
 		}
 	}
 
-	public int compareTo(Order another) {
+	public int compareTo(MbOrder another) {
 		return -1 * this.created.compareTo(another.created);
+	}
+
+	/**
+	 * Get the Parameters of the Object and return them as a list with the name and the value of each parameter.
+	 * 
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
+	 */
+	public JsonHashMap toParams() throws ApiProviderException {
+		JsonHashMap params = new JsonHashMap();
+		try {
+			params.putAll(ReflectionUtils.getParameters(this));
+		} catch (Throwable e) {
+			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
+		}
+		return params;
 	}
 	
 }

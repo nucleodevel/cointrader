@@ -7,14 +7,12 @@ import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
-import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
-import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
+import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
+import br.eti.claudiney.blinktrade.api.beans.BtSimpleOrder;
 import net.mercadobitcoin.tradeapi.to.Operation;
-import net.mercadobitcoin.tradeapi.to.Order;
+import net.mercadobitcoin.tradeapi.to.MbOrder;
 import net.trader.blinktrade.BlinktradeReport;
-import net.trader.exception.NetworkErrorException;
+import net.trader.exception.ApiProviderException;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
 import net.trader.exception.ParamValueErrorException;
@@ -133,7 +131,7 @@ public class Main {
 			// analise and make orders
 			if (!robot.getOperationMode().contains("b")) {
 				// get the unique buy order or null
-				OpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+				BtOpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				if (myBuyOrder != null)
 					report.cancelOrder(myBuyOrder);
@@ -144,7 +142,7 @@ public class Main {
 
 			if (!robot.getOperationMode().contains("s")) {
 				// get the unique buy order or null
-				OpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
+				BtOpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 				if (mySellOrder != null)
 					report.cancelOrder(mySellOrder);
@@ -155,15 +153,13 @@ public class Main {
 			
 			System.out.println("\n---- Finish reading: " + (new Date()));
 			
-		} catch (NetworkErrorException e) {
-			System.out.println("Network error: after 10 seconds, try again");
+		} catch (ApiProviderException e) {
+			System.out.println("API or Network error: after 10 seconds, try again");
 			try {
 				TimeUnit.SECONDS.sleep(10);
 			} catch (InterruptedException ex) {
 				ex.printStackTrace();
 			}
-		} catch (BlinktradeAPIException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -262,7 +258,7 @@ public class Main {
 			// analise and make orders
 			if (!robot.getOperationMode().contains("b")) {
 				// get the unique buy order or null
-				Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+				MbOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				if (myBuyOrder != null)
 					report.cancelOrder(myBuyOrder);
@@ -273,7 +269,7 @@ public class Main {
 
 			if (!robot.getOperationMode().contains("s")) {
 				// get the unique buy order or null
-				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
+				MbOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 				if (mySellOrder != null)
 					report.cancelOrder(mySellOrder);
@@ -284,10 +280,8 @@ public class Main {
 			
 			System.out.println("\n---- Finish reading: " + (new Date()));
 			
-		} catch (MercadoBitcoinException e) {
-			e.printStackTrace();
-		} catch (NetworkErrorException e) {
-			System.out.println("Network error: after 10 seconds, try again");
+		} catch (ApiProviderException e) {
+			System.out.println("API or Network error: after 10 seconds, try again");
 			try {
 				TimeUnit.SECONDS.sleep(10);
 			} catch (InterruptedException ex) {
@@ -306,7 +300,7 @@ public class Main {
 	}
 	
 	private static void makeBlinktradeBuyOrders(BlinktradeReport report) 
-		throws BlinktradeAPIException, Exception {		
+		throws ApiProviderException, Exception {		
 		
 		DecimalFormat decFmt = new DecimalFormat();
 		decFmt.setMaximumFractionDigits(8);
@@ -321,8 +315,8 @@ public class Main {
 		
 		for (int i = 0; i < report.getActiveBuyOrders().size(); i++) {
 			
-			SimpleOrder order = report.getActiveBuyOrders().get(i);
-			SimpleOrder nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
+			BtSimpleOrder order = report.getActiveBuyOrders().get(i);
+			BtSimpleOrder nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
 				null: report.getActiveBuyOrders().get(i + 1);
 			
 			boolean isAGoodBuyOrder =  
@@ -337,7 +331,7 @@ public class Main {
 				BigDecimal coin = new BigDecimal(coinDouble);
 				
 				// get the unique buy order or null
-				OpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+				BtOpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				
 				if (myBuyOrder != null) {
@@ -354,7 +348,7 @@ public class Main {
 						report.cancelOrder(myBuyOrder);
 					try {
 						if (coin.doubleValue() / 100000000 > robot.getMinimumCoinAmount()) {
-							report.createBuyOrder(currency, coin.toBigInteger());
+							report.createBuyOrder(currency, coin);
 							System.out.println(
 								"Buy order created: " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
@@ -404,8 +398,8 @@ public class Main {
 		
 		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
 			
-			SimpleOrder order = report.getActiveSellOrders().get(i);
-			SimpleOrder nextOrder = report.getActiveSellOrders().size() - 1 == i? 
+			BtSimpleOrder order = report.getActiveSellOrders().get(i);
+			BtSimpleOrder nextOrder = report.getActiveSellOrders().size() - 1 == i? 
 				null: report.getActiveSellOrders().get(i + 1);
 			
 			boolean isAGoodSellOrder = 
@@ -428,7 +422,7 @@ public class Main {
 				BigDecimal coin = report.getCoinAmount();
 				
 				// get the unique buy order or null
-				OpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
+				BtOpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 					
 				if (mySellOrder != null) {
@@ -445,7 +439,7 @@ public class Main {
 						report.cancelOrder(mySellOrder);
 					try {
 						if (coin.doubleValue() / 100000000 > robot.getMinimumCoinAmount()) {
-							report.createSellOrder(currency, coin.toBigInteger());
+							report.createSellOrder(currency, coin);
 							System.out.println(
 								"Sell order created: " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
@@ -481,7 +475,7 @@ public class Main {
 	}
 	
 	private static void makeMercadoBitcoinBuyOrders(MercadoBitcoinReport report) 
-		throws NumberFormatException, MercadoBitcoinException, NetworkErrorException {		
+		throws NumberFormatException, ApiProviderException {		
 		
 		System.out.println("");
 		System.out.println("Analising buy order");
@@ -500,8 +494,8 @@ public class Main {
 		
 		for (int i = 0; i < report.getActiveBuyOrders().size(); i++) {
 			
-			Order order = report.getActiveBuyOrders().get(i);
-			Order nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
+			MbOrder order = report.getActiveBuyOrders().get(i);
+			MbOrder nextOrder = report.getActiveBuyOrders().size() - 1 == i? 
 				null: report.getActiveBuyOrders().get(i + 1);
 			
 			boolean isAGoodBuyOrder =  
@@ -515,7 +509,7 @@ public class Main {
 				BigDecimal coin = new BigDecimal((totalCurrency.doubleValue() - 0.01) / currency.doubleValue());
 				
 				// get the unique buy order or null
-				Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+				MbOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				
 				// if my order isn't the best, delete it and create another 
@@ -527,7 +521,7 @@ public class Main {
 						report.cancelOrder(myBuyOrder);
 					try {
 						if (coin.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.createBuyOrder(coin, currency);
+							report.createBuyOrder(currency, coin);
 							System.out.println(
 								"Buy order created: " +
 								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
@@ -564,7 +558,7 @@ public class Main {
 	}
 		
 	private static void makeMercadoBitcoinSellOrders(MercadoBitcoinReport report) 
-		throws NumberFormatException, MercadoBitcoinException, NetworkErrorException {	
+		throws NumberFormatException, ApiProviderException {	
 		
 		System.out.println("");
 		System.out.println("Analising sell order");
@@ -582,8 +576,8 @@ public class Main {
 		
 		for (int i = 0; i < report.getActiveSellOrders().size(); i++) {
 			
-			Order order = report.getActiveSellOrders().get(i);
-			Order nextOrder = report.getActiveSellOrders().size() - 1 == i? 
+			MbOrder order = report.getActiveSellOrders().get(i);
+			MbOrder nextOrder = report.getActiveSellOrders().size() - 1 == i? 
 				null: report.getActiveSellOrders().get(i + 1);
 			
 			boolean isAGoodSellOrder = 
@@ -606,7 +600,7 @@ public class Main {
 				BigDecimal coin = totalCoin;
 				
 				// get the unique buy order or null
-				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
+				MbOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 					
 				// if my order isn't the best, delete it and create another 
@@ -618,7 +612,7 @@ public class Main {
 						report.cancelOrder(mySellOrder);
 					try {
 						if (coin.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.createSellOrder(coin, currency);
+							report.createSellOrder(currency, coin);
 							System.out.println(
 								"Sell order created: " +
 								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 

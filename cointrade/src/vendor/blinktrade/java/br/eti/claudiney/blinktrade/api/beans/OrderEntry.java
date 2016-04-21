@@ -13,7 +13,7 @@ import br.eti.claudiney.blinktrade.utils.Utils;
 public class OrderEntry implements Serializable {
 	
 	private JsonArray ordListGrp;
-	private List<OpenOrder> openOrders;
+	private List<BtOpenOrder> openOrders;
 	
 	
 	public OrderEntry(JsonArray ordListGrp) {
@@ -21,13 +21,13 @@ public class OrderEntry implements Serializable {
 		this.ordListGrp = ordListGrp;
 	}
 
-	public List<OpenOrder> getOpenOrders() {
+	public List<BtOpenOrder> getOpenOrders() {
 		if (openOrders == null) {
 		
 			if(ordListGrp != null) {
 				for (JsonElement o: ordListGrp) {
 					if (o != null) {
-						OpenOrder oo = new OpenOrder();
+						BtOpenOrder oo = new BtOpenOrder();
 						openOrders.add(oo);
 						JsonArray objArray = o.getAsJsonArray();
 						oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
@@ -58,9 +58,9 @@ public class OrderEntry implements Serializable {
 		
 	}
 	
-	public OpenOrder getFirstResult() {
+	public BtOpenOrder getFirstResult() {
 		
-		List<OpenOrder> l = getOpenOrders();
+		List<BtOpenOrder> l = getOpenOrders();
 		if(l.size() > 0) {
 			return l.get(0);
 		}
@@ -69,16 +69,16 @@ public class OrderEntry implements Serializable {
 		
 	}
 	
-	public OpenOrder getLastBuy() {
-		for (OpenOrder order: getOpenOrders())
+	public BtOpenOrder getLastBuy() {
+		for (BtOpenOrder order: getOpenOrders())
 			if (order.getSide().equals("1"))
 				return order;
 		
 		return null;
 	}
 	
-	public OpenOrder getLastSell() {
-		for (OpenOrder order: getOpenOrders())
+	public BtOpenOrder getLastSell() {
+		for (BtOpenOrder order: getOpenOrders())
 			if (order.getSide().equals("2"))
 				return order;
 		

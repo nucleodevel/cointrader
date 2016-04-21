@@ -3,17 +3,19 @@ package br.eti.claudiney.blinktrade.api.beans;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+import net.trader.beans.Order;
+
 @SuppressWarnings("serial")
-public class SimpleOrder implements Serializable {
+public class BtSimpleOrder extends Order implements Serializable {
 	
 	private BigDecimal currencyPrice;
 	private BigDecimal bitcoins;
 	private String clientID;
 	
-	public SimpleOrder() {
+	public BtSimpleOrder() {
 	}
 	
-	SimpleOrder(BigDecimal currencyPrice, BigDecimal bitcoins) {
+	BtSimpleOrder(BigDecimal currencyPrice, BigDecimal bitcoins) {
 		this.currencyPrice = currencyPrice;
 		this.bitcoins = bitcoins;
 	}

@@ -8,7 +8,7 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.math.BigDecimal;
 
-import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
+import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 
 import com.eclipsesource.json.JsonObject;
 

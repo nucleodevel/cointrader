@@ -1,29 +1,25 @@
 package net.trader.mercadobitcoin;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
-import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.tradeapi.service.ApiService;
 import net.mercadobitcoin.tradeapi.service.TradeApiService;
 import net.mercadobitcoin.tradeapi.to.AccountBalance;
 import net.mercadobitcoin.tradeapi.to.Operation;
-import net.mercadobitcoin.tradeapi.to.Order;
-import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
-import net.mercadobitcoin.tradeapi.to.Order.OrderStatus;
-import net.mercadobitcoin.tradeapi.to.Order.OrderType;
+import net.mercadobitcoin.tradeapi.to.MbOrder;
+import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Orderbook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
-import net.trader.exception.NetworkErrorException;
+import net.trader.beans.Order;
+import net.trader.exception.ApiProviderException;
 import net.trader.robot.RobotReport;
 import net.trader.robot.UserConfiguration;
 
@@ -42,20 +38,20 @@ public class MercadoBitcoinReport extends RobotReport {
 	private AccountBalance accountBalance;
 	private Orderbook orderbook;
 	
-	private List<Order> activeOrders;
-	private List<Order> activeBuyOrders;
-	private List<Order> activeSellOrders;
+	private List<MbOrder> activeOrders;
+	private List<MbOrder> activeBuyOrders;
+	private List<MbOrder> activeSellOrders;
 	private List<Operation> operations;
 	
-	private Order currentTopBuy;
-	private Order currentTopSell;
+	private MbOrder currentTopBuy;
+	private MbOrder currentTopSell;
 	
-	private List<Order> myOrders;
-	private static List<Order> myCanceledOrders;
-	private List<Order> myCompletedOrders;
-	private List<Order> myActiveOrders;
-	private List<Order> myActiveBuyOrders;
-	private List<Order> myActiveSellOrders;
+	private List<MbOrder> myOrders;
+	private static List<MbOrder> myCanceledOrders;
+	private List<MbOrder> myCompletedOrders;
+	private List<MbOrder> myActiveOrders;
+	private List<MbOrder> myActiveBuyOrders;
+	private List<MbOrder> myActiveSellOrders;
 	private List<Operation> myOperations;
 	
 	private Operation lastBuy;
@@ -73,13 +69,13 @@ public class MercadoBitcoinReport extends RobotReport {
 			CoinPair.BTC_BRL: null;
 	}
 
-	private ApiService getApiService() throws MercadoBitcoinException {
+	private ApiService getApiService() throws ApiProviderException {
 		if (apiService == null)
 			apiService = new ApiService();
 		return apiService;
 	}
 	
-	private TradeApiService getTradeApiService() throws MercadoBitcoinException {
+	private TradeApiService getTradeApiService() throws ApiProviderException {
 		if (tradeApiService == null)
 			tradeApiService = new TradeApiService(
 				getUserConfiguration().getSecret(), getUserConfiguration().getKey()
@@ -87,19 +83,19 @@ public class MercadoBitcoinReport extends RobotReport {
 		return tradeApiService;
 	}
 
-	public Ticker getTicker24h() throws MercadoBitcoinException {
+	public Ticker getTicker24h() throws ApiProviderException {
 		if (ticker24h == null)
 			ticker24h = getApiService().ticker24h(getCoinPair());
 		return ticker24h;
 	}
 	
-	public AccountBalance getAccountBalance() throws MercadoBitcoinException, NetworkErrorException {
+	public AccountBalance getAccountBalance() throws ApiProviderException {
 		if (accountBalance == null)
 			accountBalance = getTradeApiService().getAccountInfo();
 		return accountBalance;
 	}
 	
-	public BigDecimal getCurrencyAmount() throws MercadoBitcoinException, NetworkErrorException {
+	public BigDecimal getCurrencyAmount() throws ApiProviderException {
 		BigDecimal currencyAmount;
 		if (getCurrency().equals("BRL"))
 			currencyAmount = getAccountBalance().getFunds().getBrlWithOpenOrders();
@@ -108,7 +104,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return currencyAmount;
 	}
 	
-	public BigDecimal getCoinAmount() throws MercadoBitcoinException, NetworkErrorException {
+	public BigDecimal getCoinAmount() throws ApiProviderException {
 		BigDecimal coinAmount;
 		if (getCoin().equals("BTC"))
 			coinAmount = getAccountBalance().getFunds().getBtcWithOpenOrders();
@@ -119,15 +115,15 @@ public class MercadoBitcoinReport extends RobotReport {
 		return coinAmount;
 	}
 
-	public Orderbook getOrderbook() throws MercadoBitcoinException {
+	public Orderbook getOrderbook() throws ApiProviderException {
 		if (orderbook == null)
 			orderbook = getApiService().orderbook(getCoinPair());
 		return orderbook;
 	}
 
-	public List<Order> getActiveOrders() throws MercadoBitcoinException {
+	public List<MbOrder> getActiveOrders() throws ApiProviderException {
 		if (activeOrders == null) {
-			activeOrders = new ArrayList<Order>();
+			activeOrders = new ArrayList<MbOrder>();
 			activeOrders.addAll(getActiveBuyOrders());
 			activeOrders.addAll(getActiveSellOrders());
 			Collections.sort(activeOrders);
@@ -135,21 +131,21 @@ public class MercadoBitcoinReport extends RobotReport {
 		return activeOrders;
 	}
 
-	public List<Order> getActiveBuyOrders() throws MercadoBitcoinException {
+	public List<MbOrder> getActiveBuyOrders() throws ApiProviderException {
 		if (activeBuyOrders == null) {
-			activeBuyOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getBids()));
+			activeBuyOrders = new ArrayList<MbOrder>(Arrays.asList(getOrderbook().getBids()));
 		}
 		return activeBuyOrders;
 	}
 
-	public List<Order> getActiveSellOrders() throws MercadoBitcoinException {
+	public List<MbOrder> getActiveSellOrders() throws ApiProviderException {
 		if (activeSellOrders == null) {
-			activeSellOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getAsks()));
+			activeSellOrders = new ArrayList<MbOrder>(Arrays.asList(getOrderbook().getAsks()));
 		}
 		return activeSellOrders;
 	}
 
-	public List<Operation> getOperations() throws MercadoBitcoinException {
+	public List<Operation> getOperations() throws ApiProviderException {
 		if (operations == null) {
 			Operation[] operationArray = getApiService().tradeList(getCoinPair());
 			operations = new ArrayList<Operation>(Arrays.asList(operationArray));
@@ -158,23 +154,23 @@ public class MercadoBitcoinReport extends RobotReport {
 		return operations;
 	}
 
-	public Order getCurrentTopBuy() throws MercadoBitcoinException {
+	public MbOrder getCurrentTopBuy() throws ApiProviderException {
 		if (currentTopBuy == null)
 			currentTopBuy = getActiveBuyOrders().get(0);
 		return currentTopBuy;
 	}
 
-	public Order getCurrentTopSell() throws MercadoBitcoinException {
+	public MbOrder getCurrentTopSell() throws ApiProviderException {
 		if (currentTopSell == null)
 			currentTopSell = getActiveSellOrders().get(0);
 		return currentTopSell;
 	}
 
-	public List<Order> getMyOrders() throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> getMyOrders() throws ApiProviderException {
 		if (myOrders == null) {
 			if (myCanceledOrders == null)
 				System.out.println("The first reading can take a lot of seconds. Please wait!");
-			myOrders = new ArrayList<Order>();
+			myOrders = new ArrayList<MbOrder>();
 			myOrders.addAll(getMyActiveOrders());
 			myOrders.addAll(getMyCompletedOrders());
 			myOrders.addAll(getMyCanceledOrders());
@@ -183,20 +179,20 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myOrders;
 	}
 	
-	public List<Order> getMyCanceledOrders() throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> getMyCanceledOrders() throws ApiProviderException {
 		long now = (new Date()).getTime() / 1000;
 		
 		OrderFilter orderFilter = new OrderFilter(getCoinPair());
 		orderFilter.setStatus(OrderStatus.CANCELED);
 		
 		if (myCanceledOrders == null) {
-			myCanceledOrders = new ArrayList<Order>();
+			myCanceledOrders = new ArrayList<MbOrder>();
 			
 			for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
 				orderFilter.setSince(time - intervalToReadMyCanceledOrders);
 				orderFilter.setEnd(time - 1);
-				List<Order> orders = getTradeApiService().listOrders(orderFilter);
-				for (Order order: orders) {
+				List<MbOrder> orders = getTradeApiService().listOrders(orderFilter);
+				for (MbOrder order: orders) {
 					if (order.getOperations() != null && order.getOperations().size() > 0)
 						myCanceledOrders.add(order);
 				}
@@ -207,9 +203,9 @@ public class MercadoBitcoinReport extends RobotReport {
 			orderFilter.setSince(lastTimeByReadingMyCanceledOrders + 1);
 			orderFilter.setEnd(now);
 			
-			List<Order> orders = getTradeApiService().listOrders(orderFilter);
+			List<MbOrder> orders = getTradeApiService().listOrders(orderFilter);
 			int i = 0;
-			for (Order order: orders) {
+			for (MbOrder order: orders) {
 				if (order.getOperations() != null && order.getOperations().size() > 0) {
 					myCanceledOrders.add(i, order);
 					i++;
@@ -221,7 +217,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myCanceledOrders;
 	}
 
-	public List<Order> getMyCompletedOrders() throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> getMyCompletedOrders() throws ApiProviderException {
 		if (myCompletedOrders == null) {
 			
 			// lê uma semana de ordens completas
@@ -238,7 +234,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myCompletedOrders;
 	}
 
-	public List<Order> getMyActiveOrders() throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> getMyActiveOrders() throws ApiProviderException {
 		if (myActiveOrders == null) {
 			OrderFilter orderFilter = new OrderFilter(getCoinPair());			
 			orderFilter.setStatus(OrderStatus.ACTIVE);
@@ -248,30 +244,30 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myActiveOrders;
 	}
 
-	public List<Order> getMyActiveBuyOrders() throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> getMyActiveBuyOrders() throws ApiProviderException {
 		if (myActiveBuyOrders == null) {
-			myActiveBuyOrders = new ArrayList<Order>();
-			for (Order order: getMyActiveOrders())
+			myActiveBuyOrders = new ArrayList<MbOrder>();
+			for (MbOrder order: getMyActiveOrders())
 				if (order.getType() == OrderType.BUY)
 					myActiveBuyOrders.add(order);
 		}
 		return myActiveBuyOrders;
 	}
 
-	public List<Order> getMyActiveSellOrders() throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> getMyActiveSellOrders() throws ApiProviderException {
 		if (myActiveSellOrders == null) {
-			myActiveSellOrders = new ArrayList<Order>();
-			for (Order order: getMyActiveOrders())
+			myActiveSellOrders = new ArrayList<MbOrder>();
+			for (MbOrder order: getMyActiveOrders())
 				if (order.getType() == OrderType.SELL)
 					myActiveSellOrders.add(order);
 		}
 		return myActiveSellOrders;
 	}
 
-	public List<Operation> getMyOperations() throws MercadoBitcoinException, NetworkErrorException {
+	public List<Operation> getMyOperations() throws ApiProviderException {
 		if (myOperations == null) {
 			myOperations = new ArrayList<Operation>();
-			for (Order order: getMyOrders())
+			for (MbOrder order: getMyOrders())
 				if (order.getOperations() != null)
 					for (Operation operation: order.getOperations()) {
 						operation.setType(order.getType());
@@ -281,7 +277,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myOperations;
 	}
 
-	public Operation getLastBuy() throws MercadoBitcoinException, NetworkErrorException {
+	public Operation getLastBuy() throws ApiProviderException {
 		if (lastBuy == null) {
 			lastBuy = null;
 			for (Operation operation: getMyOperations()) {
@@ -294,7 +290,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return lastBuy;
 	}
 	
-	public Operation getLastSell() throws MercadoBitcoinException, NetworkErrorException {
+	public Operation getLastSell() throws ApiProviderException {
 		if (lastSell == null) {
 			lastSell = null;
 			for (Operation operation: getMyOperations()) {
@@ -307,7 +303,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return lastSell;
 	}
 	
-	public BigDecimal getLastRelevantBuyPrice() throws MercadoBitcoinException, NetworkErrorException {
+	public BigDecimal getLastRelevantBuyPrice() throws ApiProviderException {
 		if (lastRelevantBuyPrice == null) {
 			
 			lastRelevantBuyPrice = new BigDecimal(0);
@@ -354,7 +350,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return lastRelevantBuyPrice;
 	}
 	
-	public BigDecimal getLastRelevantSellPrice() throws MercadoBitcoinException, NetworkErrorException {
+	public BigDecimal getLastRelevantSellPrice() throws ApiProviderException {
 		if (lastRelevantSellPrice == null) {
 			
 			lastRelevantSellPrice = new BigDecimal(0);
@@ -362,10 +358,10 @@ public class MercadoBitcoinReport extends RobotReport {
 			double sumOfCoin = 0;
 			double sumOfNumerators = 0;
 			
-			List<Order> groupOfOrders = new ArrayList<Order>();
+			List<MbOrder> groupOfOrders = new ArrayList<MbOrder>();
 			
 			for (int i = 0; i < numOfConsideredOrdersForLastRelevantSellPrice; i++) {
-				Order order = getActiveSellOrders().get(i);				
+				MbOrder order = getActiveSellOrders().get(i);				
 				sumOfCoin +=  order.getVolume().doubleValue();
 				sumOfNumerators += 
 					order.getVolume().doubleValue() * order.getPrice().doubleValue();
@@ -382,24 +378,27 @@ public class MercadoBitcoinReport extends RobotReport {
 			System.out.println("  Considered sell orders: " + groupOfOrders.size());
 			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
 			System.out.println("  Considered orders: ");
-			for (Order order: groupOfOrders)
+			for (MbOrder order: groupOfOrders)
 				System.out.print("    " + order); 
 			System.out.println("");
 		}
 		return lastRelevantSellPrice;
 	}
 	
-	public void cancelOrder(Order order) throws MercadoBitcoinException, NetworkErrorException {
-		getTradeApiService().cancelOrder(order);
+	@Override
+	public void cancelOrder(Order order) throws ApiProviderException {
+		getTradeApiService().cancelOrder((MbOrder) order);
 	}
-
-	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws MercadoBitcoinException, NetworkErrorException {
+	
+	@Override
+	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
 		getTradeApiService().createBuyOrder(
 			getCoinPair(), coin.toString(), currency.toString()
 		);
 	}
 
-	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws MercadoBitcoinException, NetworkErrorException {
+	@Override
+	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
 		getTradeApiService().createSellOrder(
 			getCoinPair(), coin.toString(), currency.toString()
 		);

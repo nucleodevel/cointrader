@@ -8,8 +8,8 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.util.Arrays;
 
-import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
-import net.mercadobitcoin.tradeapi.to.Order.OrderType;
+import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -18,8 +18,8 @@ import com.eclipsesource.json.JsonObject;
  * Mercado Bitcoin order book, contains open Orders, 'asks' for SELL orders and 'bids' for BUY orders.
  */
 public class Orderbook {
-	private Order[] asks;
-	private Order[] bids;
+	private MbOrder[] asks;
+	private MbOrder[] bids;
 	
 	/**
 	 * Constructor based on JSON response.
@@ -29,23 +29,23 @@ public class Orderbook {
 	 */
 	public Orderbook(JsonObject jsonObject, CoinPair pair) {
 		JsonArray asking = jsonObject.get("asks").asArray();
-		asks = new Order[asking.size()];
+		asks = new MbOrder[asking.size()];
 		for (int i = 0; i < asking.size(); i++) {
-			asks[i] = new Order(asking.get(i).asArray(), pair, OrderType.SELL);
+			asks[i] = new MbOrder(asking.get(i).asArray(), pair, OrderType.SELL);
 		}
 		
 		JsonArray bidding = jsonObject.get("bids").asArray();
-		bids = new Order[bidding.size()];
+		bids = new MbOrder[bidding.size()];
 		for (int i = 0; i < bidding.size(); i++) {
-			bids[i] = new Order(bidding.get(i).asArray(), pair, OrderType.BUY);
+			bids[i] = new MbOrder(bidding.get(i).asArray(), pair, OrderType.BUY);
 		}
 	}
 
-	public Order[] getAsks() {
+	public MbOrder[] getAsks() {
 		return asks;
 	}
 
-	public Order[] getBids() {
+	public MbOrder[] getBids() {
 		return bids;
 	}
 

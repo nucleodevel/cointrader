@@ -1,5 +1,10 @@
 package net.trader.robot;
 
+import java.math.BigDecimal;
+
+import net.trader.beans.Order;
+import net.trader.exception.ApiProviderException;
+
 public abstract class RobotReport {
 	
 	private UserConfiguration userConfiguration;
@@ -35,5 +40,11 @@ public abstract class RobotReport {
 	public void setCoin(String coin) {
 		this.coin = coin;
 	}
+	
+	public abstract void cancelOrder(Order order) throws ApiProviderException;
+
+	public abstract void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException;
+
+	public abstract void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException;
 
 }

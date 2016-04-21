@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
-import net.mercadobitcoin.tradeapi.to.Order.OrderType;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 
 import com.eclipsesource.json.JsonObject;
 

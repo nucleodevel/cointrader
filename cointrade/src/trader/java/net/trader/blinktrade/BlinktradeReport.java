@@ -1,14 +1,12 @@
 package net.trader.blinktrade;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
-import net.mercadobitcoin.tradeapi.to.Order;
-import net.trader.exception.NetworkErrorException;
+import net.trader.beans.Order;
+import net.trader.exception.ApiProviderException;
 import net.trader.robot.RobotReport;
 import net.trader.robot.UserConfiguration;
 
@@ -22,14 +20,13 @@ import br.eti.claudiney.blinktrade.api.beans.Ask;
 import br.eti.claudiney.blinktrade.api.beans.Balance;
 import br.eti.claudiney.blinktrade.api.beans.Bid;
 import br.eti.claudiney.blinktrade.api.beans.BlinktradeCurrency;
-import br.eti.claudiney.blinktrade.api.beans.OpenOrder;
+import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
-import br.eti.claudiney.blinktrade.api.beans.SimpleOrder;
+import br.eti.claudiney.blinktrade.api.beans.BtSimpleOrder;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
-import br.eti.claudiney.blinktrade.exception.BlinktradeAPIException;
 import br.eti.claudiney.blinktrade.utils.Utils;
 
 public class BlinktradeReport extends RobotReport {
@@ -44,15 +41,15 @@ public class BlinktradeReport extends RobotReport {
 	private List<Bid> activeBuyOrders;
 	private List<Ask> activeSellOrders;
 	
-	private SimpleOrder currentTopBuy;
-	private SimpleOrder currentTopSell;
+	private BtSimpleOrder currentTopBuy;
+	private BtSimpleOrder currentTopSell;
 
-	private List<OpenOrder> myActiveOrders;
-	private List<OpenOrder> myActiveBuyOrders;
-	private List<OpenOrder> myActiveSellOrders;
+	private List<BtOpenOrder> myActiveOrders;
+	private List<BtOpenOrder> myActiveBuyOrders;
+	private List<BtOpenOrder> myActiveSellOrders;
 	
-	private List<OpenOrder> openOrders;
-	private List<OpenOrder> completedOrders;
+	private List<BtOpenOrder> openOrders;
+	private List<BtOpenOrder> completedOrders;
 	
 	private BigDecimal lastRelevantBuyPrice;
 	private BigDecimal lastRelevantSellPrice;
@@ -66,7 +63,7 @@ public class BlinktradeReport extends RobotReport {
 			BlinktradeSymbol.BTCBRL: null;
 	}
 	
-	private BlinktradeAPI getApi() throws BlinktradeAPIException {
+	private BlinktradeAPI getApi() throws ApiProviderException {
 		if (api == null) {
 			BlinktradeBroker broker = getUserConfiguration().getBroker().equals("Foxbit")?
 				BlinktradeBroker.FOXBIT: null;
@@ -78,7 +75,7 @@ public class BlinktradeReport extends RobotReport {
 		return api;
 	}
 	
-	public Balance getBalance() throws BlinktradeAPIException, Exception {
+	public Balance getBalance() throws ApiProviderException, Exception {
 		if (balance == null) {
 			balance = new Balance();
 			String response = getApi().getBalance(new Integer((int)(System.currentTimeMillis()/1000)));
@@ -96,11 +93,11 @@ public class BlinktradeReport extends RobotReport {
 		return balance;
 	}
 	
-	public BigDecimal getCurrencyAmount() throws BlinktradeAPIException, Exception {
+	public BigDecimal getCurrencyAmount() throws ApiProviderException, Exception {
 		return getBalance().getCurrencyAmount();
 	}
 	
-	public BigDecimal getCoinAmount() throws BlinktradeAPIException, Exception {
+	public BigDecimal getCoinAmount() throws ApiProviderException, Exception {
 		BigDecimal coinAmount;
 		if (getCoin().equals("BTC"))
 			coinAmount = new BigDecimal(getBalance().getBtcAmount().doubleValue());
@@ -109,49 +106,49 @@ public class BlinktradeReport extends RobotReport {
 		return coinAmount;
 	}
 	
-	public OrderBookResponse getOrderBook() throws BlinktradeAPIException {
+	public OrderBookResponse getOrderBook() throws ApiProviderException {
 		if (orderBook == null)
 			orderBook = getApi().getOrderBook();
 		return orderBook;
 	}
 
-	public List<Bid> getActiveBuyOrders() throws BlinktradeAPIException {
+	public List<Bid> getActiveBuyOrders() throws ApiProviderException {
 		if (activeBuyOrders == null) {
 			activeBuyOrders = getOrderBook().getBids();
 		}
 		return activeBuyOrders;
 	}
 
-	public List<Ask> getActiveSellOrders() throws BlinktradeAPIException {
+	public List<Ask> getActiveSellOrders() throws ApiProviderException {
 		if (activeSellOrders == null) {
 			activeSellOrders = getOrderBook().getAsks();
 		}
 		return activeSellOrders;
 	}
 
-	public SimpleOrder getCurrentTopBuy() throws BlinktradeAPIException {
+	public BtSimpleOrder getCurrentTopBuy() throws ApiProviderException {
 		if (currentTopBuy == null)
 			currentTopBuy = getActiveBuyOrders().get(0);
 		return currentTopBuy;
 	}
 
-	public SimpleOrder getCurrentTopSell() throws BlinktradeAPIException {
+	public BtSimpleOrder getCurrentTopSell() throws ApiProviderException {
 		if (currentTopSell == null)
 			currentTopSell = getActiveSellOrders().get(0);
 		return currentTopSell;
 	}
 
-	public List<OpenOrder> getOpenOrders() throws BlinktradeAPIException {
+	public List<BtOpenOrder> getOpenOrders() throws ApiProviderException {
 		if (openOrders == null) {
 			String response = getApi().requestOpenOrders(new Integer((int)(System.currentTimeMillis()/1000)));
 			JsonParser jsonParser = new JsonParser();
 			JsonObject jo = (JsonObject) jsonParser.parse(response);
 			JsonArray openOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
-			openOrders = new ArrayList<OpenOrder>();
+			openOrders = new ArrayList<BtOpenOrder>();
 			if(openOrdListGrp != null) {
 				for (JsonElement o: openOrdListGrp) {
 					if (o != null) {
-						OpenOrder oo = new OpenOrder();
+						BtOpenOrder oo = new BtOpenOrder();
 						openOrders.add(oo);
 						JsonArray objArray = o.getAsJsonArray();
 						oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
@@ -182,17 +179,17 @@ public class BlinktradeReport extends RobotReport {
 		
 	}
 
-	public List<OpenOrder> getCompletedOrders() throws BlinktradeAPIException {
+	public List<BtOpenOrder> getCompletedOrders() throws ApiProviderException {
 		if (completedOrders == null) {
 			String response = getApi().requestCompletedOrders(new Integer((int)(System.currentTimeMillis()/1000)));
 			JsonParser jsonParser = new JsonParser();
 			JsonObject jo = (JsonObject) jsonParser.parse(response);
 			JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
-			completedOrders = new ArrayList<OpenOrder>();
+			completedOrders = new ArrayList<BtOpenOrder>();
 			if(completedOrdListGrp != null) {
 				for (JsonElement o: completedOrdListGrp) {
 					if (o != null) {
-						OpenOrder oo = new OpenOrder();
+						BtOpenOrder oo = new BtOpenOrder();
 						completedOrders.add(oo);
 						JsonArray objArray = o.getAsJsonArray();
 						oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
@@ -223,40 +220,40 @@ public class BlinktradeReport extends RobotReport {
 		
 	}
 	
-	public OpenOrder getLastBuy() throws BlinktradeAPIException {
-		for (OpenOrder order: getCompletedOrders())
+	public BtOpenOrder getLastBuy() throws ApiProviderException {
+		for (BtOpenOrder order: getCompletedOrders())
 			if (order.getSide().equals("1"))
 				return order;
 		
 		return null;
 	}
 	
-	public OpenOrder getLastSell() throws BlinktradeAPIException {
-		for (OpenOrder order: getCompletedOrders())
+	public BtOpenOrder getLastSell() throws ApiProviderException {
+		for (BtOpenOrder order: getCompletedOrders())
 			if (order.getSide().equals("2"))
 				return order;
 		
 		return null;
 	}
 	
-	public BigDecimal getLastRelevantBuyPrice() throws BlinktradeAPIException, Exception {
+	public BigDecimal getLastRelevantBuyPrice() throws ApiProviderException, Exception {
 		if (lastRelevantBuyPrice == null) {
 			
 			lastRelevantBuyPrice = new BigDecimal(0);
 			
 			double coinWithOpenOrders = getCoinAmount().doubleValue();
 			
-			List<OpenOrder> groupOfOperations = new ArrayList<OpenOrder>(); 
+			List<BtOpenOrder> groupOfOperations = new ArrayList<BtOpenOrder>(); 
 			double sumOfCoin = 0;
 			
-			for (OpenOrder operation: getCompletedOrders()) {
+			for (BtOpenOrder operation: getCompletedOrders()) {
 				if (operation.getSide().equals("1")) {
 					if (sumOfCoin + operation.getCumQty().doubleValue() <= coinWithOpenOrders) {
 						sumOfCoin += operation.getCumQty().doubleValue();
 						groupOfOperations.add(operation);
 					}
 					else {
-						OpenOrder newOperation = new OpenOrder(operation);
+						BtOpenOrder newOperation = new BtOpenOrder(operation);
 						newOperation.setCumQty(new BigDecimal(coinWithOpenOrders - sumOfCoin));
 						groupOfOperations.add(newOperation);
 						sumOfCoin += coinWithOpenOrders - sumOfCoin;
@@ -265,7 +262,7 @@ public class BlinktradeReport extends RobotReport {
 				}
 			}
 			if (sumOfCoin != 0) {
-				for (OpenOrder operation: groupOfOperations) {
+				for (BtOpenOrder operation: groupOfOperations) {
 					lastRelevantBuyPrice = new BigDecimal(
 						lastRelevantBuyPrice.doubleValue() +	
 						(operation.getCumQty().doubleValue() * 
@@ -279,14 +276,14 @@ public class BlinktradeReport extends RobotReport {
 			System.out.println("  Considered buy operations: " + groupOfOperations.size());
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
-			for (OpenOrder operation: groupOfOperations)
+			for (BtOpenOrder operation: groupOfOperations)
 				System.out.println("    " + operation.toDisplayString()); 
 			System.out.println("");
 		}
 		return lastRelevantBuyPrice;
 	}
 	
-	public BigDecimal getLastRelevantSellPrice() throws BlinktradeAPIException {
+	public BigDecimal getLastRelevantSellPrice() throws ApiProviderException {
 		if (lastRelevantSellPrice == null) {
 			
 			lastRelevantSellPrice = new BigDecimal(0);
@@ -294,10 +291,10 @@ public class BlinktradeReport extends RobotReport {
 			double sumOfCoin = 0;
 			double sumOfNumerators = 0;
 			
-			List<SimpleOrder> groupOfOrders = new ArrayList<SimpleOrder>();
+			List<BtSimpleOrder> groupOfOrders = new ArrayList<BtSimpleOrder>();
 			
 			for (int i = 0; i < numOfConsideredOrdersForLastRelevantSellPrice; i++) {
-				SimpleOrder order = getActiveSellOrders().get(i);				
+				BtSimpleOrder order = getActiveSellOrders().get(i);				
 				sumOfCoin +=  order.getBitcoins().doubleValue();
 				sumOfNumerators += 
 					order.getBitcoins().doubleValue() * order.getCurrencyPrice().doubleValue();
@@ -314,61 +311,64 @@ public class BlinktradeReport extends RobotReport {
 			System.out.println("  Considered sell orders: " + groupOfOrders.size());
 			System.out.println("  Last relevant sell price: " + lastRelevantSellPrice);
 			System.out.println("  Considered orders: ");
-			for (SimpleOrder order: groupOfOrders)
+			for (BtSimpleOrder order: groupOfOrders)
 				System.out.println("    " + order); 
 			System.out.println("");
 		}
 		return lastRelevantSellPrice;
 	}
 
-	public List<OpenOrder> getMyActiveOrders() throws BlinktradeAPIException {
+	public List<BtOpenOrder> getMyActiveOrders() throws ApiProviderException {
 		if (myActiveOrders == null) {
 			myActiveOrders = getOpenOrders();
 		}
 		return myActiveOrders;
 	}
 
-	public List<OpenOrder> getMyActiveBuyOrders() throws BlinktradeAPIException {
+	public List<BtOpenOrder> getMyActiveBuyOrders() throws ApiProviderException {
 		if (myActiveBuyOrders == null) {
-			myActiveBuyOrders = new ArrayList<OpenOrder>();
-			for (OpenOrder order: getMyActiveOrders())
+			myActiveBuyOrders = new ArrayList<BtOpenOrder>();
+			for (BtOpenOrder order: getMyActiveOrders())
 				if (order.getSide().equals("1"))
 					myActiveBuyOrders.add(order);
 		}
 		return myActiveBuyOrders;
 	}
 
-	public List<OpenOrder> getMyActiveSellOrders() throws BlinktradeAPIException {
+	public List<BtOpenOrder> getMyActiveSellOrders() throws ApiProviderException {
 		if (myActiveSellOrders == null) {
-			myActiveSellOrders = new ArrayList<OpenOrder>();
-			for (OpenOrder order: getMyActiveOrders())
+			myActiveSellOrders = new ArrayList<BtOpenOrder>();
+			for (BtOpenOrder order: getMyActiveOrders())
 				if (order.getSide().equals("2"))
 					myActiveSellOrders.add(order);
 		}
 		return myActiveSellOrders;
 	}
 	
-	public void cancelOrder(OpenOrder order) throws BlinktradeAPIException {
-		getApi().cancelOrder(order);
+	@Override
+	public void cancelOrder(Order order) throws ApiProviderException {
+		getApi().cancelOrder((BtOpenOrder) order);
 	}
-
-	public void createBuyOrder(BigDecimal currency, BigInteger coin) throws BlinktradeAPIException {
+	
+	@Override
+	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
 		getApi().sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
 			getCoinPair(),
 			BlinktradeOrderSide.BUY,
 			BlinktradeOrderType.LIMITED,
-			currency, coin
+			currency, coin.toBigInteger()
 		);
 	}
-
-	public void createSellOrder(BigDecimal currency, BigInteger coin) throws BlinktradeAPIException {
+	
+	@Override
+	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
 		getApi().sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
 			getCoinPair(),
 			BlinktradeOrderSide.SELL,
 			BlinktradeOrderType.LIMITED,
-			currency, coin
+			currency, coin.toBigInteger()
 		);
 	}
 

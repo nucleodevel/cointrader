@@ -8,9 +8,9 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.io.Serializable;
 
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.util.JsonHashMap;
 import net.mercadobitcoin.util.ReflectionUtils;
+import net.trader.exception.ApiProviderException;
 
 public abstract class TapiBase implements Serializable {
 
@@ -19,14 +19,14 @@ public abstract class TapiBase implements Serializable {
 	/**
 	 * Get the Parameters of the Object and return them as a list with the name and the value of each parameter.
 	 * 
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public JsonHashMap toParams() throws MercadoBitcoinException {
+	public JsonHashMap toParams() throws ApiProviderException {
 		JsonHashMap params = new JsonHashMap();
 		try {
 			params.putAll(ReflectionUtils.getParameters(this));
 		} catch (Throwable e) {
-			throw new MercadoBitcoinException("Internal error: Unable to transform the parameters in a request.");
+			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
 		}
 		return params;
 	}

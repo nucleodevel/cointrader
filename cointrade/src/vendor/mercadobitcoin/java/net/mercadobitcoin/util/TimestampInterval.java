@@ -9,7 +9,7 @@ package net.mercadobitcoin.util;
 import java.io.Serializable;
 import java.util.Date;
 
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
+import net.trader.exception.ApiProviderException;
 
 public class TimestampInterval implements Serializable {
 	
@@ -26,9 +26,9 @@ public class TimestampInterval implements Serializable {
 	 * Creates an interval with only initial date.
 	 * @param fromDate Initial date
 	 */
-	public TimestampInterval(Date fromDate) throws MercadoBitcoinException {
+	public TimestampInterval(Date fromDate) throws ApiProviderException {
 		if (fromDate == null) {
-			throw new MercadoBitcoinException("Date cannot be null");
+			throw new ApiProviderException("Date cannot be null");
 		}
 		this.fromTimestamp = fromDate.getTime();
 	}
@@ -38,13 +38,13 @@ public class TimestampInterval implements Serializable {
 	 * @param fromTimestamp Initial date
 	 * @param toTimestamp Final date
 	 */
-	public TimestampInterval(long fromTimestamp, long toTimestamp) throws MercadoBitcoinException {
+	public TimestampInterval(long fromTimestamp, long toTimestamp) throws ApiProviderException {
 		if ((fromTimestamp < 0L) || (toTimestamp < 0L)) {
-			throw new MercadoBitcoinException("Values must be greater than zero.");
+			throw new ApiProviderException("Values must be greater than zero.");
 		}
 		
 		if (fromTimestamp > toTimestamp) {
-			throw new MercadoBitcoinException("Initial timestamp must be before final timestamp");
+			throw new ApiProviderException("Initial timestamp must be before final timestamp");
 		}
 
 		this.fromTimestamp = fromTimestamp;
@@ -56,16 +56,16 @@ public class TimestampInterval implements Serializable {
 	 * @param fromDate Initial date
 	 * @param toDate Final date
 	 */
-	public TimestampInterval(Date fromDate, Date toDate) throws MercadoBitcoinException {
+	public TimestampInterval(Date fromDate, Date toDate) throws ApiProviderException {
 		if (fromDate == null || toDate == null) {
-			throw new MercadoBitcoinException("Date cannot be null");
+			throw new ApiProviderException("Date cannot be null");
 		}
 
 		this.fromTimestamp = fromDate.getTime();
 		this.toTimestamp = toDate.getTime();
 
 		if (fromDate.after(toDate)) {
-			throw new MercadoBitcoinException("Initial date must be before final date");
+			throw new ApiProviderException("Initial date must be before final date");
 		}
 	}
 

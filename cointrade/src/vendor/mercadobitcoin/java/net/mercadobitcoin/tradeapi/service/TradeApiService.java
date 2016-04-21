@@ -24,15 +24,14 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
 
-import net.mercadobitcoin.common.exception.MercadoBitcoinException;
 import net.mercadobitcoin.tradeapi.to.AccountBalance;
-import net.mercadobitcoin.tradeapi.to.Order;
-import net.mercadobitcoin.tradeapi.to.Order.CoinPair;
-import net.mercadobitcoin.tradeapi.to.Order.OrderType;
+import net.mercadobitcoin.tradeapi.to.MbOrder;
+import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
+import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Withdrawal;
 import net.mercadobitcoin.util.JsonHashMap;
-import net.trader.exception.NetworkErrorException;
+import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -71,17 +70,18 @@ public class TradeApiService extends AbstractApiService {
 	 * 
 	 * @param mbTapiCode Personal code given by Mercado Bitcoin to have access to the Trade API.
 	 * @param mbTapiKey Personal key given by Mercado Bitcoin to have access to the Trade API.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException 
+	 * @throws Exception 
 	 */
-	public TradeApiService(String mbTapiCode, String mbTapiKey) throws MercadoBitcoinException {
+	public TradeApiService(String mbTapiCode, String mbTapiKey) throws ApiProviderException {
 		super();
 		
 		if (mbTapiCode == null) {
-			throw new MercadoBitcoinException("Null code.");
+			throw new ApiProviderException("Null code.");
 		}
 		
 		if (mbTapiKey == null) {
-			throw new MercadoBitcoinException("Null key.");
+			throw new ApiProviderException("Null key.");
 		}
 		
 		this.mbTapiCodeBytes = mbTapiCode.getBytes();
@@ -99,10 +99,10 @@ public class TradeApiService extends AbstractApiService {
 	 * Also 'server time' to ease API sync and avoid Time Zone misinterpretation.
 	 * 
 	 * @return An AccountBalance object containing the user's account information.
-	 * @throws MercadoBitcoinException Generic exception to point the cause of any possible problem with the execution.
+	 * @throws ApiProviderException Generic exception to point the cause of any possible problem with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public AccountBalance getAccountInfo() throws MercadoBitcoinException, NetworkErrorException {
+	public AccountBalance getAccountInfo() throws ApiProviderException {
 		JsonObject jsonResponse = makeRequest(RequestMethod.GET_INFO.value);
 		AccountBalance response = new AccountBalance(jsonResponse);
 		return response;		
@@ -120,31 +120,31 @@ public class TradeApiService extends AbstractApiService {
 	 * 
 	 * @param filter OrderFilter object with the set parameters to make a request to the server.
 	 * @return List of Orders requested by the user.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public List<Order> listOrders(OrderFilter filter) throws MercadoBitcoinException, NetworkErrorException {
+	public List<MbOrder> listOrders(OrderFilter filter) throws ApiProviderException {
 		if (filter == null) {
-			throw new MercadoBitcoinException("Invalid filter.");
+			throw new ApiProviderException("Invalid filter.");
 		}
 		JsonObject jsonResponse = makeRequest(filter.toParams(), RequestMethod.ORDER_LIST.value);
 
-		List<Order> orders = new ArrayList<Order>();
+		List<MbOrder> orders = new ArrayList<MbOrder>();
 		for (String id : jsonResponse.names()) {
-			orders.add(new Order(Long.valueOf(id), jsonResponse.get(id).asObject()));
+			orders.add(new MbOrder(Long.valueOf(id), jsonResponse.get(id).asObject()));
 		}
 		
 		return orders;
 	}
 	
-	private Order createOrder(Order order) throws MercadoBitcoinException, NetworkErrorException {
+	private MbOrder createOrder(MbOrder order) throws ApiProviderException {
 		if (order == null) {
-			throw new MercadoBitcoinException("Invalid order.");
+			throw new ApiProviderException("Invalid order.");
 		}
 		
 		JsonObject jsonResponse = makeRequest(order.toParams(), RequestMethod.TRADE.value);
 		String orderId = jsonResponse.names().get(0);
-		Order response = new Order(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
+		MbOrder response = new MbOrder(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
 		return response;
 	}
 	
@@ -155,14 +155,14 @@ public class TradeApiService extends AbstractApiService {
 	 * @param volume The volume of the Coin to be bought.
 	 * @param price Define the price for the order.
 	 * @return The information about the new Order.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public Order createBuyOrder(CoinPair coin, String volume, String price) throws MercadoBitcoinException, NetworkErrorException {
+	public MbOrder createBuyOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
 		OrderType type = OrderType.BUY;
 		BigDecimal decimalVolume = new BigDecimal(volume);
 		BigDecimal decimalPrice = new BigDecimal(price);
-		Order order = new Order(coin, type, decimalVolume, decimalPrice);
+		MbOrder order = new MbOrder(coin, type, decimalVolume, decimalPrice);
 		return createOrder(order);
 		
 	}
@@ -174,14 +174,14 @@ public class TradeApiService extends AbstractApiService {
 	 * @param volume The volume of the Coin to be sold.
 	 * @param price Define the price for the order.
 	 * @return The information about the new Order.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public Order createSellOrder(CoinPair coin, String volume, String price) throws MercadoBitcoinException, NetworkErrorException {
+	public MbOrder createSellOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
 		OrderType type = OrderType.SELL;
 		BigDecimal decimalVolume = new BigDecimal(volume);
 		BigDecimal decimalPrice = new BigDecimal(price);
-		Order order = new Order(coin, type, decimalVolume, decimalPrice);
+		MbOrder order = new MbOrder(coin, type, decimalVolume, decimalPrice);
 		return createOrder(order);
 		
 	}
@@ -191,18 +191,18 @@ public class TradeApiService extends AbstractApiService {
 	 * 
 	 * @param order Order object with the OrderId and pair defined.
 	 * @return Order that was canceled.
-	 * @throws MercadoBitcoinException Generic exception to point any error with the execution.
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public Order cancelOrder(Order order) throws MercadoBitcoinException, NetworkErrorException {
+	public MbOrder cancelOrder(MbOrder order) throws ApiProviderException {
 		if (order == null) {
-			throw new MercadoBitcoinException("Invalid filter.");
+			throw new ApiProviderException("Invalid filter.");
 		}
 		
 		JsonObject jsonResponse = makeRequest(order.toParams(), RequestMethod.CANCEL_ORDER.value);
 
 		String orderId = jsonResponse.names().get(0);
-		Order response = new Order(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
+		MbOrder response = new MbOrder(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
 		return response;
 	}
 
@@ -213,13 +213,13 @@ public class TradeApiService extends AbstractApiService {
 	 * @param volume Amount that will be withdrawal
 	 * @throws NetworkErrorException 
 	 */
-	public Withdrawal withdrawalBitcoin(String bitcoinAddress, BigDecimal volume) throws MercadoBitcoinException, NetworkErrorException {
+	public Withdrawal withdrawalBitcoin(String bitcoinAddress, BigDecimal volume) throws ApiProviderException {
 		if (bitcoinAddress == null) {
-			throw new MercadoBitcoinException("Invalid Bitcoin address.");
+			throw new ApiProviderException("Invalid Bitcoin address.");
 		}
 
 		if (volume == null || volume.compareTo(BigDecimal.ZERO) == -1) {
-			throw new MercadoBitcoinException("Invalid volume.");
+			throw new ApiProviderException("Invalid volume.");
 		}
 		
 		JsonHashMap params = new JsonHashMap();
@@ -232,23 +232,23 @@ public class TradeApiService extends AbstractApiService {
 		return withdrawal;
 	}
 	
-	private JsonObject makeRequest(String method) throws MercadoBitcoinException, NetworkErrorException {
+	private JsonObject makeRequest(String method) throws ApiProviderException {
 		return makeRequest(new JsonHashMap(), method);
 	}
 	
-	private JsonObject makeRequest(JsonHashMap params, String method) throws MercadoBitcoinException, NetworkErrorException {
+	private JsonObject makeRequest(JsonHashMap params, String method) throws ApiProviderException {
 		params.put(METHOD_PARAM, method);
 		params.put("tonce", generateTonce());
 
 		String jsonResponse = invokeTapiMethod(params);
 		
 		if (jsonResponse == null) {
-			throw new MercadoBitcoinException("Internal error: null response from the server.");
+			throw new ApiProviderException("Internal error: null response from the server.");
 		}
 		
 		JsonObject jsonObject = JsonObject.readFrom(jsonResponse);
 		if (jsonObject.get("success").asInt() == 0) {
-			throw new MercadoBitcoinException(jsonObject.get("error").asString());
+			throw new ApiProviderException(jsonObject.get("error").asString());
 		}
 		
 		JsonValue returnData = jsonObject.get("return");
@@ -263,7 +263,7 @@ public class TradeApiService extends AbstractApiService {
 		return (returnData == null) ? null : returnData.asObject();
 	}
 	
-	private String invokeTapiMethod(JsonHashMap params) throws MercadoBitcoinException, NetworkErrorException {
+	private String invokeTapiMethod(JsonHashMap params) throws ApiProviderException {
 		try {
 			String jsonParams = params.toUrlEncoded();
 			String signature = generateSignature(jsonParams);
@@ -273,11 +273,11 @@ public class TradeApiService extends AbstractApiService {
 			return getResponseFromServer(conn);
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new NetworkErrorException("Internal error: Failure in connection.");
+			throw new ApiProviderException("Internal error: Failure in connection.");
 		} catch (NoSuchAlgorithmException e) {
-			throw new MercadoBitcoinException("Internal error: Cryptography Algorithm not found.");
+			throw new ApiProviderException("Internal error: Cryptography Algorithm not found.");
 		} catch (InvalidKeyException e) {
-			throw new MercadoBitcoinException("Invalid Key or Signature.");
+			throw new ApiProviderException("Invalid Key or Signature.");
 		} 
 	}
 
