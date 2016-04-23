@@ -9,7 +9,7 @@ package net.mercadobitcoin.tradeapi.to;
 import java.util.Arrays;
 
 import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
-import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
+import net.trader.beans.Order.OrderSide;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -25,19 +25,19 @@ public class Orderbook {
 	 * Constructor based on JSON response.
 	 * 
 	 * @param jsonObject Trade API JSON response
-	 * @param pair Type of coins for the relationship, for instance, Bitcoin and Real.
+	 * @param pair Side of coins for the relationship, for instance, Bitcoin and Real.
 	 */
 	public Orderbook(JsonObject jsonObject, CoinPair pair) {
 		JsonArray asking = jsonObject.get("asks").asArray();
 		asks = new MbOrder[asking.size()];
 		for (int i = 0; i < asking.size(); i++) {
-			asks[i] = new MbOrder(asking.get(i).asArray(), pair, OrderType.SELL);
+			asks[i] = new MbOrder(asking.get(i).asArray(), pair, OrderSide.SELL);
 		}
 		
 		JsonArray bidding = jsonObject.get("bids").asArray();
 		bids = new MbOrder[bidding.size()];
 		for (int i = 0; i < bidding.size(); i++) {
-			bids[i] = new MbOrder(bidding.get(i).asArray(), pair, OrderType.BUY);
+			bids[i] = new MbOrder(bidding.get(i).asArray(), pair, OrderSide.BUY);
 		}
 	}
 

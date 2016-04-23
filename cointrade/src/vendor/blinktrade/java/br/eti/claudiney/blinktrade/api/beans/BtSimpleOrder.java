@@ -8,24 +8,19 @@ import net.trader.beans.Order;
 @SuppressWarnings("serial")
 public class BtSimpleOrder extends Order implements Serializable {
 	
-	private BigDecimal currencyPrice;
-	private BigDecimal bitcoins;
 	private String clientID;
 	
 	public BtSimpleOrder() {
 	}
 	
-	BtSimpleOrder(BigDecimal currencyPrice, BigDecimal bitcoins) {
+	BtSimpleOrder(BigDecimal currencyPrice, BigDecimal coinAmount) {
 		this.currencyPrice = currencyPrice;
-		this.bitcoins = bitcoins;
+		this.coinAmount = coinAmount;
 	}
 	
-	public BigDecimal getCurrencyPrice() {
-		return currencyPrice;
-	}
-	
-	public BigDecimal getBitcoins() {
-		return bitcoins;
+	@Override
+	public Long getDate() {
+		return null;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -44,12 +39,17 @@ public class BtSimpleOrder extends Order implements Serializable {
 		
 		sb.append('{');
 		sb.append("currencyPrice=").append(currencyPrice);
-		sb.append(", bitcoins=").append(bitcoins.divide(new BigDecimal(100000000)));
+		sb.append(", coinAmount=").append(coinAmount.divide(new BigDecimal(100000000)));
 		sb.append(", clientID=").append(clientID);
 		sb.append('}');
 		
 		return sb.toString();
 		
+	}
+
+	@Override
+	public String toDisplayString() {
+		return toString();
 	}
 
 }

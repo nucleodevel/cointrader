@@ -11,6 +11,7 @@ import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.BtSimpleOrder;
 import net.mercadobitcoin.tradeapi.to.Operation;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
+import net.trader.beans.Order;
 import net.trader.blinktrade.BlinktradeReport;
 import net.trader.exception.ApiProviderException;
 import net.trader.exception.ParamLabelErrorException;
@@ -104,8 +105,8 @@ public class Main {
 			
 			System.out.println("");
 			System.out.println("Reading my last orders... ");
-            System.out.println("Number of open orders: " + report.getOpenOrders().size());
-            System.out.println("Number of completed orders: " + report.getCompletedOrders().size());
+            System.out.println("Number of open orders: " + report.getMyActiveOrders().size());
+            System.out.println("Number of completed orders: " + report.getMyCompletedOrders().size());
 			
 			System.out.println("");
 			System.out.println("My last operations by type");
@@ -131,7 +132,7 @@ public class Main {
 			// analise and make orders
 			if (!robot.getOperationMode().contains("b")) {
 				// get the unique buy order or null
-				BtOpenOrder myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
+				Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
 					report.getMyActiveBuyOrders().get(0): null;
 				if (myBuyOrder != null)
 					report.cancelOrder(myBuyOrder);
@@ -142,7 +143,7 @@ public class Main {
 
 			if (!robot.getOperationMode().contains("s")) {
 				// get the unique buy order or null
-				BtOpenOrder mySellOrder = report.getMyActiveSellOrders().size() > 0?
+				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
 					report.getMyActiveSellOrders().get(0): null;
 				if (mySellOrder != null)
 					report.cancelOrder(mySellOrder);
@@ -212,24 +213,24 @@ public class Main {
 			System.out.println("My last operations by type");
 			if (report.getLastBuy() != null) {
 				System.out.println(
-					report.getLastBuy().getType() + " - Price " + 
-					decFmt.format(report.getLastBuy().getPrice()) + 
-					" - " + report.getCoin() + " " + decFmt.format(report.getLastBuy().getAmount()) + 
+					report.getLastBuy().getSide() + " - Price " + 
+					decFmt.format(report.getLastBuy().getCurrencyPrice()) + 
+					" - " + report.getCoin() + " " + decFmt.format(report.getLastBuy().getCoinAmount()) + 
 					" - " + report.getCurrency() + " " + 
-					decFmt.format(report.getLastBuy().getPrice().doubleValue() * 
-					report.getLastBuy().getAmount().doubleValue()) +
+					decFmt.format(report.getLastBuy().getCurrencyPrice().doubleValue() * 
+					report.getLastBuy().getCoinAmount().doubleValue()) +
 					" - Rate " + report.getLastBuy().getRate() + "%" +
 					" - " + report.getLastBuy().getCreatedDate().getTime()
 				);
 			}
 			if (report.getLastSell() != null) {
 				System.out.println(
-					report.getLastSell().getType() + " - Price " + 
-					decFmt.format(report.getLastSell().getPrice()) + 
-					" - " + report.getCoin() + " " + decFmt.format(report.getLastSell().getAmount()) + 
+					report.getLastSell().getSide() + " - Price " + 
+					decFmt.format(report.getLastSell().getCurrencyPrice()) + 
+					" - " + report.getCoin() + " " + decFmt.format(report.getLastSell().getCoinAmount()) + 
 					" - " + report.getCurrency() + " " + 
-					decFmt.format(report.getLastSell().getPrice().doubleValue() * 
-					report.getLastSell().getAmount().doubleValue()) +
+					decFmt.format(report.getLastSell().getCurrencyPrice().doubleValue() * 
+					report.getLastSell().getCoinAmount().doubleValue()) +
 					" - Rate " + report.getLastSell().getRate() + "%" +
 					" - " + report.getLastSell().getCreatedDate().getTime()
 				);
@@ -242,12 +243,12 @@ public class Main {
 			System.out.println("");
 			System.out.println("Current top orders by type");
 			System.out.println(
-				report.getCurrentTopBuy().getType() + " - " + 
-				decFmt.format(report.getCurrentTopBuy().getPrice())
+				report.getCurrentTopBuy().getSide() + " - " + 
+				decFmt.format(report.getCurrentTopBuy().getCurrencyPrice())
 			);
 			System.out.println(
-				report.getCurrentTopSell().getType() + " - " + 
-				decFmt.format(report.getCurrentTopSell().getPrice())
+				report.getCurrentTopSell().getSide() + " - " + 
+				decFmt.format(report.getCurrentTopSell().getCurrencyPrice())
 			);
 			
 			for (Operation operation: report.getMyOperations()) {
@@ -335,14 +336,14 @@ public class Main {
 					report.getMyActiveBuyOrders().get(0): null;
 				
 				if (myBuyOrder != null) {
-					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getPrice())));
+					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getCurrencyPrice())));
 					System.out.println(Math.abs(order.getBitcoins().doubleValue() - (coin.doubleValue() / 100000000)));
 					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
-					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
+					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getCurrencyPrice()))
 				) {
 					if (myBuyOrder != null)
 						report.cancelOrder(myBuyOrder);
@@ -367,7 +368,7 @@ public class Main {
 					break;
 				}
 				else if (
-					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
+					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getCurrencyPrice())) &&
 					Math.abs(order.getBitcoins().doubleValue() - (coin.doubleValue() / 100000000)) <= robot.getMinimumCoinAmount() &&
 					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
@@ -426,14 +427,14 @@ public class Main {
 					report.getMyActiveSellOrders().get(0): null;
 					
 				if (mySellOrder != null) {
-					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(mySellOrder.getPrice())));
+					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(mySellOrder.getCurrencyPrice())));
 					System.out.println(Math.abs(order.getBitcoins().doubleValue() - (coin.doubleValue() / 100000000)));
 					System.out.println(nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
-					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice()))
+					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getCurrencyPrice()))
 				) {
 					if (mySellOrder != null)
 						report.cancelOrder(mySellOrder);
@@ -458,7 +459,7 @@ public class Main {
 					break;
 				}
 				else if (
-					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
+					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getCurrencyPrice())) &&
 					Math.abs(order.getBitcoins().doubleValue() - (coin.doubleValue() / 100000000)) <= robot.getMinimumCoinAmount() &&
 					nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
@@ -499,13 +500,13 @@ public class Main {
 				null: report.getActiveBuyOrders().get(i + 1);
 			
 			boolean isAGoodBuyOrder =  
-					order.getPrice().doubleValue() / 
+					order.getCurrencyPrice().doubleValue() / 
 					report.getLastRelevantSellPrice().doubleValue() <= 
 					1 - robot.getMinimumBuyRate();
 			
 			if (isAGoodBuyOrder) {
 				
-				BigDecimal currency = new BigDecimal(order.getPrice().doubleValue() + robot.getIncDecPrice());
+				BigDecimal currency = new BigDecimal(order.getCurrencyPrice().doubleValue() + robot.getIncDecPrice());
 				BigDecimal coin = new BigDecimal((totalCurrency.doubleValue() - 0.01) / currency.doubleValue());
 				
 				// get the unique buy order or null
@@ -515,7 +516,7 @@ public class Main {
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
-					!decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice()))
+					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getCurrencyPrice()))
 				) {
 					if (myBuyOrder != null)
 						report.cancelOrder(myBuyOrder);
@@ -524,14 +525,14 @@ public class Main {
 							report.createBuyOrder(currency, coin);
 							System.out.println(
 								"Buy order created: " +
-								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
+								order.getSide() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
 								decFmt.format(currency) + " - " + report.getCoin() + " " + decFmt.format(coin)
 							);
 						}
 						else
 							System.out.println(
 								"There are no currency available for " +
-								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
+								order.getSide() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
 								decFmt.format(currency) + " - " + report.getCoin() + " " + decFmt.format(coin)
 							);
 					} catch (Exception e1) {
@@ -540,15 +541,15 @@ public class Main {
 					break;
 				}
 				else if (
-					decFmt.format(order.getPrice()).equals(decFmt.format(myBuyOrder.getPrice())) &&
+					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getCurrencyPrice())) &&
 					decFmt.format(order.getVolume()).equals(decFmt.format(coin)) &&
-					decFmt.format(order.getPrice().doubleValue() - nextOrder.getPrice().doubleValue()).
+					decFmt.format(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()).
 						equals(decFmt.format(robot.getIncDecPrice()))
 				) {
 					System.out.println(
 						"Maintaining previous order " +
-						order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
-						decFmt.format(order.getPrice()) + " - " + report.getCoin() + " " + 
+						order.getSide() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
+						decFmt.format(order.getCurrencyPrice()) + " - " + report.getCoin() + " " + 
 						decFmt.format(order.getVolume())
 					);
 					break;
@@ -583,20 +584,20 @@ public class Main {
 			boolean isAGoodSellOrder = 
 				report.getLastRelevantBuyPrice() != null && 
 				report.getLastRelevantBuyPrice().doubleValue() > 0 ?
-					(order.getPrice().doubleValue() / 
+					(order.getCurrencyPrice().doubleValue() / 
 					report.getLastRelevantBuyPrice().doubleValue() >= 
 					1 + robot.getMinimumSellRate()): true;
 				
 			boolean isToSellSoon = 
 				report.getLastRelevantBuyPrice() != null && 
 				report.getLastRelevantBuyPrice().doubleValue() > 0 ?
-					(order.getPrice().doubleValue() / 
+					(order.getCurrencyPrice().doubleValue() / 
 					report.getLastRelevantBuyPrice().doubleValue() <= 
 					1 + robot.getSellRateAfterBreakdown()): true;
 				
 			if (isAGoodSellOrder || isToSellSoon) {
 				
-				BigDecimal currency = new BigDecimal(order.getPrice().doubleValue() - robot.getIncDecPrice());
+				BigDecimal currency = new BigDecimal(order.getCurrencyPrice().doubleValue() - robot.getIncDecPrice());
 				BigDecimal coin = totalCoin;
 				
 				// get the unique buy order or null
@@ -606,7 +607,7 @@ public class Main {
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
-					!decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice()))
+					!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getCurrencyPrice()))
 				) {
 					if (mySellOrder != null)
 						report.cancelOrder(mySellOrder);
@@ -615,14 +616,14 @@ public class Main {
 							report.createSellOrder(currency, coin);
 							System.out.println(
 								"Sell order created: " +
-								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
+								order.getSide() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
 								decFmt.format(currency) + " - " + report.getCoin() + " " + decFmt.format(coin)
 							);
 						}
 						else
 							System.out.println(
 								"There are no " + report.getCoin() + " available for " +
-								order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
+								order.getSide() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
 								decFmt.format(currency) + " - " + report.getCoin() + " " + decFmt.format(coin)
 							);
 					} catch (Exception e1) {
@@ -631,15 +632,15 @@ public class Main {
 					break;
 				}
 				else if (
-					decFmt.format(order.getPrice()).equals(decFmt.format(mySellOrder.getPrice())) &&
+					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getCurrencyPrice())) &&
 					decFmt.format(order.getVolume()).equals(decFmt.format(coin)) &&
-					decFmt.format(nextOrder.getPrice().doubleValue() - order.getPrice().doubleValue()).
+					decFmt.format(nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue()).
 						equals(decFmt.format(robot.getIncDecPrice()))
 				) {
 					System.out.println(
 						"Maintaining previous order " +
-						order.getType() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
-						decFmt.format(order.getPrice()) + " - " + report.getCoin() + " " + 
+						order.getSide() + " - " + (i + 1) + "° - " + report.getCurrency() + " " + 
+						decFmt.format(order.getCurrencyPrice()) + " - " + report.getCoin() + " " + 
 						decFmt.format(order.getVolume())
 					);
 					break;

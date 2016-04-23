@@ -27,10 +27,11 @@ import javax.net.ssl.HttpsURLConnection;
 import net.mercadobitcoin.tradeapi.to.AccountBalance;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
 import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
-import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Withdrawal;
 import net.mercadobitcoin.util.JsonHashMap;
+import net.trader.beans.Order;
+import net.trader.beans.Order.OrderSide;
 import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonObject;
@@ -123,13 +124,13 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public List<MbOrder> listOrders(OrderFilter filter) throws ApiProviderException {
+	public List<Order> listOrders(OrderFilter filter) throws ApiProviderException {
 		if (filter == null) {
 			throw new ApiProviderException("Invalid filter.");
 		}
 		JsonObject jsonResponse = makeRequest(filter.toParams(), RequestMethod.ORDER_LIST.value);
 
-		List<MbOrder> orders = new ArrayList<MbOrder>();
+		List<Order> orders = new ArrayList<Order>();
 		for (String id : jsonResponse.names()) {
 			orders.add(new MbOrder(Long.valueOf(id), jsonResponse.get(id).asObject()));
 		}
@@ -159,10 +160,10 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws NetworkErrorException 
 	 */
 	public MbOrder createBuyOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
-		OrderType type = OrderType.BUY;
+		OrderSide side = OrderSide.BUY;
 		BigDecimal decimalVolume = new BigDecimal(volume);
 		BigDecimal decimalPrice = new BigDecimal(price);
-		MbOrder order = new MbOrder(coin, type, decimalVolume, decimalPrice);
+		MbOrder order = new MbOrder(coin, side, decimalVolume, decimalPrice);
 		return createOrder(order);
 		
 	}
@@ -178,10 +179,10 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws NetworkErrorException 
 	 */
 	public MbOrder createSellOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
-		OrderType type = OrderType.SELL;
+		OrderSide side = OrderSide.SELL;
 		BigDecimal decimalVolume = new BigDecimal(volume);
 		BigDecimal decimalPrice = new BigDecimal(price);
-		MbOrder order = new MbOrder(coin, type, decimalVolume, decimalPrice);
+		MbOrder order = new MbOrder(coin, side, decimalVolume, decimalPrice);
 		return createOrder(order);
 		
 	}

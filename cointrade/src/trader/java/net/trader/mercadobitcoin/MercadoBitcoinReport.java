@@ -14,11 +14,11 @@ import net.mercadobitcoin.tradeapi.to.Operation;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
 import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
-import net.mercadobitcoin.tradeapi.to.MbOrder.OrderType;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Orderbook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.trader.beans.Order;
+import net.trader.beans.Order.OrderSide;
 import net.trader.exception.ApiProviderException;
 import net.trader.robot.RobotReport;
 import net.trader.robot.UserConfiguration;
@@ -38,27 +38,13 @@ public class MercadoBitcoinReport extends RobotReport {
 	private AccountBalance accountBalance;
 	private Orderbook orderbook;
 	
-	private List<MbOrder> activeOrders;
-	private List<MbOrder> activeBuyOrders;
-	private List<MbOrder> activeSellOrders;
-	private List<Operation> operations;
+	private List<Order> operations;
 	
-	private MbOrder currentTopBuy;
-	private MbOrder currentTopSell;
-	
-	private List<MbOrder> myOrders;
-	private static List<MbOrder> myCanceledOrders;
-	private List<MbOrder> myCompletedOrders;
-	private List<MbOrder> myActiveOrders;
-	private List<MbOrder> myActiveBuyOrders;
-	private List<MbOrder> myActiveSellOrders;
-	private List<Operation> myOperations;
-	
-	private Operation lastBuy;
-	private Operation lastSell;
-	
-	private BigDecimal lastRelevantBuyPrice;
-	private BigDecimal lastRelevantSellPrice;
+	private List<Order> myOrders;
+	private static List<Order> myCanceledOrders;
+	private List<Order> myCompletedOrders;
+	private List<Order> myActiveOrders;
+	private List<Order> myOperations;
 	
 	public MercadoBitcoinReport(UserConfiguration userConfiguration, String currency, String coin) {
 		super(userConfiguration, currency, coin);
@@ -121,9 +107,9 @@ public class MercadoBitcoinReport extends RobotReport {
 		return orderbook;
 	}
 
-	public List<MbOrder> getActiveOrders() throws ApiProviderException {
+	public List<Order> getActiveOrders() throws ApiProviderException {
 		if (activeOrders == null) {
-			activeOrders = new ArrayList<MbOrder>();
+			activeOrders = new ArrayList<Order>();
 			activeOrders.addAll(getActiveBuyOrders());
 			activeOrders.addAll(getActiveSellOrders());
 			Collections.sort(activeOrders);
@@ -131,46 +117,50 @@ public class MercadoBitcoinReport extends RobotReport {
 		return activeOrders;
 	}
 
-	public List<MbOrder> getActiveBuyOrders() throws ApiProviderException {
+	@Override
+	public List<Order> getActiveBuyOrders() throws ApiProviderException {
 		if (activeBuyOrders == null) {
-			activeBuyOrders = new ArrayList<MbOrder>(Arrays.asList(getOrderbook().getBids()));
+			activeBuyOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getBids()));
 		}
 		return activeBuyOrders;
 	}
 
-	public List<MbOrder> getActiveSellOrders() throws ApiProviderException {
+	@Override
+	public List<Order> getActiveSellOrders() throws ApiProviderException {
 		if (activeSellOrders == null) {
-			activeSellOrders = new ArrayList<MbOrder>(Arrays.asList(getOrderbook().getAsks()));
+			activeSellOrders = new ArrayList<Order>(Arrays.asList(getOrderbook().getAsks()));
 		}
 		return activeSellOrders;
 	}
 
-	public List<Operation> getOperations() throws ApiProviderException {
+	public List<Order> getOperations() throws ApiProviderException {
 		if (operations == null) {
-			Operation[] operationArray = getApiService().tradeList(getCoinPair());
-			operations = new ArrayList<Operation>(Arrays.asList(operationArray));
+			Order[] operationArray = getApiService().tradeList(getCoinPair());
+			operations = new ArrayList<Order>(Arrays.asList(operationArray));
 			Collections.sort(operations);
 		}
 		return operations;
 	}
 
-	public MbOrder getCurrentTopBuy() throws ApiProviderException {
+	@Override
+	public Order getCurrentTopBuy() throws ApiProviderException {
 		if (currentTopBuy == null)
 			currentTopBuy = getActiveBuyOrders().get(0);
 		return currentTopBuy;
 	}
 
-	public MbOrder getCurrentTopSell() throws ApiProviderException {
+	@Override
+	public Order getCurrentTopSell() throws ApiProviderException {
 		if (currentTopSell == null)
 			currentTopSell = getActiveSellOrders().get(0);
 		return currentTopSell;
 	}
 
-	public List<MbOrder> getMyOrders() throws ApiProviderException {
+	public List<Order> getMyOrders() throws ApiProviderException {
 		if (myOrders == null) {
 			if (myCanceledOrders == null)
 				System.out.println("The first reading can take a lot of seconds. Please wait!");
-			myOrders = new ArrayList<MbOrder>();
+			myOrders = new ArrayList<Order>();
 			myOrders.addAll(getMyActiveOrders());
 			myOrders.addAll(getMyCompletedOrders());
 			myOrders.addAll(getMyCanceledOrders());
@@ -179,20 +169,21 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myOrders;
 	}
 	
-	public List<MbOrder> getMyCanceledOrders() throws ApiProviderException {
+	public List<Order> getMyCanceledOrders() throws ApiProviderException {
 		long now = (new Date()).getTime() / 1000;
 		
 		OrderFilter orderFilter = new OrderFilter(getCoinPair());
 		orderFilter.setStatus(OrderStatus.CANCELED);
 		
 		if (myCanceledOrders == null) {
-			myCanceledOrders = new ArrayList<MbOrder>();
+			myCanceledOrders = new ArrayList<Order>();
 			
 			for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
 				orderFilter.setSince(time - intervalToReadMyCanceledOrders);
 				orderFilter.setEnd(time - 1);
-				List<MbOrder> orders = getTradeApiService().listOrders(orderFilter);
-				for (MbOrder order: orders) {
+				List<Order> orders = getTradeApiService().listOrders(orderFilter);
+				for (Order o: orders) {
+					MbOrder order = (MbOrder) o;
 					if (order.getOperations() != null && order.getOperations().size() > 0)
 						myCanceledOrders.add(order);
 				}
@@ -203,9 +194,10 @@ public class MercadoBitcoinReport extends RobotReport {
 			orderFilter.setSince(lastTimeByReadingMyCanceledOrders + 1);
 			orderFilter.setEnd(now);
 			
-			List<MbOrder> orders = getTradeApiService().listOrders(orderFilter);
+			List<Order> orders = getTradeApiService().listOrders(orderFilter);
 			int i = 0;
-			for (MbOrder order: orders) {
+			for (Order o: orders) {
+				MbOrder order = (MbOrder) o;
 				if (order.getOperations() != null && order.getOperations().size() > 0) {
 					myCanceledOrders.add(i, order);
 					i++;
@@ -216,8 +208,9 @@ public class MercadoBitcoinReport extends RobotReport {
 		
 		return myCanceledOrders;
 	}
-
-	public List<MbOrder> getMyCompletedOrders() throws ApiProviderException {
+	
+	@Override
+	public List<Order> getMyCompletedOrders() throws ApiProviderException {
 		if (myCompletedOrders == null) {
 			
 			// lê uma semana de ordens completas
@@ -234,7 +227,8 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myCompletedOrders;
 	}
 
-	public List<MbOrder> getMyActiveOrders() throws ApiProviderException {
+	@Override
+	public List<Order> getMyActiveOrders() throws ApiProviderException {
 		if (myActiveOrders == null) {
 			OrderFilter orderFilter = new OrderFilter(getCoinPair());			
 			orderFilter.setStatus(OrderStatus.ACTIVE);
@@ -244,65 +238,76 @@ public class MercadoBitcoinReport extends RobotReport {
 		return myActiveOrders;
 	}
 
-	public List<MbOrder> getMyActiveBuyOrders() throws ApiProviderException {
+	@Override
+	public List<Order> getMyActiveBuyOrders() throws ApiProviderException {
 		if (myActiveBuyOrders == null) {
-			myActiveBuyOrders = new ArrayList<MbOrder>();
-			for (MbOrder order: getMyActiveOrders())
-				if (order.getType() == OrderType.BUY)
+			myActiveBuyOrders = new ArrayList<Order>();
+			for (Order o: getMyActiveOrders()) {
+				MbOrder order = (MbOrder) o;
+				if (order.getSide() == OrderSide.BUY)
 					myActiveBuyOrders.add(order);
+			}
 		}
 		return myActiveBuyOrders;
 	}
 
-	public List<MbOrder> getMyActiveSellOrders() throws ApiProviderException {
+	@Override
+	public List<Order> getMyActiveSellOrders() throws ApiProviderException {
 		if (myActiveSellOrders == null) {
-			myActiveSellOrders = new ArrayList<MbOrder>();
-			for (MbOrder order: getMyActiveOrders())
-				if (order.getType() == OrderType.SELL)
+			myActiveSellOrders = new ArrayList<Order>();
+			for (Order o: getMyActiveOrders()) {
+				MbOrder order = (MbOrder) o;
+				if (order.getSide() == OrderSide.SELL)
 					myActiveSellOrders.add(order);
+			}
 		}
 		return myActiveSellOrders;
 	}
 
-	public List<Operation> getMyOperations() throws ApiProviderException {
+	public List<Order> getMyOperations() throws ApiProviderException {
 		if (myOperations == null) {
-			myOperations = new ArrayList<Operation>();
-			for (MbOrder order: getMyOrders())
+			myOperations = new ArrayList<Order>();
+			for (Order o: getMyActiveOrders()) {
+				MbOrder order = (MbOrder) o;
 				if (order.getOperations() != null)
 					for (Operation operation: order.getOperations()) {
-						operation.setType(order.getType());
+						operation.setSide(order.getSide());
 						myOperations.add(operation);
 					}
+			}
 		}
 		return myOperations;
 	}
 
-	public Operation getLastBuy() throws ApiProviderException {
+	public Order getLastBuy() throws ApiProviderException {
 		if (lastBuy == null) {
 			lastBuy = null;
-			for (Operation operation: getMyOperations()) {
+			for (Order o: getMyOperations()) {
+				Operation operation = (Operation) o;
 				if (lastBuy != null)
 					break;
-				if (operation.getType() == OrderType.BUY)
+				if (operation.getSide() == OrderSide.BUY)
 					lastBuy = operation;
 			}
 		}
 		return lastBuy;
 	}
 	
-	public Operation getLastSell() throws ApiProviderException {
+	public Order getLastSell() throws ApiProviderException {
 		if (lastSell == null) {
 			lastSell = null;
-			for (Operation operation: getMyOperations()) {
+			for (Order o: getMyOperations()) {
+				Operation operation = (Operation) o;
 				if (lastSell != null)
 					break;
-				if (operation.getType() == OrderType.SELL)
+				if (operation.getSide() == OrderSide.SELL)
 					lastSell = operation;
 			}
 		}
 		return lastSell;
 	}
 	
+	@Override
 	public BigDecimal getLastRelevantBuyPrice() throws ApiProviderException {
 		if (lastRelevantBuyPrice == null) {
 			
@@ -313,15 +318,16 @@ public class MercadoBitcoinReport extends RobotReport {
 			List<Operation> groupOfOperations = new ArrayList<Operation>(); 
 			double sumOfCoin = 0;
 			
-			for (Operation operation: getMyOperations()) {
-				if (operation.getType() == OrderType.BUY) {
-					if (sumOfCoin + operation.getAmount().doubleValue() <= coinWithOpenOrders) {
-						sumOfCoin += operation.getAmount().doubleValue();
+			for (Order o: getMyOperations()) {
+				Operation operation = (Operation) o;
+				if (operation.getSide() == OrderSide.BUY) {
+					if (sumOfCoin + operation.getCoinAmount().doubleValue() <= coinWithOpenOrders) {
+						sumOfCoin += operation.getCoinAmount().doubleValue();
 						groupOfOperations.add(operation);
 					}
 					else {
 						Operation newOperation = new Operation(operation);
-						newOperation.setAmount(new BigDecimal(coinWithOpenOrders - sumOfCoin));
+						newOperation.setCoinAmount(new BigDecimal(coinWithOpenOrders - sumOfCoin));
 						groupOfOperations.add(newOperation);
 						sumOfCoin += coinWithOpenOrders - sumOfCoin;
 						break;
@@ -332,8 +338,8 @@ public class MercadoBitcoinReport extends RobotReport {
 				for (Operation operation: groupOfOperations) {
 					lastRelevantBuyPrice = new BigDecimal(
 						lastRelevantBuyPrice.doubleValue() +	
-						(operation.getAmount().doubleValue() * 
-						operation.getPrice().doubleValue() / sumOfCoin)
+						(operation.getCoinAmount().doubleValue() * 
+						operation.getCurrencyPrice().doubleValue() / sumOfCoin)
 					); 
 				}
 			}
@@ -350,6 +356,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		return lastRelevantBuyPrice;
 	}
 	
+	@Override
 	public BigDecimal getLastRelevantSellPrice() throws ApiProviderException {
 		if (lastRelevantSellPrice == null) {
 			
@@ -361,10 +368,10 @@ public class MercadoBitcoinReport extends RobotReport {
 			List<MbOrder> groupOfOrders = new ArrayList<MbOrder>();
 			
 			for (int i = 0; i < numOfConsideredOrdersForLastRelevantSellPrice; i++) {
-				MbOrder order = getActiveSellOrders().get(i);				
-				sumOfCoin +=  order.getVolume().doubleValue();
+				MbOrder order = (MbOrder) getActiveSellOrders().get(i);				
+				sumOfCoin +=  order.getCoinAmount().doubleValue();
 				sumOfNumerators += 
-					order.getVolume().doubleValue() * order.getPrice().doubleValue();
+					order.getCoinAmount().doubleValue() * order.getCurrencyPrice().doubleValue();
 				groupOfOrders.add(order);
 			}
 			

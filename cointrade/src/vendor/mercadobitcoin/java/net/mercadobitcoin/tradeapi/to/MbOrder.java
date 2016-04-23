@@ -24,7 +24,7 @@ import com.eclipsesource.json.JsonObject;
 /**
  * Order information.
  */
-public class MbOrder extends Order implements Serializable, Comparable<MbOrder> {
+public class MbOrder extends Order implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -45,22 +45,7 @@ public class MbOrder extends Order implements Serializable, Comparable<MbOrder> 
 		}
 	}
 	
-	/**
-	 * Defines the Type of the Order (Buy or Sell).
-	 */
-	public enum OrderType implements EnumValue {
-		BUY("buy"),
-		SELL("sell");
-		private final String value;
-
-		private OrderType(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return this.value;
-		}
-	}
+	
 	
 	/**
 	 * Define the Status of an Order (Active, Canceled or Completed).
@@ -88,9 +73,6 @@ public class MbOrder extends Order implements Serializable, Comparable<MbOrder> 
 	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 	
 	private CoinPair pair;
-	private OrderType type;
-	private BigDecimal volume;
-	private BigDecimal price;
 	
 	private Long orderId;
 	private String status;
@@ -104,15 +86,15 @@ public class MbOrder extends Order implements Serializable, Comparable<MbOrder> 
 	/**
 	 * Constructor. Request a new Order with the specified parameters.
 	 * @param pair The pair of coins of to be exchanged.
-	 * @param type Define if it is a 'buy' or 'sell' order.
-	 * @param volume The amount to be exchanged.
+	 * @param side Define if it is a 'buy' or 'sell' order.
+	 * @param coinAmount The amount to be exchanged.
 	 * @param price The price the exchange should be dealt.
 	 */
-	public MbOrder(CoinPair pair, OrderType type, BigDecimal volume, BigDecimal price) {
-		this.price = price;
-		this.volume = volume;
+	public MbOrder(CoinPair pair, OrderSide side, BigDecimal coinAmount, BigDecimal price) {
+		this.currencyPrice = price;
+		this.coinAmount = coinAmount;
 		this.pair = pair;
-		this.type = type;
+		this.side = side;
 		
 		this.flagSmall = true;
 	}
@@ -123,9 +105,9 @@ public class MbOrder extends Order implements Serializable, Comparable<MbOrder> 
 	public MbOrder(Long orderId, JsonObject jsonObject) {
 		this.orderId = orderId;
 		this.pair = CoinPair.valueOf(jsonObject.get("pair").asString().toUpperCase());
-		this.type = OrderType.valueOf(jsonObject.get("type").asString().toUpperCase());
-		this.volume = new BigDecimal(jsonObject.get("volume").asString());
-		this.price = new BigDecimal(jsonObject.get("price").asString());
+		this.side = OrderSide.valueOf(jsonObject.get("side").asString().toUpperCase());
+		this.coinAmount = new BigDecimal(jsonObject.get("volume").asString());
+		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
 		this.status = jsonObject.get("status").asString();
 		this.created = Integer.valueOf(jsonObject.get("created").asString());
 		
@@ -145,29 +127,22 @@ public class MbOrder extends Order implements Serializable, Comparable<MbOrder> 
 	/**
 	 * Constructor. Response from the API, used by Orderbook.
 	 */
-	public MbOrder(JsonArray jsonArray, CoinPair pair, OrderType type) {
-		this.price = new BigDecimal(jsonArray.get(0).toString());
-		this.volume = new BigDecimal(jsonArray.get(1).toString());
+	public MbOrder(JsonArray jsonArray, CoinPair pair, OrderSide side) {
+		this.currencyPrice = new BigDecimal(jsonArray.get(0).toString());
+		this.coinAmount = new BigDecimal(jsonArray.get(1).toString());
 		this.pair = pair;
-		this.type = type;
+		this.side = side;
 		
 		this.flagSmall = true;
 	}
 	
+	@Override
+	public Long getDate() {
+		return (long) created;
+	}
+
 	public CoinPair getPair() {
 		return pair;
-	}
-
-	public OrderType getType() {
-		return type;
-	}
-
-	public BigDecimal getVolume() {
-		return volume;
-	}
-
-	public BigDecimal getPrice() {
-		return price;
 	}
 
 	public Long getOrderId() {
@@ -197,18 +172,23 @@ public class MbOrder extends Order implements Serializable, Comparable<MbOrder> 
 	@Override
 	public String toString() {
 		if (this.flagSmall == true) {
-			return "\nOrder [pair=" + pair + ", type=" + type + ", volume=" + volume
-					+ ", price=" + price + "]";
+			return "\nOrder [pair=" + pair + ", side=" + side + ", coinAmount=" + coinAmount
+					+ ", price=" + currencyPrice + "]";
 		} else {
-			return "Order [pair=" + pair + ", type=" + type + ", volume=" + volume
-					+ ", price=" + price + ", orderId=" + orderId + ", status="
+			return "Order [pair=" + pair + ", side=" + side + ", coinAmount=" + coinAmount
+					+ ", price=" + currencyPrice + ", orderId=" + orderId + ", status="
 					+ status + ", created=" + createdDate.getTime() + ", operations="
 					+ operations + "]";
 		}
 	}
 
-	public int compareTo(MbOrder another) {
-		return -1 * this.created.compareTo(another.created);
+	@Override
+	public String toDisplayString() {
+		return toString();
+	}
+
+	public int compareTo(Order another) {
+		return -1 * super.compareTo(another);
 	}
 
 	/**

@@ -18,10 +18,8 @@ public class BtOpenOrder extends Order implements Serializable {
 	private BigDecimal cxlQty;
 	private BigDecimal avgPx;
 	private String symbol;
-	private String side;
 	private String ordType;
 	private BigDecimal orderQty;
-	private BigDecimal price;
 	private Calendar orderDate;
 	private BigDecimal volume;
 	private String timeInForce;
@@ -29,8 +27,6 @@ public class BtOpenOrder extends Order implements Serializable {
 	public BtOpenOrder() {
 		
 	}
-	
-	
 	
 	public BtOpenOrder(BtOpenOrder another) {
 		super();
@@ -45,13 +41,16 @@ public class BtOpenOrder extends Order implements Serializable {
 		this.side = another.getSide();
 		this.ordType = another.getOrdType();
 		this.orderQty = another.getOrderQty();
-		this.price = another.getPrice();
+		this.currencyPrice = another.getCurrencyPrice();
 		this.orderDate = another.getOrderDate();
 		this.volume = another.getVolume();
 		this.timeInForce = another.getTimeInForce();
 	}
-
-
+	
+	@Override
+	public Long getDate() {
+		return orderDate.getTimeInMillis();
+	}
 
 	public BigInteger getClientCustomOrderID() {
 		return clientCustomOrderID;
@@ -117,14 +116,6 @@ public class BtOpenOrder extends Order implements Serializable {
 		this.symbol = symbol;
 	}
 
-	public String getSide() {
-		return side;
-	}
-
-	public void setSide(String side) {
-		this.side = side;
-	}
-
 	public String getOrdType() {
 		return ordType;
 	}
@@ -139,14 +130,6 @@ public class BtOpenOrder extends Order implements Serializable {
 
 	public void setOrderQty(BigDecimal orderQty) {
 		this.orderQty = orderQty;
-	}
-
-	public BigDecimal getPrice() {
-		return price;
-	}
-
-	public void setPrice(BigDecimal price) {
-		this.price = price;
 	}
 
 	public Calendar getOrderDate() {
@@ -191,7 +174,7 @@ public class BtOpenOrder extends Order implements Serializable {
 		sb.append(", side=").append(side);
 		sb.append(", ordType=").append(ordType);
 		sb.append(", orderQty=").append(orderQty);
-		sb.append(", price=").append(price);
+		sb.append(", price=").append(currencyPrice);
 		sb.append(", orderDate=").append(orderDate);
 		sb.append(", volume=").append(volume);
 		sb.append(", timeInForce=").append(timeInForce);
@@ -202,6 +185,7 @@ public class BtOpenOrder extends Order implements Serializable {
 		
 	}
 	
+	@Override
 	public String toDisplayString() {
 		
 		StringBuilder sb = new StringBuilder();
@@ -212,7 +196,7 @@ public class BtOpenOrder extends Order implements Serializable {
 		sb.append("orderDate=").append(orderDate.getTime());
 		sb.append(", side=").append(side.equals("1")? "BUY": "SELL");
 		sb.append(", ordStatus=").append(ordStatus.equals("2")? "FINISHED": "NOT FINISHED");
-		sb.append(", price=").append(price);
+		sb.append(", price=").append(currencyPrice);
 		sb.append(", volume=").append(volume.divide(new BigDecimal(100000000)));
 		sb.append(", cumQty=").append(cumQty);
 		/*sb.append(", leavesQty=").append(leavesQty);

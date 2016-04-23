@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.math.RoundingMode;
 import java.util.List;
 
+import net.trader.beans.Order.OrderSide;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -38,12 +40,15 @@ public class OrderEntry implements Serializable {
 						oo.setCxlQty(objArray.get(5).getAsBigDecimal());
 						oo.setAvgPx(objArray.get(6).getAsBigDecimal());
 						oo.setSymbol(objArray.get(7).getAsString());
-						oo.setSide(objArray.get(8).getAsString());
+						String sideString = objArray.get(8).getAsString();
+						OrderSide side = sideString.equals("1")? OrderSide.BUY:
+							(sideString.equals("2")? OrderSide.SELL: null);
+						oo.setSide(side);
 						oo.setOrdType(objArray.get(9).getAsString());
 						oo.setOrderQty(objArray.get(10).getAsBigDecimal());
 						
 						BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
-						oo.setPrice(objArray.get(11).getAsBigDecimal().divide(
+						oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
 								c.getRate(),
 								c.getRateSize(), RoundingMode.DOWN) );
 						oo.setOrderDate( Utils.getCalendar(objArray.get(12).getAsString()));

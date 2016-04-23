@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.trader.beans.Order;
+
 @SuppressWarnings("serial")
 public class OrderBookResponse implements Serializable {
 	
@@ -16,9 +18,9 @@ public class OrderBookResponse implements Serializable {
 		return pair;
 	}
 	
-	public List<Bid> getBids() {
+	public List<Order> getBids() {
 		
-		List<Bid> _bids = new ArrayList<Bid>();
+		List<Order> _bids = new ArrayList<Order>();
 		
 		if(bids == null) return _bids;
 
@@ -34,9 +36,9 @@ public class OrderBookResponse implements Serializable {
 		
 	}
 	
-	public List<Ask> getAsks() {
+	public List<Order> getAsks() {
 		
-		List<Ask> _asks = new ArrayList<Ask>();
+		List<Order> _asks = new ArrayList<Order>();
 		
 		if(asks == null) return _asks;
 
@@ -53,21 +55,15 @@ public class OrderBookResponse implements Serializable {
 	}
 	
 	public Bid getBetterBid() {
-		List<Bid> bids = getBids();
+		List<Order> bids = getBids();
 		if(bids.size() == 0) return null;
-		return bids.get(0);
-	}
-	
-	public Bid getSecondBid() {
-		List<Bid> bids = getBids();
-		if(bids.size() <= 1) return null;
-		return bids.get(1);
+		return (Bid) bids.get(0);
 	}
 	
 	public Ask getBetterAsk() {
-		List<Ask> asks = getAsks();
+		List<Order> asks = getAsks();
 		if(asks.size() == 0) return null;
-		return asks.get(0);
+		return (Ask) asks.get(0);
 	}
 
 }
