@@ -10,6 +10,7 @@ import javax.net.ssl.SSLSession;
 
 import sun.security.util.HostnameChecker;
 
+@SuppressWarnings("restriction")
 public class HostnameVerifierBag {
 
 	public static final HostnameVerifier HOSTNAME_VERIFIER = new HostnameVerifier() {

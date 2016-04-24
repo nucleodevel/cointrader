@@ -195,7 +195,7 @@ public class Main {
 				
 				if (myBuyOrder != null) {
 					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getCurrencyPrice())));
-					System.out.println(Math.abs(order.getCoinAmount().doubleValue() - coin.doubleValue()));
+					System.out.println(order.getCoinAmount().doubleValue() + " - " + coin.doubleValue());
 					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 

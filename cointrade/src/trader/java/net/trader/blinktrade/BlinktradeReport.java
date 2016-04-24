@@ -11,10 +11,7 @@ import net.trader.exception.ApiProviderException;
 import net.trader.robot.RobotReport;
 import net.trader.robot.UserConfiguration;
 import br.eti.claudiney.blinktrade.api.BlinktradeAPI;
-import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
 
 public class BlinktradeReport extends RobotReport {
@@ -67,29 +64,17 @@ public class BlinktradeReport extends RobotReport {
 	
 	@Override
 	public void cancelOrder(Order order) throws ApiProviderException {
-		getApi().cancelOrder((BtOpenOrder) order);
+		getApi().cancelOrder(order);
 	}
 	
 	@Override
 	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
-		getApi().sendNewOrder(
-			new Integer((int)(System.currentTimeMillis()/1000)),
-			getCoinPair(),
-			BlinktradeOrderSide.BUY,
-			BlinktradeOrderType.LIMITED,
-			currency, coin.toBigInteger()
-		);
+		getApi().createBuyOrder(getCoinPair(), currency, coin);
 	}
 	
 	@Override
 	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
-		getApi().sendNewOrder(
-			new Integer((int)(System.currentTimeMillis()/1000)),
-			getCoinPair(),
-			BlinktradeOrderSide.SELL,
-			BlinktradeOrderType.LIMITED,
-			currency, coin.toBigInteger()
-		);
+		getApi().createSellOrder(getCoinPair(), currency, coin);
 	}
 	
 	public BlinktradeSymbol getCoinPair() {

@@ -2,7 +2,6 @@ package br.eti.claudiney.blinktrade.api.beans;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 import net.trader.beans.Balance;
 import net.trader.exception.ApiProviderException;
@@ -12,8 +11,8 @@ public class BtBalance extends Balance implements Serializable {
 
 	private BigDecimal currencyAmount;
 	private BigDecimal currencyLocked;
-	private BigInteger btcAmount;
-	private BigInteger btcLocked;
+	private BigDecimal btcAmount;
+	private BigDecimal btcLocked;
 	private String clientID;
 	private Integer balanceRequestID;
 	
@@ -40,22 +39,22 @@ public class BtBalance extends Balance implements Serializable {
 
 	@Override
 	public BigDecimal getCoinAmount() throws ApiProviderException {
-		return getCoin().equals("BTC")? new BigDecimal(getBtcAmount()): null;
+		return getCoin().equals("BTC")? getBtcAmount(): null;
 	}
 
-	public BigInteger getBtcAmount() {
+	public BigDecimal getBtcAmount() {
 		return btcAmount;
 	}
 
-	public void setBtcAmount(BigInteger btcAmount) {
+	public void setBtcAmount(BigDecimal btcAmount) {
 		this.btcAmount = btcAmount;
 	}
 
-	public BigInteger getBtcLocked() {
+	public BigDecimal getBtcLocked() {
 		return btcLocked;
 	}
 
-	public void setBtcLocked(BigInteger btcLocked) {
+	public void setBtcLocked(BigDecimal btcLocked) {
 		this.btcLocked = btcLocked;
 	}
 

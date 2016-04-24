@@ -75,6 +75,8 @@ public class MbOrder extends Order implements Serializable {
 	
 	private CoinPair pair;
 	protected OrderSide type;
+	private BigDecimal volume;
+	private BigDecimal price;
 	
 	private Long orderId;
 	private String status;
@@ -91,12 +93,14 @@ public class MbOrder extends Order implements Serializable {
 	 * @param coinAmount The amount to be exchanged.
 	 * @param price The price the exchange should be dealt.
 	 */
-	public MbOrder(CoinPair pair, OrderSide side, BigDecimal coinAmount, BigDecimal price) {
-		this.currencyPrice = price;
+	public MbOrder(CoinPair pair, OrderSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
+		this.currencyPrice = currencyPrice;
 		this.coinAmount = coinAmount;
 		this.pair = pair;
 		this.side = side;
 		this.type = side;
+		this.price = currencyPrice;
+		this.volume = coinAmount;
 		
 		this.flagSmall = true;
 	}
@@ -112,7 +116,9 @@ public class MbOrder extends Order implements Serializable {
 		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
 		this.status = jsonObject.get("status").asString();
 		this.created = Integer.valueOf(jsonObject.get("created").asString());
-		this.type = side;
+		this.type = this.side;
+		this.price = this.currencyPrice;
+		this.volume = this.coinAmount;
 		
 		this.operations = new ArrayList<MbOperation>();
 		for (String operationId: jsonObject.get("operations").asObject().names()) {
@@ -136,6 +142,8 @@ public class MbOrder extends Order implements Serializable {
 		this.pair = pair;
 		this.side = side;
 		this.type = side;
+		this.price = this.currencyPrice;
+		this.volume = this.coinAmount;
 		
 		this.flagSmall = true;
 	}
@@ -170,6 +178,14 @@ public class MbOrder extends Order implements Serializable {
 
 	public OrderSide getType() {
 		return type;
+	}
+
+	public BigDecimal getVolume() {
+		return volume;
+	}
+
+	public BigDecimal getPrice() {
+		return price;
 	}
 
 	@Override

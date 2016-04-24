@@ -186,20 +186,20 @@ public class BtOperation extends Operation implements Serializable {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append('{');
-		//sb.append("clientCustomOrderID=").append(clientCustomOrderID);
-		//sb.append(", orderID=").append(orderID);
+		sb.append("clientCustomOrderID=").append(clientCustomOrderID);
+		sb.append(", orderID=").append(orderID);
 		sb.append("creationDate=").append(creationDate.getTime());
 		sb.append(", side=").append(side.equals("1")? "BUY": "SELL");
 		sb.append(", ordStatus=").append(ordStatus.equals("2")? "FINISHED": "NOT FINISHED");
 		sb.append(", price=").append(currencyPrice);
 		sb.append(", volume=").append(volume.divide(new BigDecimal(100000000)));
 		sb.append(", cumQty=").append(cumQty);
-		/*sb.append(", leavesQty=").append(leavesQty);
+		sb.append(", leavesQty=").append(leavesQty);
 		sb.append(", cxlQty=").append(cxlQty);
 		sb.append(", avgPx=").append(avgPx);
 		sb.append(", symbol=").append(symbol);
 		sb.append(", ordType=").append(ordType);
-		sb.append(", orderQty=").append(orderQty);*/
+		sb.append(", orderQty=").append(orderQty);
 		sb.append("}");
 		
 		return sb.toString();

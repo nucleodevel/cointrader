@@ -139,14 +139,14 @@ public class TradeApiService extends AbstractApiService {
 		return orders;
 	}
 	
-	private MbOrder createOrder(MbOrder order) throws ApiProviderException {
+	private Order createOrder(Order order) throws ApiProviderException {
 		if (order == null) {
 			throw new ApiProviderException("Invalid order.");
 		}
 		
-		JsonObject jsonResponse = makeRequest(order.toParams(), RequestMethod.TRADE.value);
+		JsonObject jsonResponse = makeRequest(((MbOrder)order).toParams(), RequestMethod.TRADE.value);
 		String orderId = jsonResponse.names().get(0);
-		MbOrder response = new MbOrder(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
+		Order response = new MbOrder(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
 		return response;
 	}
 	
@@ -160,11 +160,11 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public MbOrder createBuyOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
+	public Order createBuyOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
 		OrderSide side = OrderSide.BUY;
 		BigDecimal decimalVolume = new BigDecimal(volume);
 		BigDecimal decimalPrice = new BigDecimal(price);
-		MbOrder order = new MbOrder(coin, side, decimalVolume, decimalPrice);
+		Order order = new MbOrder(coin, side, decimalVolume, decimalPrice);
 		return createOrder(order);
 		
 	}
@@ -179,11 +179,11 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public MbOrder createSellOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
+	public Order createSellOrder(CoinPair coin, String volume, String price) throws ApiProviderException {
 		OrderSide side = OrderSide.SELL;
 		BigDecimal decimalVolume = new BigDecimal(volume);
 		BigDecimal decimalPrice = new BigDecimal(price);
-		MbOrder order = new MbOrder(coin, side, decimalVolume, decimalPrice);
+		Order order = new MbOrder(coin, side, decimalVolume, decimalPrice);
 		return createOrder(order);
 		
 	}
@@ -196,15 +196,15 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public MbOrder cancelOrder(MbOrder order) throws ApiProviderException {
+	public Order cancelOrder(Order order) throws ApiProviderException {
 		if (order == null) {
 			throw new ApiProviderException("Invalid filter.");
 		}
 		
-		JsonObject jsonResponse = makeRequest(order.toParams(), RequestMethod.CANCEL_ORDER.value);
+		JsonObject jsonResponse = makeRequest(((MbOrder) order).toParams(), RequestMethod.CANCEL_ORDER.value);
 
 		String orderId = jsonResponse.names().get(0);
-		MbOrder response = new MbOrder(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
+		Order response = new MbOrder(Long.valueOf(orderId), jsonResponse.get(orderId).asObject());
 		return response;
 	}
 
