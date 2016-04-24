@@ -64,7 +64,7 @@ public class MercadoBitcoinReport extends RobotReport {
 		if (myCanceledOrders == null) {
 			myCanceledOrders = new ArrayList<Order>();
 			
-			for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
+			/*for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
 				orderFilter.setSince(time - intervalToReadMyCanceledOrders);
 				orderFilter.setEnd(time - 1);
 				List<Order> orders = getTradeApiService().listOrders(orderFilter);
@@ -88,7 +88,7 @@ public class MercadoBitcoinReport extends RobotReport {
 					myCanceledOrders.add(i, order);
 					i++;
 				}
-			}
+			}*/
 		}
 		lastTimeByReadingMyCanceledOrders = now;
 		
