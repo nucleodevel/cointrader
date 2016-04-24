@@ -10,7 +10,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
-import net.trader.beans.Order;
+import net.trader.beans.Operation;
+import net.trader.beans.OrderSide;
 
 import com.eclipsesource.json.JsonObject;
 
@@ -23,7 +24,7 @@ import com.eclipsesource.json.JsonObject;
  * <b>rate</b>: Tax's percentage applied to the operation.
  * <b>created</b>: Operation's Unix time.
  */
-public class Operation extends Order implements Serializable {
+public class MbOperation extends Operation implements Serializable {
 
 	private static final long serialVersionUID = -3345636873296069825L;
 
@@ -37,7 +38,7 @@ public class Operation extends Order implements Serializable {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public Operation(JsonObject jsonObject) {
+	public MbOperation(JsonObject jsonObject) {
 		this.created = Integer.valueOf(jsonObject.get("date").toString());
 		this.currencyPrice = new BigDecimal(jsonObject.get("price").toString());
 		this.coinAmount = new BigDecimal(jsonObject.get("amount").toString());
@@ -51,7 +52,7 @@ public class Operation extends Order implements Serializable {
 		this.createdDate.setTimeInMillis((long)created * 1000);
 	}
 	
-	public Operation(Operation another) {
+	public MbOperation(MbOperation another) {
 		this.created = another.getCreated();
 		this.currencyPrice = another.getCurrencyPrice();
 		this.coinAmount = another.getCoinAmount();
@@ -69,7 +70,7 @@ public class Operation extends Order implements Serializable {
 	 * @param operationId Operation Identifier
 	 * @param jsonObject Trade API JSON response
 	 */
-	public Operation(Long operationId, JsonObject jsonObject) {
+	public MbOperation(Long operationId, JsonObject jsonObject) {
 		this.operationId = operationId;
 		this.coinAmount = new BigDecimal(jsonObject.get("volume").asString());
 		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
@@ -129,7 +130,7 @@ public class Operation extends Order implements Serializable {
 	}
 
 	@Override
-	public int compareTo(Order another) {
+	public int compareTo(Operation another) {
 		return -1 * super.compareTo(another);
 	}
 

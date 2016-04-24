@@ -12,10 +12,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import net.mercadobitcoin.util.EnumValue;
 import net.mercadobitcoin.util.JsonHashMap;
 import net.mercadobitcoin.util.ReflectionUtils;
+import net.trader.beans.EnumValue;
 import net.trader.beans.Order;
+import net.trader.beans.OrderSide;
 import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonArray;
@@ -73,12 +74,12 @@ public class MbOrder extends Order implements Serializable {
 	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 	
 	private CoinPair pair;
+	protected OrderSide type;
 	
 	private Long orderId;
 	private String status;
 	private Integer created;
-	private Calendar createdDate;
-	private List<Operation> operations;
+	private List<MbOperation> operations;
 	
 	private Boolean flagSmall = false;
 
@@ -95,6 +96,7 @@ public class MbOrder extends Order implements Serializable {
 		this.coinAmount = coinAmount;
 		this.pair = pair;
 		this.side = side;
+		this.type = side;
 		
 		this.flagSmall = true;
 	}
@@ -105,23 +107,24 @@ public class MbOrder extends Order implements Serializable {
 	public MbOrder(Long orderId, JsonObject jsonObject) {
 		this.orderId = orderId;
 		this.pair = CoinPair.valueOf(jsonObject.get("pair").asString().toUpperCase());
-		this.side = OrderSide.valueOf(jsonObject.get("side").asString().toUpperCase());
+		this.side = OrderSide.valueOf(jsonObject.get("type").asString().toUpperCase());
 		this.coinAmount = new BigDecimal(jsonObject.get("volume").asString());
 		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
 		this.status = jsonObject.get("status").asString();
 		this.created = Integer.valueOf(jsonObject.get("created").asString());
+		this.type = side;
 		
-		this.operations = new ArrayList<Operation>();
+		this.operations = new ArrayList<MbOperation>();
 		for (String operationId: jsonObject.get("operations").asObject().names()) {
 			if (operationId.matches("-?\\d+(\\.\\d+)?")) {
-				operations.add(new Operation(
+				operations.add(new MbOperation(
 								Long.valueOf(operationId),
 								jsonObject.get("operations").asObject().get(operationId).asObject() ));
 			}
 		}
 		
-		this.createdDate = Calendar.getInstance();
-		this.createdDate.setTimeInMillis((long)created * 1000);
+		this.creationDate = Calendar.getInstance();
+		this.creationDate.setTimeInMillis((long)created * 1000);
 	}
 	
 	/**
@@ -132,13 +135,9 @@ public class MbOrder extends Order implements Serializable {
 		this.coinAmount = new BigDecimal(jsonArray.get(1).toString());
 		this.pair = pair;
 		this.side = side;
+		this.type = side;
 		
 		this.flagSmall = true;
-	}
-	
-	@Override
-	public Long getDate() {
-		return (long) created;
 	}
 
 	public CoinPair getPair() {
@@ -157,16 +156,20 @@ public class MbOrder extends Order implements Serializable {
 		return created;
 	}
 
-	public List<Operation> getOperations() {
+	public List<MbOperation> getOperations() {
 		return operations;
 	}
 
 	public Calendar getCreatedDate() {
-		return createdDate;
+		return creationDate;
 	}
 
-	public void setCreatedDate(Calendar createdDate) {
-		this.createdDate = createdDate;
+	public void setCreatedDate(Calendar creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	public OrderSide getType() {
+		return type;
 	}
 
 	@Override
@@ -177,7 +180,7 @@ public class MbOrder extends Order implements Serializable {
 		} else {
 			return "Order [pair=" + pair + ", side=" + side + ", coinAmount=" + coinAmount
 					+ ", price=" + currencyPrice + ", orderId=" + orderId + ", status="
-					+ status + ", created=" + createdDate.getTime() + ", operations="
+					+ status + ", created=" + creationDate.getTime() + ", operations="
 					+ operations + "]";
 		}
 	}

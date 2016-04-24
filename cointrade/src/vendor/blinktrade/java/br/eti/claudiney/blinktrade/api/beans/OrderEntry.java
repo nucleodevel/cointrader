@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.math.RoundingMode;
 import java.util.List;
 
-import net.trader.beans.Order.OrderSide;
+import net.trader.beans.OrderSide;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -51,9 +51,10 @@ public class OrderEntry implements Serializable {
 						oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
 								c.getRate(),
 								c.getRateSize(), RoundingMode.DOWN) );
-						oo.setOrderDate( Utils.getCalendar(objArray.get(12).getAsString()));
+						oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 						oo.setVolume(objArray.get(13).getAsBigDecimal());
 						oo.setTimeInForce(objArray.get(14).getAsString());
+						oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));	
 					}
 				}
 			}

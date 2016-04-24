@@ -9,11 +9,15 @@ package net.mercadobitcoin.tradeapi.to;
 import com.eclipsesource.json.JsonObject;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+
+import net.trader.beans.Balance;
+import net.trader.exception.ApiProviderException;
 
 /**
  * User's information of funds, opened orders and server date/time.
  */
-public class AccountBalance implements Serializable {
+public class MbBalance extends Balance implements Serializable {
 
 	private static final long serialVersionUID = 6922034267613306463L;
 
@@ -26,10 +30,33 @@ public class AccountBalance implements Serializable {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public AccountBalance(JsonObject jsonObject) {
+	public MbBalance(JsonObject jsonObject, String currency, String coin) {
+		super(currency, coin);
 		this.serverTime = Integer.valueOf(jsonObject.get("server_time").asString());
 		this.openOrders = jsonObject.get("open_orders").asInt();
 		this.funds = new Funds(jsonObject.get("funds").asObject());
+	}
+	
+	@Override
+	public BigDecimal getCurrencyAmount() throws ApiProviderException {
+		BigDecimal currencyAmount;
+		if (getCurrency().equals("BRL"))
+			currencyAmount = getFunds().getBrlWithOpenOrders();
+		else
+			currencyAmount = null;
+		return currencyAmount;
+	}
+	
+	@Override
+	public BigDecimal getCoinAmount() throws ApiProviderException {
+		BigDecimal coinAmount;
+		if (getCoin().equals("BTC"))
+			coinAmount = getFunds().getBtcWithOpenOrders();
+		else if (getCoin().equals("LTC"))
+			coinAmount = getFunds().getLtcWithOpenOrders();
+		else
+			coinAmount = null;
+		return coinAmount;
 	}
 
 	public Integer getServerTime() {

@@ -3,11 +3,12 @@ package br.eti.claudiney.blinktrade.api.beans;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Calendar;
 
-import net.trader.beans.Order;
+import net.trader.beans.Operation;
 
 @SuppressWarnings("serial")
-public class BtOpenOrder extends Order implements Serializable {
+public class BtOperation extends Operation implements Serializable {
 
 	private BigInteger clientCustomOrderID;
 	private String orderID;
@@ -22,11 +23,11 @@ public class BtOpenOrder extends Order implements Serializable {
 	private BigDecimal volume;
 	private String timeInForce;
 	
-	public BtOpenOrder() {
+	public BtOperation() {
 		
 	}
 	
-	public BtOpenOrder(BtOpenOrder another) {
+	public BtOperation(BtOperation another) {
 		super();
 		this.clientCustomOrderID = another.getClientCustomOrderID();
 		this.orderID = another.getOrderID();
@@ -40,7 +41,7 @@ public class BtOpenOrder extends Order implements Serializable {
 		this.ordType = another.getOrdType();
 		this.orderQty = another.getOrderQty();
 		this.currencyPrice = another.getCurrencyPrice();
-		this.creationDate = another.getCreationDate();
+		this.creationDate = another.getOrderDate();
 		this.volume = another.getVolume();
 		this.timeInForce = another.getTimeInForce();
 		this.coinAmount = this.cumQty.add(this.leavesQty);	
@@ -124,6 +125,14 @@ public class BtOpenOrder extends Order implements Serializable {
 
 	public void setOrderQty(BigDecimal orderQty) {
 		this.orderQty = orderQty;
+	}
+
+	public Calendar getOrderDate() {
+		return creationDate;
+	}
+
+	public void setOrderDate(Calendar creationDate) {
+		this.creationDate = creationDate;
 	}
 
 	public BigDecimal getVolume() {

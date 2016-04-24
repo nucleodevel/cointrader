@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -15,19 +16,31 @@ import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import net.trader.beans.Balance;
+import net.trader.beans.Operation;
+import net.trader.beans.Order;
+import net.trader.beans.OrderSide;
 import net.trader.exception.ApiProviderException;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
+import br.eti.claudiney.blinktrade.api.beans.BlinktradeCurrency;
+import br.eti.claudiney.blinktrade.api.beans.BtBalance;
 import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
-import br.eti.claudiney.blinktrade.api.beans.OrderBookResponse;
+import br.eti.claudiney.blinktrade.api.beans.BtOperation;
+import br.eti.claudiney.blinktrade.api.beans.BtOrderBook;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
+import br.eti.claudiney.blinktrade.utils.Utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Comprise main Blinktrade API operations. <br/>
@@ -69,8 +82,8 @@ public class BlinktradeAPI {
 	 * @param broker
 	 *            Broker (exchange) ID.
 	 */
-	public BlinktradeAPI(String apiKey, String apiSecret,
-			BlinktradeBroker broker) throws ApiProviderException {
+	public BlinktradeAPI(String apiKey, String apiSecret, BlinktradeBroker broker) 
+		throws ApiProviderException {
 
 		if (apiKey == null) {
 			throw new ApiProviderException("APIKey cannot be null");
@@ -102,14 +115,27 @@ public class BlinktradeAPI {
 	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
-	public String getBalance(Integer balanceRequestID) throws ApiProviderException {
+	public Balance getBalance(String currency, String coin) throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
 		request.put("MsgType", "U2");
-		request.put("BalanceReqID", balanceRequestID); // new Integer(1)
+		request.put("BalanceReqID", new Integer((int)(System.currentTimeMillis()/1000))); // new Integer(1)
 
-		return sendMessage(GSON.toJson(request));
+		String response = sendMessage(GSON.toJson(request));
+		
+		BtBalance balance = new BtBalance(currency, coin);
+		JsonParser jsonParser = new JsonParser();
+        JsonObject jo = (JsonObject)jsonParser.parse(response);
+        
+        balance.setClientID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("ClientID").getAsString());
+        balance.setBalanceRequestID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("BalanceReqID").getAsInt());
+        
+        balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency).getAsBigDecimal());
+        balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency + "_locked").getAsBigDecimal());
+        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigInteger());
+        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC_locked").getAsBigInteger());
+        return balance;
 
 	}
 
@@ -126,8 +152,7 @@ public class BlinktradeAPI {
 	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
-	public String requestOpenOrders(Integer orderRequestID)
-			throws ApiProviderException {
+	public List<Order> getClientActiveOrders() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -135,13 +160,50 @@ public class BlinktradeAPI {
 		filters.add("has_leaves_qty eq 1");
 
 		request.put("MsgType", "U4");
-		request.put("OrdersReqID", orderRequestID);
+		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
 		request.put("Page", new Integer(0));
 		request.put("PageSize", new Integer(100));
 		request.put("Filter", filters);
 
-		return sendMessage(GSON.toJson(request));
-
+		String response = sendMessage(GSON.toJson(request));
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jo = (JsonObject) jsonParser.parse(response);
+		JsonArray openOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
+		List<Order> activeOrders = new ArrayList<Order>();
+		if(openOrdListGrp != null) {
+			for (JsonElement o: openOrdListGrp) {
+				if (o != null) {
+					BtOpenOrder oo = new BtOpenOrder();
+					activeOrders.add(oo);
+					JsonArray objArray = o.getAsJsonArray();
+					oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
+					oo.setOrderID(objArray.get(1).getAsString());
+					oo.setCumQty(objArray.get(2).getAsBigDecimal());
+					oo.setOrdStatus(objArray.get(3).getAsString());
+					oo.setLeavesQty(objArray.get(4).getAsBigDecimal());
+					oo.setCxlQty(objArray.get(5).getAsBigDecimal());
+					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
+					oo.setSymbol(objArray.get(7).getAsString());
+					String sideString = objArray.get(8).getAsString();
+					OrderSide side = sideString.equals("1")? OrderSide.BUY:
+						(sideString.equals("2")? OrderSide.SELL: null);
+					oo.setSide(side);
+					oo.setOrdType(objArray.get(9).getAsString());
+					oo.setOrderQty(objArray.get(10).getAsBigDecimal());
+					
+					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
+					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
+							c.getRate(),
+							c.getRateSize(), RoundingMode.DOWN) );
+					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
+					oo.setVolume(objArray.get(13).getAsBigDecimal());
+					oo.setTimeInForce(objArray.get(14).getAsString());
+					oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));
+				}
+			}
+		}
+		return activeOrders;
 	}
 
 	/**
@@ -157,8 +219,7 @@ public class BlinktradeAPI {
 	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
-	public String requestCompletedOrders(Integer orderRequestID)
-			throws ApiProviderException {
+	public List<Order> getClientCompletedOrders() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -166,13 +227,105 @@ public class BlinktradeAPI {
 		filters.add("has_cum_qty eq 1");
 
 		request.put("MsgType", "U4");
-		request.put("OrdersReqID", orderRequestID);
+		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
 		request.put("Page", new Integer(0));
 		request.put("PageSize", new Integer(100));
 		request.put("Filter", filters);
 
-		return sendMessage(GSON.toJson(request));
+		String response = sendMessage(GSON.toJson(request));
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jo = (JsonObject) jsonParser.parse(response);
+		JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
+		List<Order> completedOrders = new ArrayList<Order>();
+		if(completedOrdListGrp != null) {
+			for (JsonElement o: completedOrdListGrp) {
+				if (o != null) {
+					BtOpenOrder oo = new BtOpenOrder();
+					completedOrders.add(oo);
+					JsonArray objArray = o.getAsJsonArray();
+					oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
+					oo.setOrderID(objArray.get(1).getAsString());
+					oo.setCumQty(objArray.get(2).getAsBigDecimal());
+					oo.setOrdStatus(objArray.get(3).getAsString());
+					oo.setLeavesQty(objArray.get(4).getAsBigDecimal());
+					oo.setCxlQty(objArray.get(5).getAsBigDecimal());
+					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
+					oo.setSymbol(objArray.get(7).getAsString());
+					String sideString = objArray.get(8).getAsString();
+					OrderSide side = sideString.equals("1")? OrderSide.BUY:
+						(sideString.equals("2")? OrderSide.SELL: null);
+					oo.setSide(side);
+					oo.setOrdType(objArray.get(9).getAsString());
+					oo.setOrderQty(objArray.get(10).getAsBigDecimal());
+					
+					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
+					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
+							c.getRate(),
+							c.getRateSize(), RoundingMode.DOWN) );
+					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
+					oo.setVolume(objArray.get(13).getAsBigDecimal());
+					oo.setTimeInForce(objArray.get(14).getAsString());
+					oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));
+				}
+			}
+		}
+		return completedOrders;
+	}
+	
 
+	public List<Operation> getClientOperations() throws ApiProviderException {
+
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		List<String> filters = new ArrayList<String>(1);
+		filters.add("has_cum_qty eq 1");
+
+		request.put("MsgType", "U4");
+		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
+		request.put("Page", new Integer(0));
+		request.put("PageSize", new Integer(100));
+		request.put("Filter", filters);
+
+		String response = sendMessage(GSON.toJson(request));
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jo = (JsonObject) jsonParser.parse(response);
+		JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
+		List<Operation> clientOperations = new ArrayList<Operation>();
+		if(completedOrdListGrp != null) {
+			for (JsonElement o: completedOrdListGrp) {
+				if (o != null) {
+					BtOperation oo = new BtOperation();
+					clientOperations.add(oo);
+					JsonArray objArray = o.getAsJsonArray();
+					oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
+					oo.setOrderID(objArray.get(1).getAsString());
+					oo.setCumQty(objArray.get(2).getAsBigDecimal());
+					oo.setOrdStatus(objArray.get(3).getAsString());
+					oo.setLeavesQty(objArray.get(4).getAsBigDecimal());
+					oo.setCxlQty(objArray.get(5).getAsBigDecimal());
+					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
+					oo.setSymbol(objArray.get(7).getAsString());
+					String sideString = objArray.get(8).getAsString();
+					OrderSide side = sideString.equals("1")? OrderSide.BUY:
+						(sideString.equals("2")? OrderSide.SELL: null);
+					oo.setSide(side);
+					oo.setOrdType(objArray.get(9).getAsString());
+					oo.setOrderQty(objArray.get(10).getAsBigDecimal());
+					
+					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
+					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
+							c.getRate(),
+							c.getRateSize(), RoundingMode.DOWN) );
+					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
+					oo.setVolume(objArray.get(13).getAsBigDecimal());
+					oo.setTimeInForce(objArray.get(14).getAsString());
+					oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));
+				}
+			}
+		}
+		return clientOperations;
 	}
 
 	/**
@@ -434,7 +587,7 @@ public class BlinktradeAPI {
 
 	}
 
-	public OrderBookResponse getOrderBook() throws ApiProviderException {
+	public BtOrderBook getOrderBook() throws ApiProviderException {
 
 		/*
 		 * API URL initialzation
@@ -471,7 +624,7 @@ public class BlinktradeAPI {
 			throw new ApiProviderException("API response retrieve fail", e);
 		}
 
-		return GSON.fromJson(responseMessage, OrderBookResponse.class);
+		return GSON.fromJson(responseMessage, BtOrderBook.class);
 
 	}
 

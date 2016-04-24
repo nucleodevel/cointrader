@@ -3,12 +3,24 @@ package net.trader.beans;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
-public abstract class Order implements Comparable<Order> {
+public class Operation implements Comparable<Operation> {
 	
 	protected OrderSide side;
 	protected BigDecimal currencyPrice;
 	protected BigDecimal coinAmount;
 	protected Calendar creationDate;
+
+	public Operation() {
+		
+	}
+	
+	public Operation getClone() {
+		Operation newOperation = new Operation();
+		newOperation.side = this.side;
+		newOperation.currencyPrice = this.currencyPrice;
+		newOperation.coinAmount = this.coinAmount;
+		return newOperation;
+	}
 
 	public OrderSide getSide() {
 		return side;
@@ -33,7 +45,7 @@ public abstract class Order implements Comparable<Order> {
 	public void setCoinAmount(BigDecimal coinAmount) {
 		this.coinAmount = coinAmount;
 	}
-
+	
 	public Calendar getCreationDate() {
 		return creationDate;
 	}
@@ -47,7 +59,7 @@ public abstract class Order implements Comparable<Order> {
 	}
 
 	@Override
-	public int compareTo(Order another) {
+	public int compareTo(Operation another) {
 		return this.getCreationDate().compareTo(another.getCreationDate());
 	}
 

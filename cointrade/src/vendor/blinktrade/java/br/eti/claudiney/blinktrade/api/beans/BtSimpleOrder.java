@@ -18,11 +18,6 @@ public class BtSimpleOrder extends Order implements Serializable {
 		this.coinAmount = coinAmount;
 	}
 	
-	@Override
-	public Long getDate() {
-		return null;
-	}
-	
 	@SuppressWarnings("unchecked")
 	<T> T setClientID(String clientID) {
 		this.clientID = clientID;

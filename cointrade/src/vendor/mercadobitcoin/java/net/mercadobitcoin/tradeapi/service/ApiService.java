@@ -16,11 +16,13 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import net.mercadobitcoin.tradeapi.to.Operation;
+import net.mercadobitcoin.tradeapi.to.MbOperation;
 import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
-import net.mercadobitcoin.tradeapi.to.Orderbook;
+import net.mercadobitcoin.tradeapi.to.MbOrderBook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.mercadobitcoin.util.TimestampInterval;
+import net.trader.beans.Operation;
+import net.trader.beans.OrderBook;
 import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonArray;
@@ -75,10 +77,10 @@ public class ApiService extends AbstractApiService {
 	 * @return Orderbook object with an Array of the open Orders.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Orderbook orderbook(CoinPair coinPair) throws ApiProviderException {
+	public OrderBook getOrderBook(CoinPair coinPair) throws ApiProviderException {
 		String url = assemblyUrl(coinPair, "orderbook");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
-		return new Orderbook(jsonObject, CoinPair.BTC_BRL);
+		return new MbOrderBook(jsonObject, CoinPair.BTC_BRL);
 	}
 	
 	/**
@@ -133,7 +135,7 @@ public class ApiService extends AbstractApiService {
 		//Convert Json response to object
 		Operation[] operationList = new Operation[jsonObject.size()];
 		for (int i = 0; i < jsonObject.size(); i++) {
-			operationList[i] = new Operation(jsonObject.get(i).asObject());
+			operationList[i] = new MbOperation(jsonObject.get(i).asObject());
 		}
 		return operationList;
 	}

@@ -24,14 +24,15 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
 
-import net.mercadobitcoin.tradeapi.to.AccountBalance;
+import net.mercadobitcoin.tradeapi.to.MbBalance;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
 import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Withdrawal;
 import net.mercadobitcoin.util.JsonHashMap;
+import net.trader.beans.Balance;
 import net.trader.beans.Order;
-import net.trader.beans.Order.OrderSide;
+import net.trader.beans.OrderSide;
 import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonObject;
@@ -103,10 +104,10 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point the cause of any possible problem with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public AccountBalance getAccountInfo() throws ApiProviderException {
+	public Balance getBalance(String currency, String coin) throws ApiProviderException {
 		JsonObject jsonResponse = makeRequest(RequestMethod.GET_INFO.value);
-		AccountBalance response = new AccountBalance(jsonResponse);
-		return response;		
+		Balance balance = new MbBalance(jsonResponse, currency, coin);
+		return balance;		
 	}
 
 	/**

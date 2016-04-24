@@ -8,7 +8,7 @@ package net.mercadobitcoin.tradeapi.to;
 
 import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
-import net.trader.beans.Order.OrderSide;
+import net.trader.beans.OrderSide;
 
 /**
  * Filter object to be used on order list request.
