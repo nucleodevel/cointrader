@@ -2,8 +2,6 @@ package br.eti.claudiney.blinktrade.api.beans;
 
 import java.math.BigDecimal;
 
-import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
-
 public class BlinktradeCurrency {
 	
 	public static BlinktradeCurrency BRL = new BlinktradeCurrency("BRL", new BigDecimal("100000000.0"), (byte)2);
@@ -41,15 +39,11 @@ public class BlinktradeCurrency {
 	}
 	
 	public static BlinktradeCurrency getCurrencyBySimbol(String symbol) {
-		return getCurrencyBySimbol(BlinktradeSymbol.getSymbolById(symbol));
-	}
-	
-	public static BlinktradeCurrency getCurrencyBySimbol(BlinktradeSymbol symbol) {
 		
 		if(symbol == null) return null;
 		
 		for(BlinktradeCurrency c: SUPPORTED_CURRENCIES) {
-			if( c.getId().equals(symbol.getId().substring(3)) ) {
+			if( c.getId().equals(symbol.substring(3)) ) {
 				return c;
 			}
 		}

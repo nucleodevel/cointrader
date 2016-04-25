@@ -31,7 +31,6 @@ import br.eti.claudiney.blinktrade.api.beans.BtOperation;
 import br.eti.claudiney.blinktrade.api.beans.BtOrderBook;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
-import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
 import br.eti.claudiney.blinktrade.utils.Utils;
 
 import com.google.gson.Gson;
@@ -193,7 +192,7 @@ public class BlinktradeAPI {
 					oo.setOrdType(objArray.get(9).getAsString());
 					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					
-					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
+					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency());
 					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
 							c.getRate(),
 							c.getRateSize(), RoundingMode.DOWN) );
@@ -261,7 +260,7 @@ public class BlinktradeAPI {
 					oo.setOrdType(objArray.get(9).getAsString());
 					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					
-					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
+					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency());
 					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
 							c.getRate(),
 							c.getRateSize(), RoundingMode.DOWN) );
@@ -317,7 +316,7 @@ public class BlinktradeAPI {
 					oo.setOrdType(objArray.get(9).getAsString());
 					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					
-					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getSymbol());
+					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency());
 					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
 							c.getRate(),
 							c.getRateSize(), RoundingMode.DOWN) );
@@ -387,14 +386,12 @@ public class BlinktradeAPI {
 			String currency, OrderSide side, BlinktradeOrderType type,
 			BigDecimal coinAmount, BigDecimal currencyPrice)
 			throws ApiProviderException {
-		
-		BlinktradeSymbol symbol = BlinktradeSymbol.getSymbolById(coin + currency);
 
 		if (clientOrderId == null) {
 			throw new ApiProviderException("ClientOrderID  cannot be null");
 		}
 
-		if (symbol == null) {
+		if (coin == null || currency == null) {
 			throw new ApiProviderException("Symbol (currency) cannot be null");
 		}
 
@@ -422,7 +419,7 @@ public class BlinktradeAPI {
 
 		request.put("MsgType", "D");
 		request.put("ClOrdID", clientOrderId);
-		request.put("Symbol", symbol.getId());
+		request.put("Symbol", coin + currency);
 		request.put("Side", side == OrderSide.BUY? "1": (side == OrderSide.SELL? "2": null));
 		request.put("OrdType", type.getOrderType());
 		request.put("Price", currencyPrice.toBigInteger());

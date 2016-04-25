@@ -17,7 +17,8 @@ public class OrderFilter extends TapiBase {
 
 	private static final long serialVersionUID = 6302408184251869680L;
 
-	private CoinPair pair;
+	private String coin;
+	private String currency;
 	private OrderSide side;
 	private OrderStatus status;
 	private Long fromId;
@@ -32,22 +33,22 @@ public class OrderFilter extends TapiBase {
 	 */
 	public OrderFilter(String coin, String currency) {
 		super();
-		CoinPair pair = CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
-		this.pair =  pair;
+		this.coin =  coin;
+		this.currency = currency;
 	}
 
 	/**
 	 * @param pair Set the Coin Pair ("btc_brl" or "ltc_brl") filter.
 	 */
 	public void setPair(String coin, String currency) { 
-		if (pair != null) {
-			CoinPair pair = CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
-			this.pair = pair;
+		if (coin != null && currency != null) {
+			this.coin =  coin;
+			this.currency = currency;
 		}
 	}
 
 	public CoinPair getPair() {
-		return pair;
+		return CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
 	}
 	
 	/**
@@ -130,7 +131,7 @@ public class OrderFilter extends TapiBase {
 
 	@Override
 	public String toString() {
-		return "OrderFilter [pair=" + pair + ", side=" + side + ", status="
+		return "OrderFilter [coin=" + coin + ", currency=" + currency + ", side=" + side + ", status="
 				+ status + ", fromId=" + fromId + ", endId=" + endId
 				+ ", since=" + since + ", end=" + end + "]";
 	}

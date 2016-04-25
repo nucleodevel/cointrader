@@ -203,8 +203,8 @@ public class MbOrder extends Order implements Serializable {
 		try {
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			if (getPair() != null)
-				params.put("pair", getPair().getValue());
+			if (getCoin() != null && getCurrency() != null)
+				params.put("pair", getCoin().toLowerCase() + "_" + getCurrency().toLowerCase());
 			if (side != null)
 				params.put("type", side == OrderSide.BUY? "buy": (side == OrderSide.SELL? "sell": null));
 			if (coinAmount != null)
