@@ -30,7 +30,6 @@ import br.eti.claudiney.blinktrade.api.beans.BtOpenOrder;
 import br.eti.claudiney.blinktrade.api.beans.BtOperation;
 import br.eti.claudiney.blinktrade.api.beans.BtOrderBook;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderSide;
 import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
 import br.eti.claudiney.blinktrade.utils.Utils;
@@ -382,7 +381,7 @@ public class BlinktradeAPI {
 	 * 
 	 */
 	public String sendNewOrder(Integer clientOrderId, BlinktradeSymbol symbol,
-			BlinktradeOrderSide side, BlinktradeOrderType type,
+			OrderSide side, BlinktradeOrderType type,
 			BigDecimal coinAmount, BigDecimal currencyPrice)
 			throws ApiProviderException {
 
@@ -419,7 +418,7 @@ public class BlinktradeAPI {
 		request.put("MsgType", "D");
 		request.put("ClOrdID", clientOrderId);
 		request.put("Symbol", symbol.getId());
-		request.put("Side", side.getSide());
+		request.put("Side", side == OrderSide.BUY? "1": (side == OrderSide.SELL? "2": null));
 		request.put("OrdType", type.getOrderType());
 		request.put("Price", currencyPrice.toBigInteger());
 		request.put("OrderQty", coinAmount.toBigInteger());
@@ -434,7 +433,7 @@ public class BlinktradeAPI {
 	) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
-			symbol, BlinktradeOrderSide.BUY,
+			symbol, OrderSide.BUY,
 			BlinktradeOrderType.LIMITED,
 			coinAmount, currencyPrice
 		);
@@ -445,7 +444,7 @@ public class BlinktradeAPI {
 	) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
-			symbol, BlinktradeOrderSide.SELL,
+			symbol, OrderSide.SELL,
 			BlinktradeOrderType.LIMITED,
 			coinAmount, currencyPrice
 		);

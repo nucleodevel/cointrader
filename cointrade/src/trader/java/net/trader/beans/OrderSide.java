@@ -1,8 +1,8 @@
 package net.trader.beans;
 
-public enum OrderSide implements EnumValue {
-	BUY("buy"),
-	SELL("sell");
+public enum OrderSide {
+	BUY("BUY"),
+	SELL("SELL");
 	private final String value;
 
 	private OrderSide(String value) {

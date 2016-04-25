@@ -10,10 +10,11 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.mercadobitcoin.util.JsonHashMap;
-import net.mercadobitcoin.util.ReflectionUtils;
 import net.trader.beans.EnumValue;
 import net.trader.beans.Order;
 import net.trader.beans.OrderSide;
@@ -82,14 +83,10 @@ public class MbOrder extends Order implements Serializable {
 	public static final BigDecimal LITECOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
 	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 	
-	private CoinPair pair;
-	protected OrderSide type;
-	private BigDecimal volume;
-	private BigDecimal price;
-	
+	private CoinPair pair;	
 	private Long orderId;
 	private String status;
-	private Integer created;
+	
 	private List<MbOperation> operations;
 	
 	private Boolean flagSmall = false;
@@ -107,9 +104,6 @@ public class MbOrder extends Order implements Serializable {
 		this.coinAmount = coinAmount;
 		this.pair = pair;
 		this.side = side;
-		this.type = side;
-		this.price = currencyPrice;
-		this.volume = coinAmount;
 		
 		this.flagSmall = true;
 	}
@@ -124,10 +118,6 @@ public class MbOrder extends Order implements Serializable {
 		this.coinAmount = new BigDecimal(jsonObject.get("volume").asString());
 		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
 		this.status = jsonObject.get("status").asString();
-		this.created = Integer.valueOf(jsonObject.get("created").asString());
-		this.type = this.side;
-		this.price = this.currencyPrice;
-		this.volume = this.coinAmount;
 		
 		this.operations = new ArrayList<MbOperation>();
 		for (String operationId: jsonObject.get("operations").asObject().names()) {
@@ -138,6 +128,7 @@ public class MbOrder extends Order implements Serializable {
 			}
 		}
 		
+		long created = Integer.valueOf(jsonObject.get("created").asString());
 		this.creationDate = Calendar.getInstance();
 		this.creationDate.setTimeInMillis((long)created * 1000);
 	}
@@ -150,9 +141,6 @@ public class MbOrder extends Order implements Serializable {
 		this.coinAmount = new BigDecimal(jsonArray.get(1).toString());
 		this.pair = pair;
 		this.side = side;
-		this.type = side;
-		this.price = this.currencyPrice;
-		this.volume = this.coinAmount;
 		
 		this.flagSmall = true;
 	}
@@ -169,10 +157,6 @@ public class MbOrder extends Order implements Serializable {
 		return status;
 	}
 
-	public Integer getCreated() {
-		return created;
-	}
-
 	public List<MbOperation> getOperations() {
 		return operations;
 	}
@@ -183,18 +167,6 @@ public class MbOrder extends Order implements Serializable {
 
 	public void setCreatedDate(Calendar creationDate) {
 		this.creationDate = creationDate;
-	}
-
-	public OrderSide getType() {
-		return type;
-	}
-
-	public BigDecimal getVolume() {
-		return volume;
-	}
-
-	public BigDecimal getPrice() {
-		return price;
 	}
 
 	@Override
@@ -225,13 +197,23 @@ public class MbOrder extends Order implements Serializable {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
 	public JsonHashMap toParams() throws ApiProviderException {
-		JsonHashMap params = new JsonHashMap();
+		JsonHashMap hashMap = new JsonHashMap();
 		try {
-			params.putAll(ReflectionUtils.getParameters(this));
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			params.put("pair", pair.getValue());
+			params.put("type", side == OrderSide.BUY? "buy": (side == OrderSide.SELL? "sell": null));
+			params.put("volume", coinAmount);
+			params.put("price", currencyPrice);
+			params.put("orderId", orderId);
+			params.put("status", status);
+			params.put("created", creationDate.getTime());
+			
+			hashMap.putAll(params);
 		} catch (Throwable e) {
 			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
 		}
-		return params;
+		return hashMap;
 	}
 	
 }
