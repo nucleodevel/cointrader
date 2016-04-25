@@ -270,8 +270,8 @@ public abstract class RobotReport {
 
 	public abstract void cancelOrder(Order order) throws ApiProviderException;
 
-	public abstract void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException;
+	public abstract void createBuyOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException;
 
-	public abstract void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException;
+	public abstract void createSellOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException;
 
 }

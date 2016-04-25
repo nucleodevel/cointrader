@@ -383,7 +383,7 @@ public class BlinktradeAPI {
 	 */
 	public String sendNewOrder(Integer clientOrderId, BlinktradeSymbol symbol,
 			BlinktradeOrderSide side, BlinktradeOrderType type,
-			BigDecimal currencyPrice, BigDecimal coinAmount)
+			BigDecimal coinAmount, BigDecimal currencyPrice)
 			throws ApiProviderException {
 
 		if (clientOrderId == null) {
@@ -430,24 +430,24 @@ public class BlinktradeAPI {
 	}
 	
 	public void createBuyOrder(
-		BlinktradeSymbol symbol, BigDecimal currencyPrice, BigDecimal coinAmount
+		BlinktradeSymbol symbol, BigDecimal coinAmount, BigDecimal currencyPrice
 	) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
 			symbol, BlinktradeOrderSide.BUY,
 			BlinktradeOrderType.LIMITED,
-			currencyPrice, coinAmount
+			coinAmount, currencyPrice
 		);
 	}
 	
 	public void createSellOrder(
-		BlinktradeSymbol symbol, BigDecimal currencyPrice, BigDecimal coinAmount
+		BlinktradeSymbol symbol, BigDecimal coinAmount, BigDecimal currencyPrice
 	) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
 			symbol, BlinktradeOrderSide.SELL,
 			BlinktradeOrderType.LIMITED,
-			currencyPrice, coinAmount
+			coinAmount, currencyPrice
 		);
 	}
 

@@ -44,6 +44,15 @@ public class MbOrder extends Order implements Serializable {
 		public String getValue() {
 			return this.value;
 		}
+		
+		public static CoinPair getSymbolById(String value) {
+			for(CoinPair cp : values()) {
+				if(cp.getValue().equals(value)) {
+					return cp;
+				}
+			}
+			return null;
+		}
 	}
 	
 	

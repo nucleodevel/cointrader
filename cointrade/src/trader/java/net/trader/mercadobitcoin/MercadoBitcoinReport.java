@@ -146,22 +146,17 @@ public class MercadoBitcoinReport extends RobotReport {
 	}
 	
 	@Override
-	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
-		getTradeApiService().createBuyOrder(
-			getCoinPair(), coin.toString(), currency.toString()
-		);
+	public void createBuyOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
+		getTradeApiService().createBuyOrder(getCoinPair(), coinAmount, currencyPrice);
 	}
 
 	@Override
-	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
-		getTradeApiService().createSellOrder(
-			getCoinPair(), coin.toString(), currency.toString()
-		);
+	public void createSellOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
+		getTradeApiService().createSellOrder(getCoinPair(), coinAmount, currencyPrice);
 	}
 	
 	public CoinPair getCoinPair() {
-		return getCurrency().equals("BRL") && getCoin().equals("BTC")?
-			CoinPair.BTC_BRL: null;
+		return CoinPair.getSymbolById(getCoin().toLowerCase() + "_" + getCurrency().toLowerCase());
 	}
 
 	private ApiService getApiService() throws ApiProviderException {

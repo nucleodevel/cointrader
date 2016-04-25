@@ -185,9 +185,9 @@ public class Main {
 			
 			if (isAGoodBuyOrder) {
 				
-				BigDecimal currency = new BigDecimal(order.getCurrencyPrice().doubleValue() + robot.getIncDecPrice());
-				Double coinDouble = (report.getBalance().getCurrencyAmount().doubleValue() - 0.01) / currency.doubleValue();
-				BigDecimal coin = new BigDecimal(coinDouble);
+				BigDecimal currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue() + robot.getIncDecPrice());
+				Double coinDouble = (report.getBalance().getCurrencyAmount().doubleValue() - 0.01) / currencyPrice.doubleValue();
+				BigDecimal coinAmount = new BigDecimal(coinDouble);
 				
 				// get the unique buy order or null
 				Order myBuyOrder = report.getMyActiveBuyOrders().size() > 0?
@@ -195,7 +195,7 @@ public class Main {
 				
 				if (myBuyOrder != null) {
 					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getCurrencyPrice())));
-					System.out.println(order.getCoinAmount().doubleValue() + " - " + coin.doubleValue());
+					System.out.println(order.getCoinAmount().doubleValue() + " - " + coinAmount.doubleValue());
 					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 
@@ -206,19 +206,19 @@ public class Main {
 					if (myBuyOrder != null)
 						report.cancelOrder(myBuyOrder);
 					try {
-						if (coin.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.createBuyOrder(currency, coin);
+						if (coinAmount.doubleValue() > robot.getMinimumCoinAmount()) {
+							report.createBuyOrder(coinAmount, currencyPrice);
 							System.out.println(
 								"Buy order created: " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
-								decFmt.format(currency) + " - " + report.getCoin() + " " + coin
+								decFmt.format(currencyPrice) + " - " + report.getCoin() + " " + coinAmount
 							);
 						}
 						else
 							System.out.println(
 								"There are no currency available for " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
-								decFmt.format(currency) + " - " + report.getCoin() + " " + coin
+								decFmt.format(currencyPrice) + " - " + report.getCoin() + " " + coinAmount
 							);
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -227,7 +227,7 @@ public class Main {
 				}
 				else if (
 					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myBuyOrder.getCurrencyPrice())) &&
-					Math.abs(order.getCoinAmount().doubleValue() - coin.doubleValue()) <= robot.getMinimumCoinAmount() &&
+					Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= robot.getMinimumCoinAmount() &&
 					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(
@@ -277,8 +277,8 @@ public class Main {
 				
 			if (isAGoodSellOrder || isToSellSoon) {
 				
-				BigDecimal currency = new BigDecimal(order.getCurrencyPrice().doubleValue() - robot.getIncDecPrice());
-				BigDecimal coin = report.getBalance().getCoinAmount();
+				BigDecimal currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue() - robot.getIncDecPrice());
+				BigDecimal coinAmount = report.getBalance().getCoinAmount();
 				
 				// get the unique buy order or null
 				Order mySellOrder = report.getMyActiveSellOrders().size() > 0?
@@ -286,7 +286,7 @@ public class Main {
 					
 				if (mySellOrder != null) {
 					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(mySellOrder.getCurrencyPrice())));
-					System.out.println(Math.abs(order.getCoinAmount().doubleValue() - coin.doubleValue()));
+					System.out.println(Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()));
 					System.out.println(nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue());
 				}
 				// if my order isn't the best, delete it and create another 
@@ -297,19 +297,19 @@ public class Main {
 					if (mySellOrder != null)
 						report.cancelOrder(mySellOrder);
 					try {
-						if (coin.doubleValue() > robot.getMinimumCoinAmount()) {
-							report.createSellOrder(currency, coin);
+						if (coinAmount.doubleValue() > robot.getMinimumCoinAmount()) {
+							report.createSellOrder(coinAmount, currencyPrice);
 							System.out.println(
 								"Sell order created: " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
-								decFmt.format(currency) + " - " + report.getCoin() + " " + coin
+								decFmt.format(currencyPrice) + " - " + report.getCoin() + " " + coinAmount
 							);
 						}
 						else
 							System.out.println(
 								"There are no " + report.getCoin() + " available for " +
 								(i + 1) + "° - " + report.getCurrency() + " " + 
-								decFmt.format(currency) + " - " + report.getCoin() + " " + coin
+								decFmt.format(currencyPrice) + " - " + report.getCoin() + " " + coinAmount
 							);
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -318,7 +318,7 @@ public class Main {
 				}
 				else if (
 					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(mySellOrder.getCurrencyPrice())) &&
-					Math.abs(order.getCoinAmount().doubleValue() - coin.doubleValue()) <= robot.getMinimumCoinAmount() &&
+					Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= robot.getMinimumCoinAmount() &&
 					nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue() <= robot.getIncDecPrice()
 				) {
 					System.out.println(

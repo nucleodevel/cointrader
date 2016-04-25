@@ -68,18 +68,17 @@ public class BlinktradeReport extends RobotReport {
 	}
 	
 	@Override
-	public void createBuyOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
-		getApi().createBuyOrder(getCoinPair(), currency, coin);
+	public void createBuyOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
+		getApi().createBuyOrder(getCoinPair(), coinAmount, currencyPrice);
 	}
 	
 	@Override
-	public void createSellOrder(BigDecimal currency, BigDecimal coin) throws ApiProviderException {
-		getApi().createSellOrder(getCoinPair(), currency, coin);
+	public void createSellOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
+		getApi().createSellOrder(getCoinPair(), coinAmount, currencyPrice);
 	}
 	
 	public BlinktradeSymbol getCoinPair() {
-		return getCurrency().equals("BRL") && getCoin().equals("BTC")?
-			BlinktradeSymbol.BTCBRL: null;
+		return BlinktradeSymbol.getSymbolById(getCoin() + getCurrency());
 	}
 	
 	private BlinktradeAPI getApi() throws ApiProviderException {
