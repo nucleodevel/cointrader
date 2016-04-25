@@ -184,8 +184,8 @@ public class BlinktradeAPI {
 					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
-					oo.setCoin(oo.getSymbol().substring(0, 3).toUpperCase());
-					oo.setCurrency(oo.getSymbol().substring(3, 6).toUpperCase());
+					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
+					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
 					OrderSide side = sideString.equals("1")? OrderSide.BUY:
 						(sideString.equals("2")? OrderSide.SELL: null);
@@ -252,8 +252,8 @@ public class BlinktradeAPI {
 					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
-					oo.setCoin(oo.getSymbol().substring(0, 3).toUpperCase());
-					oo.setCurrency(oo.getSymbol().substring(3, 6).toUpperCase());
+					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
+					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
 					OrderSide side = sideString.equals("1")? OrderSide.BUY:
 						(sideString.equals("2")? OrderSide.SELL: null);
@@ -308,8 +308,8 @@ public class BlinktradeAPI {
 					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
-					oo.setCoin(oo.getSymbol().substring(0, 3).toUpperCase());
-					oo.setCurrency(oo.getSymbol().substring(3, 6).toUpperCase());
+					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
+					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
 					OrderSide side = sideString.equals("1")? OrderSide.BUY:
 						(sideString.equals("2")? OrderSide.SELL: null);
