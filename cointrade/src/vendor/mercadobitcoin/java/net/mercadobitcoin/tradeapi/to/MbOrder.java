@@ -205,7 +205,7 @@ public class MbOrder extends Order implements Serializable {
 			params.put("type", side == OrderSide.BUY? "buy": (side == OrderSide.SELL? "sell": null));
 			params.put("volume", coinAmount);
 			params.put("price", currencyPrice);
-			params.put("orderId", orderId);
+			params.put("order_id", orderId);
 			params.put("status", status);
 			params.put("created", creationDate.getTime());
 			
