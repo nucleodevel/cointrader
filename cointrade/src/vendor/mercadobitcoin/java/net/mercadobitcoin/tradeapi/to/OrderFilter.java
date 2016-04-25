@@ -30,16 +30,18 @@ public class OrderFilter extends TapiBase {
 	 * 
 	 * @param pair Define the Coin Pair to filter the list.
 	 */
-	public OrderFilter(CoinPair pair) {
+	public OrderFilter(String coin, String currency) {
 		super();
+		CoinPair pair = CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
 		this.pair =  pair;
 	}
 
 	/**
 	 * @param pair Set the Coin Pair ("btc_brl" or "ltc_brl") filter.
 	 */
-	public void setPair(CoinPair pair) { 
+	public void setPair(String coin, String currency) { 
 		if (pair != null) {
+			CoinPair pair = CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
 			this.pair = pair;
 		}
 	}

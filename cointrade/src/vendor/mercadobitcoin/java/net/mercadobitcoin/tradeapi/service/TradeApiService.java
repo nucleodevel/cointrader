@@ -160,9 +160,9 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public Order createBuyOrder(CoinPair coin, BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
+	public Order createBuyOrder(String coin, String currency, BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
 		OrderSide side = OrderSide.BUY;
-		Order order = new MbOrder(coin, side, coinAmount, currencyPrice);
+		Order order = new MbOrder(coin, currency, side, coinAmount, currencyPrice);
 		return createOrder(order);
 		
 	}
@@ -177,9 +177,9 @@ public class TradeApiService extends AbstractApiService {
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 * @throws NetworkErrorException 
 	 */
-	public Order createSellOrder(CoinPair coin, BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
+	public Order createSellOrder(String coin, String currency, BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
 		OrderSide side = OrderSide.SELL;
-		Order order = new MbOrder(coin, side, coinAmount, currencyPrice);
+		Order order = new MbOrder(coin, currency, side, coinAmount, currencyPrice);
 		return createOrder(order);
 		
 	}

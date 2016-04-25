@@ -184,7 +184,8 @@ public class BlinktradeAPI {
 					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
-					oo.setSymbol(objArray.get(7).getAsString());
+					oo.setCoin(oo.getSymbol().substring(0, 3).toUpperCase());
+					oo.setCurrency(oo.getSymbol().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
 					OrderSide side = sideString.equals("1")? OrderSide.BUY:
 						(sideString.equals("2")? OrderSide.SELL: null);
@@ -251,7 +252,8 @@ public class BlinktradeAPI {
 					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
-					oo.setSymbol(objArray.get(7).getAsString());
+					oo.setCoin(oo.getSymbol().substring(0, 3).toUpperCase());
+					oo.setCurrency(oo.getSymbol().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
 					OrderSide side = sideString.equals("1")? OrderSide.BUY:
 						(sideString.equals("2")? OrderSide.SELL: null);
@@ -306,7 +308,8 @@ public class BlinktradeAPI {
 					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
-					oo.setSymbol(objArray.get(7).getAsString());
+					oo.setCoin(oo.getSymbol().substring(0, 3).toUpperCase());
+					oo.setCurrency(oo.getSymbol().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
 					OrderSide side = sideString.equals("1")? OrderSide.BUY:
 						(sideString.equals("2")? OrderSide.SELL: null);
@@ -380,10 +383,12 @@ public class BlinktradeAPI {
 	 *             Throws an exception if some error occurs.
 	 * 
 	 */
-	public String sendNewOrder(Integer clientOrderId, BlinktradeSymbol symbol,
-			OrderSide side, BlinktradeOrderType type,
+	public String sendNewOrder(Integer clientOrderId, String coin,
+			String currency, OrderSide side, BlinktradeOrderType type,
 			BigDecimal coinAmount, BigDecimal currencyPrice)
 			throws ApiProviderException {
+		
+		BlinktradeSymbol symbol = BlinktradeSymbol.getSymbolById(coin + currency);
 
 		if (clientOrderId == null) {
 			throw new ApiProviderException("ClientOrderID  cannot be null");
@@ -429,22 +434,22 @@ public class BlinktradeAPI {
 	}
 	
 	public void createBuyOrder(
-		BlinktradeSymbol symbol, BigDecimal coinAmount, BigDecimal currencyPrice
+		String coin, String currency, BigDecimal coinAmount, BigDecimal currencyPrice
 	) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
-			symbol, OrderSide.BUY,
+			coin, currency, OrderSide.BUY,
 			BlinktradeOrderType.LIMITED,
 			coinAmount, currencyPrice
 		);
 	}
 	
 	public void createSellOrder(
-		BlinktradeSymbol symbol, BigDecimal coinAmount, BigDecimal currencyPrice
+		String coin, String currency, BigDecimal coinAmount, BigDecimal currencyPrice
 	) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
-			symbol, OrderSide.SELL,
+			coin, currency, OrderSide.SELL,
 			BlinktradeOrderType.LIMITED,
 			coinAmount, currencyPrice
 		);

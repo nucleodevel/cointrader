@@ -83,7 +83,6 @@ public class MbOrder extends Order implements Serializable {
 	public static final BigDecimal LITECOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
 	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 	
-	private CoinPair pair;	
 	private Long orderId;
 	private String status;
 	
@@ -99,12 +98,12 @@ public class MbOrder extends Order implements Serializable {
 	 * @param coinAmount The amount to be exchanged.
 	 * @param price The price the exchange should be dealt.
 	 */
-	public MbOrder(CoinPair pair, OrderSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
-		this.currencyPrice = currencyPrice;
+	public MbOrder(String coin, String currency, OrderSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
+		this.coin = coin;
+		this.currency = currency;
 		this.coinAmount = coinAmount;
-		this.pair = pair;
+		this.currencyPrice = currencyPrice;
 		this.side = side;
-		
 		this.flagSmall = true;
 	}
 
@@ -113,7 +112,9 @@ public class MbOrder extends Order implements Serializable {
 	 */
 	public MbOrder(Long orderId, JsonObject jsonObject) {
 		this.orderId = orderId;
-		this.pair = CoinPair.valueOf(jsonObject.get("pair").asString().toUpperCase());
+		String coinPair = jsonObject.get("pair").asString().toUpperCase();
+		this.coin = coinPair.substring(0, 3).toUpperCase();
+		this.currency = coinPair.substring(4, 7).toUpperCase();
 		this.side = OrderSide.valueOf(jsonObject.get("type").asString().toUpperCase());
 		this.coinAmount = new BigDecimal(jsonObject.get("volume").asString());
 		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
@@ -136,17 +137,18 @@ public class MbOrder extends Order implements Serializable {
 	/**
 	 * Constructor. Response from the API, used by Orderbook.
 	 */
-	public MbOrder(JsonArray jsonArray, CoinPair pair, OrderSide side) {
-		this.currencyPrice = new BigDecimal(jsonArray.get(0).toString());
+	public MbOrder(JsonArray jsonArray, String coin, String currency,  OrderSide side) {
+		this.coin = coin;
+		this.currency = currency;
 		this.coinAmount = new BigDecimal(jsonArray.get(1).toString());
-		this.pair = pair;
+		this.currencyPrice = new BigDecimal(jsonArray.get(0).toString());
 		this.side = side;
 		
 		this.flagSmall = true;
 	}
 
 	public CoinPair getPair() {
-		return pair;
+		return CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
 	}
 
 	public Long getOrderId() {
@@ -172,10 +174,10 @@ public class MbOrder extends Order implements Serializable {
 	@Override
 	public String toString() {
 		if (this.flagSmall == true) {
-			return "\nOrder [pair=" + pair + ", side=" + side + ", coinAmount=" + coinAmount
+			return "\nOrder [pair=" + getPair() + ", side=" + side + ", coinAmount=" + coinAmount
 					+ ", price=" + currencyPrice + "]";
 		} else {
-			return "Order [pair=" + pair + ", side=" + side + ", coinAmount=" + coinAmount
+			return "Order [pair=" + getPair() + ", side=" + side + ", coinAmount=" + coinAmount
 					+ ", price=" + currencyPrice + ", orderId=" + orderId + ", status="
 					+ status + ", created=" + creationDate.getTime() + ", operations="
 					+ operations + "]";
@@ -201,8 +203,8 @@ public class MbOrder extends Order implements Serializable {
 		try {
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			if (pair != null)
-				params.put("pair", pair.getValue());
+			if (getPair() != null)
+				params.put("pair", getPair().getValue());
 			if (side != null)
 				params.put("type", side == OrderSide.BUY? "buy": (side == OrderSide.SELL? "sell": null));
 			if (coinAmount != null)

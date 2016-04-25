@@ -16,7 +16,6 @@ public class BtOpenOrder extends Order implements Serializable {
 	private BigDecimal leavesQty;
 	private BigDecimal cxlQty;
 	private BigDecimal avgPx;
-	private String symbol;
 	private String ordType;
 	private BigDecimal orderQty;
 	private BigDecimal volume;
@@ -35,7 +34,6 @@ public class BtOpenOrder extends Order implements Serializable {
 		this.leavesQty = another.getLeavesQty();
 		this.cxlQty = another.getCxlQty();
 		this.avgPx = another.getAvgPx();
-		this.symbol = another.getSymbol();
 		this.side = another.getSide();
 		this.ordType = another.getOrdType();
 		this.orderQty = another.getOrderQty();
@@ -103,11 +101,7 @@ public class BtOpenOrder extends Order implements Serializable {
 	}
 
 	public String getSymbol() {
-		return symbol;
-	}
-
-	public void setSymbol(String symbol) {
-		this.symbol = symbol;
+		return coin + currency;
 	}
 
 	public String getOrdType() {
@@ -156,7 +150,7 @@ public class BtOpenOrder extends Order implements Serializable {
 		sb.append(", leavesQty=").append(leavesQty);
 		sb.append(", cxlQty=").append(cxlQty);
 		sb.append(", avgPx=").append(avgPx);
-		sb.append(", symbol=").append(symbol);
+		sb.append(", symbol=").append(getSymbol());
 		sb.append(", side=").append(side);
 		sb.append(", ordType=").append(ordType);
 		sb.append(", orderQty=").append(orderQty);
@@ -183,12 +177,12 @@ public class BtOpenOrder extends Order implements Serializable {
 		sb.append(", side=").append(side.equals("1")? "BUY": "SELL");
 		sb.append(", ordStatus=").append(ordStatus.equals("2")? "FINISHED": "NOT FINISHED");
 		sb.append(", price=").append(currencyPrice);
-		sb.append(", volume=").append(volume.divide(new BigDecimal(100000000)));
+		sb.append(", volume=").append(volume);
 		sb.append(", cumQty=").append(cumQty);
 		sb.append(", leavesQty=").append(leavesQty);
 		sb.append(", cxlQty=").append(cxlQty);
 		sb.append(", avgPx=").append(avgPx);
-		sb.append(", symbol=").append(symbol);
+		sb.append(", symbol=").append(getSymbol());
 		sb.append(", ordType=").append(ordType);
 		sb.append(", orderQty=").append(orderQty);
 		sb.append("}");

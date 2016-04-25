@@ -12,7 +12,6 @@ import net.trader.robot.RobotReport;
 import net.trader.robot.UserConfiguration;
 import br.eti.claudiney.blinktrade.api.BlinktradeAPI;
 import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
-import br.eti.claudiney.blinktrade.enums.BlinktradeSymbol;
 
 public class BlinktradeReport extends RobotReport {
 	
@@ -69,16 +68,12 @@ public class BlinktradeReport extends RobotReport {
 	
 	@Override
 	public void createBuyOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
-		getApi().createBuyOrder(getCoinPair(), coinAmount, currencyPrice);
+		getApi().createBuyOrder(getCoin(), getCurrency(), coinAmount, currencyPrice);
 	}
 	
 	@Override
 	public void createSellOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
-		getApi().createSellOrder(getCoinPair(), coinAmount, currencyPrice);
-	}
-	
-	public BlinktradeSymbol getCoinPair() {
-		return BlinktradeSymbol.getSymbolById(getCoin() + getCurrency());
+		getApi().createSellOrder(getCoin(), getCurrency(), coinAmount, currencyPrice);
 	}
 	
 	private BlinktradeAPI getApi() throws ApiProviderException {

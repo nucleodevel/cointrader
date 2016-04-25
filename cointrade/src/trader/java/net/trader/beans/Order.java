@@ -6,8 +6,8 @@ import java.util.Calendar;
 public abstract class Order implements Comparable<Order> {
 	
 	protected OrderSide side;
-	private String currency;
-	private String coin;
+	protected String currency;
+	protected String coin;
 	protected BigDecimal currencyPrice;
 	protected BigDecimal coinAmount;
 	protected Calendar creationDate;

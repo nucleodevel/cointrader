@@ -51,8 +51,8 @@ public class ApiService extends AbstractApiService {
 	 * @return Ticker object with the information retrieved.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Ticker ticker24h(CoinPair coinPair) throws ApiProviderException {
-		String url = assemblyUrl(coinPair, "ticker");
+	public Ticker ticker24h(String coin, String currency) throws ApiProviderException {
+		String url = assemblyUrl(coin, currency, "ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
 		return new Ticker(ticketJsonObject);
@@ -64,8 +64,8 @@ public class ApiService extends AbstractApiService {
 	 * @return Ticker object with the information retrieved.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Ticker tickerOfToday(CoinPair coinPair) throws ApiProviderException {
-		String url = assemblyUrl(coinPair, "v1/ticker");
+	public Ticker tickerOfToday(String coin, String currency) throws ApiProviderException {
+		String url = assemblyUrl(coin, currency, "v1/ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
 		return new Ticker(ticketJsonObject);
@@ -77,10 +77,10 @@ public class ApiService extends AbstractApiService {
 	 * @return Orderbook object with an Array of the open Orders.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public OrderBook getOrderBook(CoinPair coinPair) throws ApiProviderException {
-		String url = assemblyUrl(coinPair, "orderbook");
+	public OrderBook getOrderBook(String coin, String currency) throws ApiProviderException {
+		String url = assemblyUrl(coin, currency, "orderbook");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
-		return new MbOrderBook(jsonObject, CoinPair.BTC_BRL);
+		return new MbOrderBook(jsonObject, coin, currency);
 	}
 	
 	/**
@@ -89,8 +89,8 @@ public class ApiService extends AbstractApiService {
 	 * @return Trades object with an Array of the operations.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Operation[] tradeList(CoinPair coinPair) throws ApiProviderException {
-		return tradeList(coinPair, "");
+	public Operation[] tradeList(String coin, String currency) throws ApiProviderException {
+		return tradeList(coin, currency, "");
 	}
 
 	/**
@@ -99,11 +99,11 @@ public class ApiService extends AbstractApiService {
 	 * @return Trades object with an Array of the operations.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Operation[] tradeList(CoinPair coinPair, long initialTid) throws ApiProviderException {
+	public Operation[] tradeList(String coin, String currency, long initialTid) throws ApiProviderException {
 		if (initialTid < 0) {
 			throw new ApiProviderException("Invalid initial tid.");
 		}
-		return tradeList(coinPair, String.valueOf("?tid=" + initialTid));
+		return tradeList(coin, currency, String.valueOf("?tid=" + initialTid));
 	}
 	
 	/**
@@ -112,7 +112,7 @@ public class ApiService extends AbstractApiService {
 	 * @return Trades object with an Array of the operations.
 	 * @throws ApiProviderException Generic exception to point any error with the execution.
 	 */
-	public Operation[] tradeList(CoinPair coinPair, TimestampInterval interval) throws ApiProviderException {
+	public Operation[] tradeList(String coin, String currency, TimestampInterval interval) throws ApiProviderException {
 		if (interval == null) {
 			throw new ApiProviderException("Invalid date interval.");
 		}
@@ -124,11 +124,11 @@ public class ApiService extends AbstractApiService {
 			paths.add(interval.getToTimestamp() + "/");
 		}
 		
-		return tradeList(coinPair, paths.toArray(new String[0]));
+		return tradeList(coin, currency, paths.toArray(new String[0]));
 	}
 
-	private Operation[] tradeList(CoinPair coinPair, String ... complements) throws ApiProviderException {
-		String url = assemblyUrl(coinPair, "trades", complements);
+	private Operation[] tradeList(String coin, String currency, String ... complements) throws ApiProviderException {
+		String url = assemblyUrl(coin, currency, "trades", complements);
 		String response = invokeApiMethod(url.toString());
 		JsonArray jsonObject = JsonArray.readFrom(response);
 
@@ -143,14 +143,15 @@ public class ApiService extends AbstractApiService {
 	/*
 	 * Assembly url to be invoked based on coin pair and parameters
 	 */
-	private String assemblyUrl(CoinPair coinPair, String method, String ... pathParams) throws ApiProviderException {
+	private String assemblyUrl(String coin, String currency, String method, String ... pathParams) throws ApiProviderException {
+		CoinPair coinPair = CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
 		if (coinPair == null) {
 			throw new ApiProviderException("Invalid coin pair.");
 		}
 
 		StringBuffer url = new StringBuffer(method);
 		
-		if (coinPair.equals(CoinPair.LTC_BRL)) {
+		if (coin.equals("LTC")) {
 			url.append("_litecoin");
 		}
 		url.append("/");
