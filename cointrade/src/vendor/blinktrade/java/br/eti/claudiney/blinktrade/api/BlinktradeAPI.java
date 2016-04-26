@@ -216,7 +216,7 @@ public class BlinktradeAPI {
 	 * @throws ApiProviderException
 	 *             Throws an exception if some error occurs.
 	 */
-	public List<Order> getClientCompletedOrders() throws ApiProviderException {
+	public List<Order> getUserCompletedOrders() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 

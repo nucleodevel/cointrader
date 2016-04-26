@@ -42,7 +42,7 @@ public class BlinktradeReport extends RobotReport {
 	@Override
 	public List<Order> getMyCompletedOrders() throws ApiProviderException {
 		if (myCompletedOrders == null)
-			myCompletedOrders = getApi().getClientCompletedOrders();
+			myCompletedOrders = getApi().getUserCompletedOrders();
 		return myCompletedOrders;
 	}
 
