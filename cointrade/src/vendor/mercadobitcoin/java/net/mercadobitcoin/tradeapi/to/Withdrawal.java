@@ -6,14 +6,20 @@
 
 package net.mercadobitcoin.tradeapi.to;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+import net.mercadobitcoin.util.JsonHashMap;
+import net.trader.exception.ApiProviderException;
 
 import com.eclipsesource.json.JsonObject;
 
 /**
  * Withdrawal information.
  */
-public class Withdrawal extends TapiBase {
+public class Withdrawal implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -134,6 +140,40 @@ public class Withdrawal extends TapiBase {
 				+ coin + ", currency=" + currency + ", transaction=" + transaction 
 				+ ", address=" + address + ", volume=" + volume + ", created=" 
 				+ created + ", updated=" + updated + "]";
+	}
+	
+	/**
+	 * Get the Parameters of the Object and return them as a list with the name and the value of each parameter.
+	 * 
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
+	 */
+	public JsonHashMap toParams() throws ApiProviderException {
+		JsonHashMap hashMap = new JsonHashMap();
+		try {
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			if (coin != null && currency != null)
+				params.put("pair", coin.toLowerCase() + "_" + currency.toLowerCase());
+			if (withdrawalId != null)
+				params.put("withdrawal_id", withdrawalId);
+			if (status != null)
+				params.put("status", status);
+			if (statusDescrition != null)
+				params.put("status_descritition", statusDescrition);
+			if (transaction != null)
+				params.put("transaction", transaction);
+			if (address != null)
+				params.put("address", address);
+			if (volume != null)
+				params.put("volume", volume);
+			params.put("created", created);
+			params.put("updated", updated);
+			
+			hashMap.putAll(params);
+		} catch (Throwable e) {
+			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
+		}
+		return hashMap;
 	}
 
 }

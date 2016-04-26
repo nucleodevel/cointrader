@@ -6,6 +6,7 @@
 
 package net.mercadobitcoin.tradeapi.to;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import net.trader.exception.ApiProviderException;
 /**
  * Filter object to be used on order list request.
  */
-public class OrderFilter extends TapiBase {
+public class OrderFilter implements Serializable {
 
 	private static final long serialVersionUID = 6302408184251869680L;
 
