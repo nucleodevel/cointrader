@@ -40,10 +40,10 @@ public class BlinktradeCurrency {
 	
 	public static BlinktradeCurrency getCurrencyBySimbol(String symbol) {
 		
-		if(symbol == null) return null;
-		
+		if (symbol == null) 
+			return null;
 		for(BlinktradeCurrency c: SUPPORTED_CURRENCIES) {
-			if( c.getId().equals(symbol.substring(3)) ) {
+			if( c.getId().equals(symbol) ) {
 				return c;
 			}
 		}

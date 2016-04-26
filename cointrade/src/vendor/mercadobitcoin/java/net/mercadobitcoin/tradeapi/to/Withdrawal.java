@@ -8,8 +8,6 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.math.BigDecimal;
 
-import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
-
 import com.eclipsesource.json.JsonObject;
 
 /**
@@ -22,7 +20,8 @@ public class Withdrawal extends TapiBase {
 	private Long withdrawalId;
 	private Integer status;
 	private String statusDescrition;
-	private CoinPair pair;
+	private String coin;
+	private String currency;
 	private String transaction;
 	private String address;
 	private BigDecimal volume;
@@ -34,7 +33,7 @@ public class Withdrawal extends TapiBase {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public Withdrawal(JsonObject jsonObject, CoinPair pair) {
+	public Withdrawal(JsonObject jsonObject, String coin, String currency) {
 		JsonObject jsonWithdrawal = jsonObject.get("withdrawal").asObject();
 		this.withdrawalId = Long.valueOf(jsonWithdrawal.getString("id", "0"));
 		this.volume = new BigDecimal(jsonWithdrawal.getString("volume", "0"));
@@ -44,7 +43,8 @@ public class Withdrawal extends TapiBase {
 		this.address = jsonWithdrawal.getString("bitcoin_address", "");
 		this.created = Long.valueOf(jsonWithdrawal.getString("created_timestamp", "0"));
 		this.updated = Long.valueOf(jsonWithdrawal.getString("updated_timestamp", "0"));
-		this.pair = pair;
+		this.coin = coin;
+		this.currency = currency;
 	}
 	
 	public Long getWithdrawalId() {
@@ -71,12 +71,20 @@ public class Withdrawal extends TapiBase {
 		this.statusDescrition = statusDescrition;
 	}
 
-	public CoinPair getPair() {
-		return pair;
+	public String getCoin() {
+		return coin;
 	}
 
-	public void setPair(CoinPair pair) {
-		this.pair = pair;
+	public void setCoin(String coin) {
+		this.coin = coin;
+	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
 	}
 
 	public String getTransaction() {
@@ -122,10 +130,10 @@ public class Withdrawal extends TapiBase {
 	@Override
 	public String toString() {
 		return "Withdrawal [withdrawalId=" + withdrawalId + ", status="
-				+ status + ", statusDescrition=" + statusDescrition + ", pair="
-				+ pair + ", transaction=" + transaction + ", address="
-				+ address + ", volume=" + volume + ", created=" + created
-				+ ", updated=" + updated + "]";
+				+ status + ", statusDescrition=" + statusDescrition + ", coin="
+				+ coin + ", currency=" + currency + ", transaction=" + transaction 
+				+ ", address=" + address + ", volume=" + volume + ", created=" 
+				+ created + ", updated=" + updated + "]";
 	}
 
 }

@@ -6,9 +6,13 @@
 
 package net.mercadobitcoin.tradeapi.to;
 
-import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
+import java.util.HashMap;
+import java.util.Map;
+
 import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
+import net.mercadobitcoin.util.JsonHashMap;
 import net.trader.beans.OrderSide;
+import net.trader.exception.ApiProviderException;
 
 /**
  * Filter object to be used on order list request.
@@ -45,10 +49,6 @@ public class OrderFilter extends TapiBase {
 			this.coin =  coin;
 			this.currency = currency;
 		}
-	}
-
-	public CoinPair getPair() {
-		return CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
 	}
 	
 	/**
@@ -134,5 +134,37 @@ public class OrderFilter extends TapiBase {
 		return "OrderFilter [coin=" + coin + ", currency=" + currency + ", side=" + side + ", status="
 				+ status + ", fromId=" + fromId + ", endId=" + endId
 				+ ", since=" + since + ", end=" + end + "]";
+	}
+
+	/**
+	 * Get the Parameters of the Object and return them as a list with the name and the value of each parameter.
+	 * 
+	 * @throws ApiProviderException Generic exception to point any error with the execution.
+	 */
+	public JsonHashMap toParams() throws ApiProviderException {
+		JsonHashMap hashMap = new JsonHashMap();
+		try {
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			if (coin != null && currency != null)
+				params.put("pair", coin.toLowerCase() + "_" + currency.toLowerCase());
+			if (side != null)
+				params.put("type", side == OrderSide.BUY? "buy": (side == OrderSide.SELL? "sell": null));
+			if (status != null)
+				params.put("status", status.getValue());
+			if (fromId != null)
+				params.put("from_id", fromId);
+			if (endId != null)
+				params.put("end_id", endId);
+			if (since != null)
+				params.put("since", since);
+			if (end != null)
+				params.put("end", end);
+			
+			hashMap.putAll(params);
+		} catch (Throwable e) {
+			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
+		}
+		return hashMap;
 	}
 }

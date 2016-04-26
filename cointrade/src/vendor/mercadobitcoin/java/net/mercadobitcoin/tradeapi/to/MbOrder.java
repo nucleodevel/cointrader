@@ -30,32 +30,6 @@ public class MbOrder extends Order implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	/**
-	 * The Coin Pairs that a operation can deal with.
-	 */
-	public enum CoinPair implements EnumValue {
-		BTC_BRL("btc_brl"),
-		LTC_BRL("ltc_brl");
-		private final String value;
-
-		private CoinPair(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return this.value;
-		}
-		
-		public static CoinPair getSymbolById(String value) {
-			for(CoinPair cp : values()) {
-				if(cp.getValue().equals(value)) {
-					return cp;
-				}
-			}
-			return null;
-		}
-	}
-	
 	
 	
 	/**
@@ -147,10 +121,6 @@ public class MbOrder extends Order implements Serializable {
 		this.flagSmall = true;
 	}
 
-	public CoinPair getPair() {
-		return CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
-	}
-
 	public Long getOrderId() {
 		return orderId;
 	}
@@ -174,10 +144,12 @@ public class MbOrder extends Order implements Serializable {
 	@Override
 	public String toString() {
 		if (this.flagSmall == true) {
-			return "\nOrder [pair=" + getPair() + ", side=" + side + ", coinAmount=" + coinAmount
+			return "\nOrder [coin=" + coin + ", currency=" + currency 
+					+ ", side=" + side + ", coinAmount=" + coinAmount
 					+ ", price=" + currencyPrice + "]";
 		} else {
-			return "Order [pair=" + getPair() + ", side=" + side + ", coinAmount=" + coinAmount
+			return "Order [coin=" + coin + ", currency=" + currency 
+					+ ", side=" + side + ", coinAmount=" + coinAmount
 					+ ", price=" + currencyPrice + ", orderId=" + orderId + ", status="
 					+ status + ", created=" + creationDate.getTime() + ", operations="
 					+ operations + "]";

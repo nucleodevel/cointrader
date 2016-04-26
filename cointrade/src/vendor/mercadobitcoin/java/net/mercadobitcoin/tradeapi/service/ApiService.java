@@ -17,7 +17,6 @@ import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
 
 import net.mercadobitcoin.tradeapi.to.MbOperation;
-import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 import net.mercadobitcoin.tradeapi.to.MbOrderBook;
 import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.mercadobitcoin.util.TimestampInterval;
@@ -144,8 +143,7 @@ public class ApiService extends AbstractApiService {
 	 * Assembly url to be invoked based on coin pair and parameters
 	 */
 	private String assemblyUrl(String coin, String currency, String method, String ... pathParams) throws ApiProviderException {
-		CoinPair coinPair = CoinPair.getSymbolById(coin.toLowerCase() + "_" + currency.toLowerCase());
-		if (coinPair == null) {
+		if (coin == null || currency == null) {
 			throw new ApiProviderException("Invalid coin pair.");
 		}
 

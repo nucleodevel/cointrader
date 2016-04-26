@@ -26,7 +26,6 @@ import javax.net.ssl.HttpsURLConnection;
 
 import net.mercadobitcoin.tradeapi.to.MbBalance;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
-import net.mercadobitcoin.tradeapi.to.MbOrder.CoinPair;
 import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Withdrawal;
 import net.mercadobitcoin.util.JsonHashMap;
@@ -211,7 +210,7 @@ public class TradeApiService extends AbstractApiService {
 	 * @param volume Amount that will be withdrawal
 	 * @throws NetworkErrorException 
 	 */
-	public Withdrawal withdrawalBitcoin(String bitcoinAddress, BigDecimal volume) throws ApiProviderException {
+	public Withdrawal withdrawalBtcBrl(String bitcoinAddress, BigDecimal volume) throws ApiProviderException {
 		if (bitcoinAddress == null) {
 			throw new ApiProviderException("Invalid Bitcoin address.");
 		}
@@ -225,7 +224,7 @@ public class TradeApiService extends AbstractApiService {
 		params.put("volume", volume.toString());
 		
 		JsonObject jsonResponse = makeRequest(params, RequestMethod.WITHDRAWAL_BITCOIN.value);
-		Withdrawal withdrawal = new Withdrawal(jsonResponse, CoinPair.BTC_BRL);
+		Withdrawal withdrawal = new Withdrawal(jsonResponse, "BTC", "BRL");
 		
 		return withdrawal;
 	}

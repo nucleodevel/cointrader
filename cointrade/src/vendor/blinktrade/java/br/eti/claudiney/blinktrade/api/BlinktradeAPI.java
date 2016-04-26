@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ public class BlinktradeAPI {
 	private static final String BLINKTRADE_PUBLIC_API_ORDERBOOK = "https://api.blinktrade.com/api/v1/BRL/orderbook";
 	//private static final String BLINKTRADE_PUBLIC_API_TRADES = "https://api.blinktrade.com/api/v1/BRL/trades";
 	
-	private static final long DIV_MULTI_BASE = 100000000;
+	private static final long SATOSHI_BASE = 100000000;
 	
 	private String apiKey;
 	private String apiSecret;
@@ -130,10 +129,10 @@ public class BlinktradeAPI {
         balance.setClientID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("ClientID").getAsString());
         balance.setBalanceRequestID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("BalanceReqID").getAsInt());
         
-        balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-        balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency + "_locked").getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC_locked").getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+        balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency).getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
+        balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency + "_locked").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
+        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
+        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC_locked").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
         return balance;
 
 	}
@@ -178,10 +177,10 @@ public class BlinktradeAPI {
 					JsonArray objArray = o.getAsJsonArray();
 					oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
 					oo.setOrderID(objArray.get(1).getAsString());
-					oo.setCumQty(objArray.get(2).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setCumQty(objArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setOrdStatus(objArray.get(3).getAsString());
-					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
 					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
 					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
@@ -190,12 +189,10 @@ public class BlinktradeAPI {
 						(sideString.equals("2")? OrderSide.SELL: null);
 					oo.setSide(side);
 					oo.setOrdType(objArray.get(9).getAsString());
-					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-					
-					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency());
+					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
-							c.getRate(),
-							c.getRateSize(), RoundingMode.DOWN) );
+						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
+					));
 					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 					oo.setVolume(objArray.get(13).getAsBigDecimal());
 					oo.setTimeInForce(objArray.get(14).getAsString());
@@ -246,10 +243,10 @@ public class BlinktradeAPI {
 					JsonArray objArray = o.getAsJsonArray();
 					oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
 					oo.setOrderID(objArray.get(1).getAsString());
-					oo.setCumQty(objArray.get(2).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setCumQty(objArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setOrdStatus(objArray.get(3).getAsString());
-					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
 					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
 					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
@@ -258,12 +255,11 @@ public class BlinktradeAPI {
 						(sideString.equals("2")? OrderSide.SELL: null);
 					oo.setSide(side);
 					oo.setOrdType(objArray.get(9).getAsString());
-					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					
-					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency());
 					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
-							c.getRate(),
-							c.getRateSize(), RoundingMode.DOWN) );
+						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
+					));
 					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 					oo.setVolume(objArray.get(13).getAsBigDecimal());
 					oo.setTimeInForce(objArray.get(14).getAsString());
@@ -302,10 +298,10 @@ public class BlinktradeAPI {
 					JsonArray objArray = o.getAsJsonArray();
 					oo.setClientCustomOrderID(objArray.get(0).getAsBigInteger());
 					oo.setOrderID(objArray.get(1).getAsString());
-					oo.setCumQty(objArray.get(2).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setCumQty(objArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setOrdStatus(objArray.get(3).getAsString());
-					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
-					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setLeavesQty(objArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+					oo.setCxlQty(objArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					oo.setAvgPx(objArray.get(6).getAsBigDecimal());
 					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
 					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
@@ -314,12 +310,11 @@ public class BlinktradeAPI {
 						(sideString.equals("2")? OrderSide.SELL: null);
 					oo.setSide(side);
 					oo.setOrdType(objArray.get(9).getAsString());
-					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(DIV_MULTI_BASE)));
+					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					
-					BlinktradeCurrency c = BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency());
 					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
-							c.getRate(),
-							c.getRateSize(), RoundingMode.DOWN) );
+						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
+					));
 					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 					oo.setVolume(objArray.get(13).getAsBigDecimal());
 					oo.setTimeInForce(objArray.get(14).getAsString());
@@ -412,8 +407,8 @@ public class BlinktradeAPI {
 			throw new ApiProviderException("Amount (satoshi) cannot be null");
 		}
 
-		currencyPrice = currencyPrice.multiply(new BigDecimal(DIV_MULTI_BASE + 1));
-		coinAmount = coinAmount.multiply(new BigDecimal(DIV_MULTI_BASE));
+		currencyPrice = currencyPrice.multiply(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate().add(new BigDecimal(1)));
+		coinAmount = coinAmount.multiply(new BigDecimal(SATOSHI_BASE));
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
