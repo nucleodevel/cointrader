@@ -30,8 +30,8 @@ public class MbBalance extends Balance implements Serializable {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public MbBalance(JsonObject jsonObject, String currency, String coin) {
-		super(currency, coin);
+	public MbBalance(JsonObject jsonObject, String coin, String currency) {
+		super(coin, currency);
 		this.serverTime = Integer.valueOf(jsonObject.get("server_time").asString());
 		this.openOrders = jsonObject.get("open_orders").asInt();
 		this.funds = new Funds(jsonObject.get("funds").asObject());

@@ -6,12 +6,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import net.mercadobitcoin.tradeapi.service.ApiService;
-import net.mercadobitcoin.tradeapi.service.TradeApiService;
-import net.mercadobitcoin.tradeapi.to.MbOperation;
+import net.mercadobitcoin.tradeapi.service.MbApiService;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
-import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
-import net.mercadobitcoin.tradeapi.to.OrderFilter;
 import net.mercadobitcoin.tradeapi.to.Ticker;
 import net.trader.beans.Balance;
 import net.trader.beans.Operation;
@@ -28,21 +24,20 @@ public class MercadoBitcoinReport extends RobotReport {
 	private static long lastTimeByReadingMyCanceledOrders = 0;
 	private static long totalTimeToReadMyCompletedOrders = 43200;
 	
-	private ApiService apiService;
-	private TradeApiService tradeApiService;
+	private MbApiService apiService;
 	
 	private Ticker ticker24h;
 	
 	protected static List<Order> myCanceledOrders;
 	
-	public MercadoBitcoinReport(UserConfiguration userConfiguration, String currency, String coin) {
-		super(userConfiguration, currency, coin);
+	public MercadoBitcoinReport(UserConfiguration userConfiguration, String coin, String currency) {
+		super(userConfiguration, coin, currency);
 	}
 	
 	@Override
 	public Balance getBalance() throws ApiProviderException {
 		if (balance == null)
-			balance = getTradeApiService().getBalance(getCurrency(), getCoin());
+			balance = getApiService().getBalance(getCurrency(), getCoin());
 		return balance;
 	}
 
@@ -52,21 +47,27 @@ public class MercadoBitcoinReport extends RobotReport {
 			orderBook = getApiService().getOrderBook(getCoin(), getCurrency());
 		return orderBook;
 	}
+
+	@Override
+	public List<Order> getMyActiveOrders() throws ApiProviderException {
+		if (myActiveOrders == null)
+			myActiveOrders = getApiService().getUserActiveOrders(getCoin(), getCurrency());
+		return myActiveOrders;
+	}
 	
 	@Override
 	public List<Order> getMyCanceledOrders() throws ApiProviderException {
 		long now = (new Date()).getTime() / 1000;
 		
-		OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());
-		orderFilter.setStatus(OrderStatus.CANCELED);
+		
 		
 		if (myCanceledOrders == null) {
 			myCanceledOrders = new ArrayList<Order>();
 			
 			for (long time = now; time > now - totalTimeToReadMyCanceledOrders; time -= intervalToReadMyCanceledOrders) {
-				orderFilter.setSince(time - intervalToReadMyCanceledOrders);
-				orderFilter.setEnd(time - 1);
-				List<Order> orders = getTradeApiService().listOrders(orderFilter);
+				Long since = time - intervalToReadMyCanceledOrders;
+				Long end = time - 1;
+				List<Order> orders = getApiService().getUserCanceledOrders(getCoin(), getCurrency(), since, end);
 				for (Order o: orders) {
 					MbOrder order = (MbOrder) o;
 					if (order.getOperations() != null && order.getOperations().size() > 0)
@@ -76,10 +77,10 @@ public class MercadoBitcoinReport extends RobotReport {
 			Collections.sort(myCanceledOrders);
 		}
 		else {
-			orderFilter.setSince(lastTimeByReadingMyCanceledOrders + 1);
-			orderFilter.setEnd(now);
+			Long since = lastTimeByReadingMyCanceledOrders + 1;
+			Long end = now;
 			
-			List<Order> orders = getTradeApiService().listOrders(orderFilter);
+			List<Order> orders = getApiService().getUserCanceledOrders(getCoin(), getCurrency(), since, end);
 			int i = 0;
 			for (Order o: orders) {
 				MbOrder order = (MbOrder) o;
@@ -99,73 +100,49 @@ public class MercadoBitcoinReport extends RobotReport {
 		if (myCompletedOrders == null) {
 			
 			// lê uma semana de ordens completas
-			long now = (new Date()).getTime() / 1000;			
-			OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());
-			orderFilter.setStatus(OrderStatus.COMPLETED);
-			orderFilter.setSince(now - totalTimeToReadMyCompletedOrders);
-			orderFilter.setEnd(now);
+			long now = (new Date()).getTime() / 1000;
+			Long since = now - totalTimeToReadMyCompletedOrders;
+			Long end = now;
 			
-			myCompletedOrders = getTradeApiService().listOrders(orderFilter);
-			Collections.sort(myCompletedOrders);
+			myCompletedOrders = getApiService().getUserCompletedOrders(
+				getCoin(), getCurrency(), since, end
+			);
 			
 		}
 		return myCompletedOrders;
 	}
 
 	@Override
-	public List<Order> getMyActiveOrders() throws ApiProviderException {
-		if (myActiveOrders == null) {
-			OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());			
-			orderFilter.setStatus(OrderStatus.ACTIVE);
-			myActiveOrders = getTradeApiService().listOrders(orderFilter);
-			Collections.sort(myActiveOrders);
-		}
-		return myActiveOrders;
-	}
-
-	@Override
 	public List<Operation> getMyOperations() throws ApiProviderException {
 		if (myOperations == null) {
-			myOperations = new ArrayList<Operation>();
-			for (Order o: getMyOrders()) {
-				MbOrder order = (MbOrder) o;
-				if (order.getOperations() != null)
-					for (MbOperation operation: order.getOperations()) {
-						operation.setSide(order.getSide());
-						myOperations.add(operation);
-					}
-			}
+			myOperations = getApiService().getUserOperations(
+				getCoin(), getCurrency(), null, null
+			);
 		}
 		return myOperations;
 	}
 	
 	@Override
 	public void cancelOrder(Order order) throws ApiProviderException {
-		getTradeApiService().cancelOrder((MbOrder) order);
+		getApiService().cancelOrder((MbOrder) order);
 	}
 	
 	@Override
 	public void createBuyOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
-		getTradeApiService().createBuyOrder(getCoin(), getCurrency(), coinAmount, currencyPrice);
+		getApiService().createBuyOrder(getCoin(), getCurrency(), coinAmount, currencyPrice);
 	}
 
 	@Override
 	public void createSellOrder(BigDecimal coinAmount, BigDecimal currencyPrice) throws ApiProviderException {
-		getTradeApiService().createSellOrder(getCoin(), getCurrency(), coinAmount, currencyPrice);
-	}
-
-	private ApiService getApiService() throws ApiProviderException {
-		if (apiService == null)
-			apiService = new ApiService();
-		return apiService;
+		getApiService().createSellOrder(getCoin(), getCurrency(), coinAmount, currencyPrice);
 	}
 	
-	private TradeApiService getTradeApiService() throws ApiProviderException {
-		if (tradeApiService == null)
-			tradeApiService = new TradeApiService(
+	private MbApiService getApiService() throws ApiProviderException {
+		if (apiService == null)
+			apiService = new MbApiService(
 				getUserConfiguration().getSecret(), getUserConfiguration().getKey()
 			);
-		return tradeApiService;
+		return apiService;
 	}
 
 	public Ticker getTicker24h() throws ApiProviderException {

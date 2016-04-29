@@ -16,8 +16,8 @@ public class BtBalance extends Balance implements Serializable {
 	private String clientID;
 	private Integer balanceRequestID;
 	
-	public BtBalance(String currency, String coin) {
-		super(currency, coin);
+	public BtBalance(String coin, String currency) {
+		super(coin, currency);
 	}
 	
 	@Override

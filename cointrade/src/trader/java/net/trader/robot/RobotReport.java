@@ -17,8 +17,8 @@ public abstract class RobotReport {
 	protected static long numOfConsideredOrdersForLastRelevantSellPrice = 5;
 	
 	private UserConfiguration userConfiguration;
-	private String currency;
 	private String coin;
+	private String currency;
 
 	protected Balance balance;
 	protected OrderBook orderBook;
@@ -49,10 +49,10 @@ public abstract class RobotReport {
 	
 	protected List<Operation> myOperations;
 	
-	public RobotReport(UserConfiguration userConfiguration, String currency, String coin) {
+	public RobotReport(UserConfiguration userConfiguration, String coin, String currency) {
 		this.userConfiguration = userConfiguration;
-		this.currency = currency;
 		this.coin = coin;
+		this.currency = currency;
 	}
 	
 	public UserConfiguration getUserConfiguration() {

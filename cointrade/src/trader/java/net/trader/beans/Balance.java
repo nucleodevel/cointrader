@@ -6,20 +6,11 @@ import net.trader.exception.ApiProviderException;
 
 public abstract class Balance {
 
-	protected String currency;
 	protected String coin;
+	protected String currency;
 	
-	public Balance(String currency, String coin) {
-		this.currency = currency;
+	public Balance(String coin, String currency) {
 		this.coin = coin;
-	}
-
-	public String getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(String currency) {
-		this.currency = currency;
 	}
 
 	public String getCoin() {
@@ -30,8 +21,16 @@ public abstract class Balance {
 		this.coin = coin;
 	}
 
-	public abstract BigDecimal getCurrencyAmount() throws ApiProviderException;
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
 	
 	public abstract BigDecimal getCoinAmount() throws ApiProviderException;
+
+	public abstract BigDecimal getCurrencyAmount() throws ApiProviderException;
 
 }

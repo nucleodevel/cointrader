@@ -77,10 +77,10 @@ public class Main {
 				
 				RobotReport report = robot.getUserConfiguration().getProvider().equals("Blinktrade")?
 					new BlinktradeReport(
-						robot.getUserConfiguration(), robot.getCurrency(), robot.getCoin() 
+						robot.getUserConfiguration(), robot.getCoin(), robot.getCurrency() 
 					): robot.getUserConfiguration().getProvider().equals("MercadoBitcoin")?
 						new MercadoBitcoinReport(
-							robot.getUserConfiguration(), robot.getCurrency(), robot.getCoin() 
+							robot.getUserConfiguration(), robot.getCoin(), robot.getCurrency() 
 						): null;
 				
 				// descriptions

@@ -14,6 +14,7 @@ import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import net.trader.api.ApiService;
 import net.trader.beans.Balance;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
@@ -54,7 +55,7 @@ import com.google.gson.JsonParser;
  * @since September/2015
  * 
  */
-public class BlinktradeAPI {
+public class BtApiService extends ApiService {
 
 	private static final String BLINKTRADE_API_PRODUCAO_URL = "https://api.blinktrade.com/tapi/v1/message";
 	private static final String BLINKTRADE_API_TESTNET_URL = "https://api.testnet.blinktrade.com/tapi/v1/message";
@@ -80,7 +81,7 @@ public class BlinktradeAPI {
 	 * @param broker
 	 *            Broker (exchange) ID.
 	 */
-	public BlinktradeAPI(String apiKey, String apiSecret, BlinktradeBroker broker) 
+	public BtApiService(String apiKey, String apiSecret, BlinktradeBroker broker) 
 		throws ApiProviderException {
 
 		if (apiKey == null) {
@@ -101,19 +102,8 @@ public class BlinktradeAPI {
 
 	}
 
-	/**
-	 * Request Balance.
-	 * 
-	 * @param balanceRequestID
-	 *            An ID assigned by you. It can be any number. The response
-	 *            message associated with this request will contain the same ID.
-	 * 
-	 * @return JSON message which contains information about balance requested.
-	 * 
-	 * @throws ApiProviderException
-	 *             Throws an exception if some error occurs.
-	 */
-	public Balance getBalance(String currency, String coin) throws ApiProviderException {
+	@Override
+	public Balance getBalance(String coin, String currency) throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -122,7 +112,7 @@ public class BlinktradeAPI {
 
 		String response = sendMessage(GSON.toJson(request));
 		
-		BtBalance balance = new BtBalance(currency, coin);
+		BtBalance balance = new BtBalance(coin, currency);
 		JsonParser jsonParser = new JsonParser();
         JsonObject jo = (JsonObject)jsonParser.parse(response);
         
@@ -137,20 +127,50 @@ public class BlinktradeAPI {
 
 	}
 
-	/**
-	 * Request Open Orders.
-	 * 
-	 * @param orderRequestID
-	 *            An ID assigned by you. It can be any number. The response
-	 *            message associated with this request will contain the same ID.
-	 * 
-	 * @return JSON Message which contains information about open orders
-	 *         requested.
-	 * 
-	 * @throws ApiProviderException
-	 *             Throws an exception if some error occurs.
-	 */
-	public List<Order> getClientActiveOrders() throws ApiProviderException {
+	@Override
+	public BtOrderBook getOrderBook(String coin, String currency) throws ApiProviderException {
+
+		/*
+		 * API URL initialzation
+		 */
+
+		URL url = null;
+		URLConnection http = null;
+
+		try {
+			url = new URL(BLINKTRADE_PUBLIC_API_ORDERBOOK);
+			http = url.openConnection();
+		} catch (Exception e) {
+			throw new ApiProviderException("API URL initialization fail", e);
+		}
+
+		/*
+		 * Required headers initialization
+		 */
+		http.setRequestProperty("Content-Type", "application/json");
+		
+		http.setDoInput(true);
+
+		InputStream is = null;
+
+		/*
+		 * Retrieve response
+		 */
+		String responseMessage = null;
+
+		try {
+			is = http.getInputStream();
+			responseMessage = IOUtils.toString(is);
+		} catch (Exception e) {
+			throw new ApiProviderException("API response retrieve fail", e);
+		}
+
+		return GSON.fromJson(responseMessage, BtOrderBook.class);
+
+	}
+
+	@Override
+	public List<Order> getUserActiveOrders(String coin, String currency) throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -202,21 +222,14 @@ public class BlinktradeAPI {
 		}
 		return activeOrders;
 	}
+	
+	@Override
+	public List<Order> getUserCanceledOrders(String coin, String currency, Long since, Long end) throws ApiProviderException {
+		return null;
+	}
 
-	/**
-	 * Request Completed Orders.
-	 * 
-	 * @param orderRequestID
-	 *            An ID assigned by you. It can be any number. The response
-	 *            message associated with this request will contain the same ID.
-	 * 
-	 * @return JSON Message which contains information about open orders
-	 *         requested.
-	 * 
-	 * @throws ApiProviderException
-	 *             Throws an exception if some error occurs.
-	 */
-	public List<Order> getUserCompletedOrders() throws ApiProviderException {
+	@Override
+	public List<Order> getUserCompletedOrders(String coin, String currency, Long since, Long end) throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -270,8 +283,8 @@ public class BlinktradeAPI {
 		return completedOrders;
 	}
 	
-
-	public List<Operation> getClientOperations() throws ApiProviderException {
+	@Override
+	public List<Operation> getUserOperations(String coin, String currency, Long since, Long end) throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -603,47 +616,6 @@ public class BlinktradeAPI {
 			e.printStackTrace();
 			return null;
 		}
-
-	}
-
-	public BtOrderBook getOrderBook() throws ApiProviderException {
-
-		/*
-		 * API URL initialzation
-		 */
-
-		URL url = null;
-		URLConnection http = null;
-
-		try {
-			url = new URL(BLINKTRADE_PUBLIC_API_ORDERBOOK);
-			http = url.openConnection();
-		} catch (Exception e) {
-			throw new ApiProviderException("API URL initialization fail", e);
-		}
-
-		/*
-		 * Required headers initialization
-		 */
-		http.setRequestProperty("Content-Type", "application/json");
-		
-		http.setDoInput(true);
-
-		InputStream is = null;
-
-		/*
-		 * Retrieve response
-		 */
-		String responseMessage = null;
-
-		try {
-			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is);
-		} catch (Exception e) {
-			throw new ApiProviderException("API response retrieve fail", e);
-		}
-
-		return GSON.fromJson(responseMessage, BtOrderBook.class);
 
 	}
 
