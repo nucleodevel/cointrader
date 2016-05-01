@@ -8,20 +8,20 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.io.Serializable;
 
-import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
+import net.mercadobitcoin.enums.MbOrderStatus;
 import net.trader.beans.RecordSide;
 
 /**
  * Filter object to be used on order list request.
  */
-public class OrderFilter implements Serializable {
+public class MbOrderFilter implements Serializable {
 
 	private static final long serialVersionUID = 6302408184251869680L;
 
 	private String coin;
 	private String currency;
 	private RecordSide side;
-	private OrderStatus status;
+	private MbOrderStatus status;
 	private Long fromId;
 	private Long endId;
 	private Long since;
@@ -32,7 +32,7 @@ public class OrderFilter implements Serializable {
 	 * 
 	 * @param pair Define the Coin Pair to filter the list.
 	 */
-	public OrderFilter(String coin, String currency) {
+	public MbOrderFilter(String coin, String currency) {
 		super();
 		this.coin =  coin;
 		this.currency = currency;
@@ -80,13 +80,13 @@ public class OrderFilter implements Serializable {
 	/**
 	 * @param status Filter the list by "Active", "Canceled" or "Completed" status.
 	 */
-	public void setStatus(OrderStatus status) { 
+	public void setStatus(MbOrderStatus status) { 
 		if (status != null) {
 			this.status = status;
 		}
 	}
 
-	public OrderStatus getStatus() {
+	public MbOrderStatus getStatus() {
 		return status;
 	}
 

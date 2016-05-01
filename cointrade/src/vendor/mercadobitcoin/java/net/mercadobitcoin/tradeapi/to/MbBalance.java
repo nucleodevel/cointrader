@@ -6,13 +6,10 @@
 
 package net.mercadobitcoin.tradeapi.to;
 
-import com.eclipsesource.json.JsonObject;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 
 import net.trader.beans.Balance;
-import net.trader.exception.ApiProviderException;
 
 /**
  * User's information of funds, opened orders and server date/time.
@@ -25,20 +22,14 @@ public class MbBalance extends Balance implements Serializable {
 	private Integer openOrders;
 	private Funds funds;
 
-	/**
-	 * Constructor based on JSON response.
-	 * 
-	 * @param jsonObject Trade API JSON response
-	 */
-	public MbBalance(JsonObject jsonObject, String coin, String currency) {
+	public MbBalance(String coin, String currency) {
 		super(coin, currency);
-		this.serverTime = Integer.valueOf(jsonObject.get("server_time").asString());
-		this.openOrders = jsonObject.get("open_orders").asInt();
-		this.funds = new Funds(jsonObject.get("funds").asObject());
+		this.coinLocked = new BigDecimal(0);
+		this.currencyLocked = new BigDecimal(0);
 	}
 	
 	@Override
-	public BigDecimal getCoinAmount() throws ApiProviderException {
+	public BigDecimal getCoinAmount() {
 		BigDecimal coinAmount;
 		if (getCoin().equals("BTC"))
 			coinAmount = getFunds().getBtcWithOpenOrders();
@@ -50,7 +41,7 @@ public class MbBalance extends Balance implements Serializable {
 	}
 	
 	@Override
-	public BigDecimal getCurrencyAmount() throws ApiProviderException {
+	public BigDecimal getCurrencyAmount() {
 		BigDecimal currencyAmount;
 		if (getCurrency().equals("BRL"))
 			currencyAmount = getFunds().getBrlWithOpenOrders();
@@ -63,18 +54,24 @@ public class MbBalance extends Balance implements Serializable {
 		return serverTime;
 	}
 
+	public void setServerTime(Integer serverTime) {
+		this.serverTime = serverTime;
+	}
+
 	public Integer getOpenOrders() {
 		return openOrders;
+	}
+
+	public void setOpenOrders(Integer openOrders) {
+		this.openOrders = openOrders;
 	}
 
 	public Funds getFunds() {
 		return funds;
 	}
 
-	@Override
-	public String toString() {
-		return "AccountBalance [serverTime=" + serverTime + ", openOrders="
-				+ openOrders + ", funds=" + funds + "]";
+	public void setFunds(Funds funds) {
+		this.funds = funds;
 	}
 
 }

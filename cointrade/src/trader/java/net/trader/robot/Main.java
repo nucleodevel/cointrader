@@ -1,8 +1,6 @@
 package net.trader.robot;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -19,15 +17,6 @@ public class Main {
 	private static UserConfiguration userConfiguration;
 	
 	public static void main(String[] args) {
-		
-		// configurations
-		
-		DecimalFormat decFmt = new DecimalFormat();
-		decFmt.setMaximumFractionDigits(5);
-		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
-		symbols.setDecimalSeparator('.');
-		symbols.setGroupingSeparator(',');
-		decFmt.setDecimalFormatSymbols(symbols);
 		
 		robot = new Robot();
 		
@@ -89,9 +78,9 @@ public class Main {
 				System.out.println("");
 				System.out.println("My last operations by type");
 				if (report.getLastUserBuyOrder() != null)
-					System.out.println(report.getLastUserBuyOrder().toDisplayString());
+					System.out.println(report.getLastUserBuyOrder().toString());
 				if (report.getLastUserSellOrder() != null)
-					System.out.println(report.getLastUserSellOrder().toDisplayString());
+					System.out.println(report.getLastUserSellOrder().toString());
 				if (report.getLastRelevantBuyPrice() != null)
 					System.out.println("");
 				if (report.getLastRelevantSellPrice() != null)
@@ -99,12 +88,8 @@ public class Main {
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");
-				System.out.println(
-					"BUY - " + decFmt.format(report.getCurrentTopBuy().getCurrencyPrice())
-				);
-				System.out.println(
-					"SELL - " + decFmt.format(report.getCurrentTopSell().getCurrencyPrice())
-				);
+				System.out.println(report.getCurrentTopBuy().toString());
+				System.out.println(report.getCurrentTopSell().toString());
 				
 				
 				// analise and make orders

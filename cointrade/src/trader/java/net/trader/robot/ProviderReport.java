@@ -113,14 +113,14 @@ public class ProviderReport {
 
 	public List<Order> getActiveBuyOrders() throws ApiProviderException {
 		if (activeBuyOrders == null) {
-			activeBuyOrders = getOrderBook().getBids();
+			activeBuyOrders = getOrderBook().getBidOrders();
 		}
 		return activeBuyOrders;
 	}
 
 	public List<Order> getActiveSellOrders() throws ApiProviderException {
 		if (activeSellOrders == null) {
-			activeSellOrders = getOrderBook().getAsks();
+			activeSellOrders = getOrderBook().getAskOrders();
 		}
 		return activeSellOrders;
 	}
@@ -261,7 +261,7 @@ public class ProviderReport {
 			System.out.println("  Last relevant buy price: " + lastRelevantBuyPrice);
 			System.out.println("  Considered operations: ");
 			for (Operation operation: groupOfOperations)
-				System.out.println("    " + operation.toDisplayString()); 
+				System.out.println("    " + operation.toString()); 
 			System.out.println("");
 			if (groupOfOperations.size() > 0)
 				groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);

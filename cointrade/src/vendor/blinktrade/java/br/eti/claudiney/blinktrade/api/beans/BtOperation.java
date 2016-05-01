@@ -11,7 +11,6 @@ import net.trader.beans.Operation;
 public class BtOperation extends Operation implements Serializable {
 
 	private BigInteger clientCustomOrderID;
-	private String orderID;
 	private BigDecimal cumQty;
 	private String ordStatus;
 	private BigDecimal leavesQty;
@@ -29,7 +28,6 @@ public class BtOperation extends Operation implements Serializable {
 	public BtOperation(BtOperation another) {
 		super();
 		this.clientCustomOrderID = another.getClientCustomOrderID();
-		this.orderID = another.getOrderID();
 		this.cumQty = another.getCumQty();
 		this.ordStatus = another.getOrdStatus();
 		this.leavesQty = another.getLeavesQty();
@@ -51,14 +49,6 @@ public class BtOperation extends Operation implements Serializable {
 	
 	public void setClientCustomOrderID(BigInteger clientCustomOrderID) {
 		this.clientCustomOrderID = clientCustomOrderID;
-	}
-
-	public String getOrderID() {
-		return orderID;
-	}
-
-	public void setOrderID(String orderID) {
-		this.orderID = orderID;
 	}
 
 	public BigDecimal getCumQty() {
@@ -143,61 +133,6 @@ public class BtOperation extends Operation implements Serializable {
 
 	public void setTimeInForce(String timeInForce) {
 		this.timeInForce = timeInForce;
-	}
-	
-	public String toString() {
-		
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append(getClass().getSimpleName());
-		
-		sb.append('{');
-		sb.append("clientCustomOrderID=").append(clientCustomOrderID);
-		sb.append(", orderID=").append(orderID);
-		sb.append(", cumQty=").append(cumQty);
-		sb.append(", ordStatus=").append(ordStatus);
-		sb.append(", leavesQty=").append(leavesQty);
-		sb.append(", cxlQty=").append(cxlQty);
-		sb.append(", avgPx=").append(avgPx);
-		sb.append(", symbol=").append(getSymbol());
-		sb.append(", side=").append(side);
-		sb.append(", ordType=").append(ordType);
-		sb.append(", orderQty=").append(orderQty);
-		sb.append(", price=").append(currencyPrice);
-		sb.append(", creationDate=").append(creationDate);
-		sb.append(", volume=").append(volume);
-		sb.append(", timeInForce=").append(timeInForce);
-		
-		sb.append('}');
-		
-		return sb.toString();
-		
-	}
-	
-	@Override
-	public String toDisplayString() {
-		
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append('{');
-		sb.append("clientCustomOrderID=").append(clientCustomOrderID);
-		sb.append(", orderID=").append(orderID);
-		sb.append("creationDate=").append(creationDate.getTime());
-		sb.append(", side=").append(side.equals("1")? "BUY": "SELL");
-		sb.append(", ordStatus=").append(ordStatus.equals("2")? "FINISHED": "NOT FINISHED");
-		sb.append(", price=").append(currencyPrice);
-		sb.append(", volume=").append(volume);
-		sb.append(", cumQty=").append(cumQty);
-		sb.append(", leavesQty=").append(leavesQty);
-		sb.append(", cxlQty=").append(cxlQty);
-		sb.append(", avgPx=").append(avgPx);
-		sb.append(", symbol=").append(getSymbol());
-		sb.append(", ordType=").append(ordType);
-		sb.append(", orderQty=").append(orderQty);
-		sb.append("}");
-		
-		return sb.toString();
-		
 	}
 
 }

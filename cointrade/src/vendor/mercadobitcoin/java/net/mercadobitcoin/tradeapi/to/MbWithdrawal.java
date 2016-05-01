@@ -14,12 +14,10 @@ import java.util.Map;
 import net.mercadobitcoin.util.JsonHashMap;
 import net.trader.exception.ApiProviderException;
 
-import com.eclipsesource.json.JsonObject;
-
 /**
  * Withdrawal information.
  */
-public class Withdrawal implements Serializable {
+public class MbWithdrawal implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -39,18 +37,8 @@ public class Withdrawal implements Serializable {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public Withdrawal(JsonObject jsonObject, String coin, String currency) {
-		JsonObject jsonWithdrawal = jsonObject.get("withdrawal").asObject();
-		this.withdrawalId = Long.valueOf(jsonWithdrawal.getString("id", "0"));
-		this.volume = new BigDecimal(jsonWithdrawal.getString("volume", "0"));
-		this.status = Long.valueOf(jsonWithdrawal.getString("status", "0")).intValue();
-		this.statusDescrition = jsonWithdrawal.getString("status_description", "");
-		this.transaction = jsonWithdrawal.getString("transaction", "");
-		this.address = jsonWithdrawal.getString("bitcoin_address", "");
-		this.created = Long.valueOf(jsonWithdrawal.getString("created_timestamp", "0"));
-		this.updated = Long.valueOf(jsonWithdrawal.getString("updated_timestamp", "0"));
-		this.coin = coin;
-		this.currency = currency;
+	public MbWithdrawal(String coin, String currency) {
+		
 	}
 	
 	public Long getWithdrawalId() {

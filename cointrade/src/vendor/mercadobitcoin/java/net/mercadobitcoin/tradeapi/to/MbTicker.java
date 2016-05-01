@@ -10,8 +10,6 @@ import java.math.BigDecimal;
 
 import net.trader.beans.Ticker;
 
-import com.eclipsesource.json.JsonObject;
-
 /**
  * Information about trades in Mercado Bitcoin. Contains: 
  * <b>high</b>: Operations highest value in the time interval, in Brazilian Real.
@@ -37,42 +35,64 @@ public class MbTicker extends Ticker {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public MbTicker(JsonObject jsonObject) {
-		this.high = new BigDecimal(jsonObject.get("high").toString());
-		this.low = new BigDecimal(jsonObject.get("low").toString());
-		this.vol = new BigDecimal(jsonObject.get("vol").toString());
-		this.last = new BigDecimal(jsonObject.get("last").toString());
-		this.buy = new BigDecimal(jsonObject.get("buy").toString());
-		this.sell = new BigDecimal(jsonObject.get("sell").toString());
-		this.date = new BigDecimal(jsonObject.get("date").toString());
+	public MbTicker() {
+		
 	}
-	
+
 	public BigDecimal getHigh() {
 		return high;
+	}
+
+	public void setHigh(BigDecimal high) {
+		this.high = high;
 	}
 
 	public BigDecimal getLow() {
 		return low;
 	}
 
+	public void setLow(BigDecimal low) {
+		this.low = low;
+	}
+
 	public BigDecimal getVol() {
 		return vol;
+	}
+
+	public void setVol(BigDecimal vol) {
+		this.vol = vol;
 	}
 
 	public BigDecimal getLast() {
 		return last;
 	}
 
+	public void setLast(BigDecimal last) {
+		this.last = last;
+	}
+
 	public BigDecimal getBuy() {
 		return buy;
+	}
+
+	public void setBuy(BigDecimal buy) {
+		this.buy = buy;
 	}
 
 	public BigDecimal getSell() {
 		return sell;
 	}
 
+	public void setSell(BigDecimal sell) {
+		this.sell = sell;
+	}
+
 	public BigDecimal getDate() {
 		return date;
+	}
+
+	public void setDate(BigDecimal date) {
+		this.date = date;
 	}
 
 	@Override

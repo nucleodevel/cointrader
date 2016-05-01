@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,14 +36,13 @@ import javax.net.ssl.SSLSocketFactory;
 import net.mercadobitcoin.common.security.HostnameVerifierBag;
 import net.mercadobitcoin.common.security.TrustManagerBag;
 import net.mercadobitcoin.common.security.TrustManagerBag.SslContextTrustManager;
+import net.mercadobitcoin.enums.MbOrderStatus;
+import net.mercadobitcoin.tradeapi.to.Funds;
 import net.mercadobitcoin.tradeapi.to.MbBalance;
-import net.mercadobitcoin.tradeapi.to.MbOperation;
 import net.mercadobitcoin.tradeapi.to.MbOrder;
-import net.mercadobitcoin.tradeapi.to.MbOrderBook;
-import net.mercadobitcoin.tradeapi.to.OrderFilter;
+import net.mercadobitcoin.tradeapi.to.MbOrderFilter;
 import net.mercadobitcoin.tradeapi.to.MbTicker;
-import net.mercadobitcoin.tradeapi.to.Withdrawal;
-import net.mercadobitcoin.tradeapi.to.MbOrder.OrderStatus;
+import net.mercadobitcoin.tradeapi.to.MbWithdrawal;
 import net.mercadobitcoin.util.JsonHashMap;
 import net.mercadobitcoin.util.TimestampInterval;
 import net.trader.api.ApiService;
@@ -89,6 +89,13 @@ public class MbApiService extends ApiService {
 	private static final String ENCRYPT_ALGORITHM = "HmacSHA512";
 	private static final String METHOD_PARAM = "method";
 	private static final String DOMAIN = "https://www.mercadobitcoin.net";
+
+	public static final BigDecimal MINIMUM_VOLUME = new BigDecimal(0.01);
+	public static final BigDecimal BITCOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
+	public static final int BITCOIN_DEPOSIT_CONFIRMATIONS = 6;
+	
+	public static final BigDecimal LITECOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
+	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 
 	private static long intervalToReadUserCanceledOrders = 1200;
 	private static long totalTimeToReadUserCanceledOrders = 43200;
@@ -155,24 +162,23 @@ public class MbApiService extends ApiService {
 		String url = assemblyUrl("ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
-		return new MbTicker(ticketJsonObject);
+		return getTicker(ticketJsonObject);
 	}
 	
 	@Override
 	public Balance getBalance() throws ApiProviderException {
-		JsonObject jsonResponse = makeRequest(RequestMethod.GET_INFO.value);
-		Balance balance = new MbBalance(jsonResponse, getCoin(), getCurrency());
-		return balance;		
+		JsonObject jsonObject = makeRequest(RequestMethod.GET_INFO.value);
+		return getBalance(jsonObject);		
 	}
 	
 	@Override
 	public OrderBook getOrderBook() throws ApiProviderException {
 		String url = assemblyUrl("orderbook");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
-		MbOrderBook orderBook = new MbOrderBook(getCoin(), getCurrency());
+		OrderBook orderBook = new OrderBook(getCoin(), getCurrency());
 
 		JsonArray asking = jsonObject.get("asks").asArray();
-		MbOrder[] asks = new MbOrder[asking.size()];
+		ArrayList<Order> askOrders = new ArrayList<Order>();
 		for (int i = 0; i < asking.size(); i++) {
 			JsonArray pairAmount = asking.get(i).asArray();
 			BigDecimal coinAmount = new BigDecimal(pairAmount.get(1).toString());
@@ -180,12 +186,12 @@ public class MbApiService extends ApiService {
 			MbOrder order = new MbOrder(
 				getCoin(), getCurrency(), RecordSide.SELL, coinAmount, currencyPrice
 			);
-			asks[i] = order;
+			askOrders.add(order);
 		}
-		orderBook.setAsks(asks);
+		orderBook.setAskOrders(askOrders);
 		
 		JsonArray bidding = jsonObject.get("bids").asArray();
-		MbOrder[] bids = new MbOrder[bidding.size()];
+		ArrayList<Order> bidOrders = new ArrayList<Order>();
 		for (int i = 0; i < bidding.size(); i++) {
 			JsonArray pairAmount = bidding.get(i).asArray();
 			BigDecimal coinAmount = new BigDecimal(pairAmount.get(1).toString());
@@ -193,17 +199,17 @@ public class MbApiService extends ApiService {
 			MbOrder order = new MbOrder(
 				getCoin(), getCurrency(), RecordSide.BUY, coinAmount, currencyPrice
 			);
-			bids[i] = order;
+			bidOrders.add(order);
 		}
-		orderBook.setBids(bids);
+		orderBook.setBidOrders(bidOrders);
 		
 		return orderBook;
 	}
 	
 	@Override
 	public List<Order> getUserActiveOrders() throws ApiProviderException {
-		OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());
-		orderFilter.setStatus(OrderStatus.ACTIVE);
+		MbOrderFilter orderFilter = new MbOrderFilter(getCoin(), getCurrency());
+		orderFilter.setStatus(MbOrderStatus.ACTIVE);
 			
 		List<Order> orders = getUserOrders(orderFilter);
 		Collections.sort(orders);
@@ -221,8 +227,8 @@ public class MbApiService extends ApiService {
 				Long since = time - intervalToReadUserCanceledOrders;
 				Long end = time - 1;
 				
-				OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());
-				orderFilter.setStatus(OrderStatus.CANCELED);
+				MbOrderFilter orderFilter = new MbOrderFilter(getCoin(), getCurrency());
+				orderFilter.setStatus(MbOrderStatus.CANCELED);
 				
 				orderFilter.setSince(since);
 				orderFilter.setEnd(end);
@@ -242,8 +248,8 @@ public class MbApiService extends ApiService {
 			Long since = lastTimeByReadingUserCanceledOrders + 1;
 			Long end = now;
 			
-			OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());
-			orderFilter.setStatus(OrderStatus.CANCELED);
+			MbOrderFilter orderFilter = new MbOrderFilter(getCoin(), getCurrency());
+			orderFilter.setStatus(MbOrderStatus.CANCELED);
 			
 			orderFilter.setSince(since);
 			orderFilter.setEnd(end);
@@ -270,8 +276,8 @@ public class MbApiService extends ApiService {
 		Long since = now - totalTimeToReadUserCompletedOrders;
 		Long end = now;
 		
-		OrderFilter orderFilter = new OrderFilter(getCoin(), getCurrency());
-		orderFilter.setStatus(OrderStatus.COMPLETED);
+		MbOrderFilter orderFilter = new MbOrderFilter(getCoin(), getCurrency());
+		orderFilter.setStatus(MbOrderStatus.COMPLETED);
 		if (since != null)
 			orderFilter.setSince(since);
 		if (end != null)
@@ -307,7 +313,7 @@ public class MbApiService extends ApiService {
 
 		String orderId = jsonResponse.names().get(0);
 		MbOrder response = getOrder(jsonResponse.get(orderId).asObject());
-		response.setOrderId(Long.valueOf(orderId)); 
+		response.setId(new BigInteger(orderId)); 
 		return response;
 	}
 	
@@ -338,7 +344,7 @@ public class MbApiService extends ApiService {
 	}
 	
 	public List<Order> getUserOrders(Long since, Long end) throws ApiProviderException {
-		OrderFilter filter = new OrderFilter(getCoin(), getCurrency());
+		MbOrderFilter filter = new MbOrderFilter(getCoin(), getCurrency());
 		if (since != null)
 			filter.setSince(since);
 		if (end != null)
@@ -350,7 +356,7 @@ public class MbApiService extends ApiService {
 		for (String id : jsonResponse.names()) {
 			JsonObject jsonObject = jsonResponse.get(id).asObject();
 			MbOrder order = getOrder(jsonObject);
-			order.setOrderId(Long.valueOf(id));
+			order.setId(new BigInteger(id));
 			orders.add(order);
 		}
 		
@@ -367,7 +373,7 @@ public class MbApiService extends ApiService {
 		String url = assemblyUrl("v1/ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
 		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
-		return new MbTicker(ticketJsonObject);
+		return getTicker(ticketJsonObject);
 	}
 	
 	/**
@@ -423,19 +429,19 @@ public class MbApiService extends ApiService {
 		Operation[] operationList = new Operation[jsonArray.size()];
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JsonObject jsonObject = jsonArray.get(i).asObject();
-			MbOperation operation = new MbOperation();
-			operation.setCreated(Integer.valueOf(jsonObject.get("date").toString()));
+			Operation operation = new Operation();
+			long created = Integer.valueOf(jsonObject.get("date").toString());
 			operation.setCoinAmount(new BigDecimal(jsonObject.get("amount").toString()));
 			operation.setCurrencyPrice(new BigDecimal(jsonObject.get("price").toString()));
-			operation.setOperationId(jsonObject.get("tid").asLong());
+			operation.setId(new BigInteger(jsonObject.get("tid").asString()));
 			operation.setSide(
 				RecordSide.valueOf(jsonObject.get("side").asString().toUpperCase())
 			);
 
 			operation.setRate(null);
 			
-			operation.setCreatedDate(Calendar.getInstance());
-			operation.getCreatedDate().setTimeInMillis((long) operation.getCreated() * 1000);
+			operation.setCreationDate(Calendar.getInstance());
+			operation.getCreationDate().setTimeInMillis(created * 1000);
 			
 			operationList[i] = operation;
 		}
@@ -534,7 +540,7 @@ public class MbApiService extends ApiService {
 	 * @throws NetworkErrorException 
 	 */
 	
-	public List<Order> getUserOrders(OrderFilter filter) throws ApiProviderException {
+	public List<Order> getUserOrders(MbOrderFilter filter) throws ApiProviderException {
 		if (filter == null) {
 			throw new ApiProviderException("Invalid filter.");
 		}
@@ -543,7 +549,7 @@ public class MbApiService extends ApiService {
 		List<Order> orders = new ArrayList<Order>();
 		for (String id : jsonResponse.names()) {
 			MbOrder order = getOrder(jsonResponse.get(id).asObject());
-			order.setOrderId(Long.valueOf(id)); 
+			order.setId(new BigInteger(id)); 
 			orders.add(order);
 		}
 		
@@ -563,7 +569,7 @@ public class MbApiService extends ApiService {
 		JsonObject jsonResponse = makeRequest(getParams(mbOrder), RequestMethod.TRADE.value);
 		String orderId = jsonResponse.names().get(0);
 		MbOrder response = getOrder(jsonResponse.get(orderId).asObject());
-		response.setOrderId(Long.valueOf(orderId));
+		response.setId(new BigInteger(orderId));
 		return response;
 	}
 
@@ -574,7 +580,7 @@ public class MbApiService extends ApiService {
 	 * @param volume Amount that will be withdrawal
 	 * @throws NetworkErrorException 
 	 */
-	public Withdrawal withdrawalBtcBrl(String bitcoinAddress, BigDecimal volume) throws ApiProviderException {
+	public MbWithdrawal withdrawalCoinCurrency(String bitcoinAddress, BigDecimal volume) throws ApiProviderException {
 		if (bitcoinAddress == null) {
 			throw new ApiProviderException("Invalid Bitcoin address.");
 		}
@@ -588,7 +594,8 @@ public class MbApiService extends ApiService {
 		params.put("volume", volume.toString());
 		
 		JsonObject jsonResponse = makeRequest(params, RequestMethod.WITHDRAWAL_BITCOIN.value);
-		Withdrawal withdrawal = new Withdrawal(jsonResponse, "BTC", "BRL");
+		JsonObject jsonWithdrawal = jsonResponse.get("withdrawal").asObject();
+		MbWithdrawal withdrawal = getWithdrawal(jsonWithdrawal);
 		
 		return withdrawal;
 	}
@@ -610,8 +617,8 @@ public class MbApiService extends ApiService {
 				params.put("volume", order.getCoinAmount());
 			if (order.getCurrencyPrice() != null)
 				params.put("price", order.getCurrencyPrice());
-			if (order.getOrderId() != null)
-				params.put("order_id", order.getOrderId());
+			if (order.getId() != null)
+				params.put("order_id", order.getId());
 			if (order.getStatus() != null)
 				params.put("status", order.getStatus());
 			if (order.getCreationDate() != null)
@@ -624,7 +631,7 @@ public class MbApiService extends ApiService {
 		return hashMap;
 	}
 	
-	public JsonHashMap getParams(OrderFilter filter) throws ApiProviderException {
+	public JsonHashMap getParams(MbOrderFilter filter) throws ApiProviderException {
 		JsonHashMap hashMap = new JsonHashMap();
 		try {
 			Map<String, Object> params = new HashMap<String, Object>();
@@ -659,8 +666,47 @@ public class MbApiService extends ApiService {
 		return hashMap;
 	}
 	
+	public MbBalance getBalance(JsonObject jsonObject) {
+		MbBalance balance = new MbBalance(getCoin(), getCurrency());
+		
+		balance.setServerTime(Integer.valueOf(jsonObject.get("server_time").asString()));
+		balance.setOpenOrders(jsonObject.get("open_orders").asInt());
+		JsonObject fundsJsonObject = jsonObject.get("funds").asObject();
+		Funds funds = new Funds();
+		funds.setBrl(new BigDecimal(fundsJsonObject.get("brl").asString()));
+		funds.setBtc(new BigDecimal(fundsJsonObject.get("btc").asString()));
+		funds.setLtc(new BigDecimal(fundsJsonObject.get("ltc").asString()));
+		funds.setBrlWithOpenOrders(new BigDecimal(
+			fundsJsonObject.get("brl_with_open_orders").asString()
+		));
+		funds.setBtcWithOpenOrders(new BigDecimal(
+			fundsJsonObject.get("btc_with_open_orders").asString()
+		));
+		funds.setLtcWithOpenOrders(new BigDecimal(
+			fundsJsonObject.get("ltc_with_open_orders").asString()
+		));
+		balance.setFunds(funds);
+		
+		return balance;
+	}
+	
+	public MbTicker getTicker(JsonObject jsonObject) {
+		MbTicker ticker = new MbTicker();
+		
+		ticker.setHigh(new BigDecimal(jsonObject.get("high").toString()));
+		ticker.setLow(new BigDecimal(jsonObject.get("low").toString()));
+		ticker.setVol(new BigDecimal(jsonObject.get("vol").toString()));
+		ticker.setLast(new BigDecimal(jsonObject.get("last").toString()));
+		ticker.setBuy(new BigDecimal(jsonObject.get("buy").toString()));
+		ticker.setSell(new BigDecimal(jsonObject.get("sell").toString()));
+		ticker.setDate(new BigDecimal(jsonObject.get("date").toString()));
+		
+		return ticker;
+	}
+	
 	public MbOrder getOrder(JsonObject jsonObject) {
 		MbOrder order = new MbOrder();
+		
 		String coinPair = jsonObject.get("pair").asString().toUpperCase();
 		order.setCoin(coinPair.substring(0, 3).toUpperCase());
 		order.setCurrency(coinPair.substring(4, 7).toUpperCase());
@@ -672,10 +718,10 @@ public class MbApiService extends ApiService {
 		List<Operation> operations = new ArrayList<Operation>();
 		for (String operationId: jsonObject.get("operations").asObject().names()) {
 			if (operationId.matches("-?\\d+(\\.\\d+)?")) {
-				MbOperation operation = getOperation(
+				Operation operation = getOperation(
 					jsonObject.get("operations").asObject().get(operationId).asObject()
 				);
-				operation.setOperationId(Long.valueOf(operationId));
+				operation.setId(new BigInteger(operationId));
 				operations.add(operation);
 			}
 		}
@@ -688,31 +734,47 @@ public class MbApiService extends ApiService {
 		return order;
 	}
 	
-	public MbOperation getOperation(JsonObject jsonObject) {
-		MbOperation operation = new MbOperation();
+	public Operation getOperation(JsonObject jsonObject) {
+		Operation operation = new Operation();
+		
 		if (jsonObject.get("date") != null && !jsonObject.get("date").toString().equals("null")) {
-			operation.setCreated(Integer.valueOf(jsonObject.get("date").toString()));
+			long created = Integer.valueOf(jsonObject.get("date").toString());
 			operation.setCoinAmount(new BigDecimal(jsonObject.get("amount").toString()));
 			operation.setCurrencyPrice(new BigDecimal(jsonObject.get("price").toString()));
-			operation.setOperationId(jsonObject.get("tid").asLong());
+			operation.setId(new BigInteger(jsonObject.get("tid").asString()));
 			operation.setSide(
 				RecordSide.valueOf(jsonObject.get("side").asString().toUpperCase())
 			);
 			operation.setRate(null);
-			operation.setCreatedDate(Calendar.getInstance());
-			operation.getCreatedDate().setTimeInMillis((long) operation.getCreated() * 1000);
+			operation.setCreationDate(Calendar.getInstance());
+			operation.getCreationDate().setTimeInMillis(created * 1000);
 		}
 		else {
 			operation.setCoinAmount(new BigDecimal(jsonObject.get("volume").asString()));
 			operation.setCurrencyPrice(new BigDecimal(jsonObject.get("price").asString()));
 			operation.setRate(new BigDecimal(jsonObject.get("rate").asString()));
-			operation.setCreated(Integer.valueOf(jsonObject.get("created").asString()));
+			long created = Integer.valueOf(jsonObject.get("created").asString());
 			operation.setRate(null);
-			operation.setCreatedDate(Calendar.getInstance());
-			operation.getCreatedDate().setTimeInMillis((long) operation.getCreated() * 1000);
+			operation.setCreationDate(Calendar.getInstance());
+			operation.getCreationDate().setTimeInMillis(created * 1000);
 		}
 		
 		return operation;
+	}
+	
+	public MbWithdrawal getWithdrawal(JsonObject jsonObject) {
+		MbWithdrawal withdrawal = new MbWithdrawal(getCoin(), getCurrency());
+		
+		withdrawal.setWithdrawalId(Long.valueOf(jsonObject.getString("id", "0")));
+		withdrawal.setVolume(new BigDecimal(jsonObject.getString("volume", "0")));
+		withdrawal.setStatus(Long.valueOf(jsonObject.getString("status", "0")).intValue());
+		withdrawal.setStatusDescrition(jsonObject.getString("status_description", ""));
+		withdrawal.setTransaction(jsonObject.getString("transaction", ""));
+		withdrawal.setAddress(jsonObject.getString("bitcoin_address", ""));
+		withdrawal.setCreated(Long.valueOf(jsonObject.getString("created_timestamp", "0")));
+		withdrawal.setUpdated(Long.valueOf(jsonObject.getString("updated_timestamp", "0")));
+		
+		return withdrawal;
 	}
 	
 	private JsonObject makeRequest(String method) throws ApiProviderException {

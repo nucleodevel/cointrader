@@ -9,14 +9,6 @@ package net.mercadobitcoin.tradeapi.to;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import com.eclipsesource.json.JsonObject;
-
-/**
- * Contains the balances of:
- * - <b>BRL</b> : Brazilian Real;
- * - <b>BTC</b> : Bitcoin;
- * - <b>LTC</b> : Litecoin.
- */
 public class Funds implements Serializable {
 
 	private static final long serialVersionUID = -6033277213248384326L;
@@ -33,37 +25,56 @@ public class Funds implements Serializable {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public Funds(JsonObject jsonObject) {
-		this.brl = new BigDecimal(jsonObject.get("brl").asString());
-		this.btc = new BigDecimal(jsonObject.get("btc").asString());
-		this.ltc = new BigDecimal(jsonObject.get("ltc").asString());
-		this.brlWithOpenOrders = new BigDecimal(jsonObject.get("brl_with_open_orders").asString());
-		this.btcWithOpenOrders = new BigDecimal(jsonObject.get("btc_with_open_orders").asString());
-		this.ltcWithOpenOrders = new BigDecimal(jsonObject.get("ltc_with_open_orders").asString());
+	public Funds() {
+		
 	}
 
 	public BigDecimal getBrl() {
 		return brl;
 	}
 
+	public void setBrl(BigDecimal brl) {
+		this.brl = brl;
+	}
+
 	public BigDecimal getBtc() {
 		return btc;
+	}
+
+	public void setBtc(BigDecimal btc) {
+		this.btc = btc;
 	}
 
 	public BigDecimal getLtc() {
 		return ltc;
 	}
-	
+
+	public void setLtc(BigDecimal ltc) {
+		this.ltc = ltc;
+	}
+
 	public BigDecimal getBrlWithOpenOrders() {
 		return brlWithOpenOrders;
 	}
-	
+
+	public void setBrlWithOpenOrders(BigDecimal brlWithOpenOrders) {
+		this.brlWithOpenOrders = brlWithOpenOrders;
+	}
+
 	public BigDecimal getBtcWithOpenOrders() {
 		return btcWithOpenOrders;
 	}
-	
+
+	public void setBtcWithOpenOrders(BigDecimal btcWithOpenOrders) {
+		this.btcWithOpenOrders = btcWithOpenOrders;
+	}
+
 	public BigDecimal getLtcWithOpenOrders() {
 		return ltcWithOpenOrders;
+	}
+
+	public void setLtcWithOpenOrders(BigDecimal ltcWithOpenOrders) {
+		this.ltcWithOpenOrders = ltcWithOpenOrders;
 	}
 
 	@Override

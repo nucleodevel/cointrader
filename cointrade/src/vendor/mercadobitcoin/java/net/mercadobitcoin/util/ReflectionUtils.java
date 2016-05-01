@@ -12,6 +12,8 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.mercadobitcoin.enums.EnumValue;
+
 public class ReflectionUtils {
 	
 	private static boolean isGetter(Method method) {
