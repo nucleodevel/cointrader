@@ -18,8 +18,10 @@ import net.trader.api.ApiService;
 import net.trader.beans.Balance;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
-import net.trader.beans.OrderSide;
+import net.trader.beans.RecordSide;
+import net.trader.beans.Ticker;
 import net.trader.exception.ApiProviderException;
+import net.trader.robot.UserConfiguration;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
@@ -65,45 +67,39 @@ public class BtApiService extends ApiService {
 	
 	private static final long SATOSHI_BASE = 100000000;
 	
-	private String apiKey;
-	private String apiSecret;
-	private BlinktradeBroker broker;
-	
 	private static final Gson GSON = new Gson();
 	
-	/**
-	 * Initialize API.
-	 * 
-	 * @param apiKey
-	 *            API KEY GENERATED IN API MODULE.
-	 * @param apiSecret
-	 *            SECRET KEY GENERATED IN API MODULE.
-	 * @param broker
-	 *            Broker (exchange) ID.
-	 */
-	public BtApiService(String apiKey, String apiSecret, BlinktradeBroker broker) 
-		throws ApiProviderException {
+	public BtApiService(UserConfiguration userConfiguration) throws ApiProviderException {
+		
+		super(userConfiguration);
 
-		if (apiKey == null) {
-			throw new ApiProviderException("APIKey cannot be null");
+		if (userConfiguration.getKey() == null) {
+			throw new ApiProviderException("Key cannot be null");
 		}
 
-		if (apiSecret == null) {
-			throw new ApiProviderException("APISecret cannot be null");
+		if (userConfiguration.getSecret() == null) {
+			throw new ApiProviderException("Secret cannot be null");
 		}
 
-		if (broker == null) {
+		if (userConfiguration.getBroker() == null) {
 			throw new ApiProviderException("Broker cannot be null");
 		}
 
-		this.apiKey = apiKey;
-		this.apiSecret = apiSecret;
-		this.broker = broker;
-
+	}
+	
+	private BlinktradeBroker getBlinktradeBroker() {
+		if (userConfiguration.getBroker().equals("Foxbit"))
+			return BlinktradeBroker.FOXBIT;
+		return null;
+	}
+	
+	@Override
+	public Ticker getTicker() throws ApiProviderException {
+		return null;
 	}
 
 	@Override
-	public Balance getBalance(String coin, String currency) throws ApiProviderException {
+	public Balance getBalance() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -112,6 +108,9 @@ public class BtApiService extends ApiService {
 
 		String response = sendMessage(GSON.toJson(request));
 		
+		String coin = userConfiguration.getCoin();
+		String currency = userConfiguration.getCurrency();
+		
 		BtBalance balance = new BtBalance(coin, currency);
 		JsonParser jsonParser = new JsonParser();
         JsonObject jo = (JsonObject)jsonParser.parse(response);
@@ -119,16 +118,17 @@ public class BtApiService extends ApiService {
         balance.setClientID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("ClientID").getAsString());
         balance.setBalanceRequestID(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonPrimitive("BalanceReqID").getAsInt());
         
+        balance.setCoinAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(coin).getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
+	    balance.setCoinLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(coin + "_locked").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
+        
         balance.setCurrencyAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency).getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
         balance.setCurrencyLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive(currency + "_locked").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
-        balance.setBtcAmount(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
-        balance.setBtcLocked(jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonObject("4").getAsJsonPrimitive("BTC_locked").getAsBigDecimal().divide(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate()));
         return balance;
 
 	}
 
 	@Override
-	public BtOrderBook getOrderBook(String coin, String currency) throws ApiProviderException {
+	public BtOrderBook getOrderBook() throws ApiProviderException {
 
 		/*
 		 * API URL initialzation
@@ -170,7 +170,7 @@ public class BtApiService extends ApiService {
 	}
 
 	@Override
-	public List<Order> getUserActiveOrders(String coin, String currency) throws ApiProviderException {
+	public List<Order> getUserActiveOrders() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -205,18 +205,18 @@ public class BtApiService extends ApiService {
 					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
 					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
-					OrderSide side = sideString.equals("1")? OrderSide.BUY:
-						(sideString.equals("2")? OrderSide.SELL: null);
+					RecordSide side = sideString.equals("1")? RecordSide.BUY:
+						(sideString.equals("2")? RecordSide.SELL: null);
 					oo.setSide(side);
 					oo.setOrdType(objArray.get(9).getAsString());
 					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
-						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
-					));
 					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 					oo.setVolume(objArray.get(13).getAsBigDecimal());
 					oo.setTimeInForce(objArray.get(14).getAsString());
 					oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));
+					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
+						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
+					));
 				}
 			}
 		}
@@ -224,12 +224,12 @@ public class BtApiService extends ApiService {
 	}
 	
 	@Override
-	public List<Order> getUserCanceledOrders(String coin, String currency, Long since, Long end) throws ApiProviderException {
+	public List<Order> getUserCanceledOrders() throws ApiProviderException {
 		return null;
 	}
 
 	@Override
-	public List<Order> getUserCompletedOrders(String coin, String currency, Long since, Long end) throws ApiProviderException {
+	public List<Order> getUserCompletedOrders() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -264,19 +264,19 @@ public class BtApiService extends ApiService {
 					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
 					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
-					OrderSide side = sideString.equals("1")? OrderSide.BUY:
-						(sideString.equals("2")? OrderSide.SELL: null);
+					RecordSide side = sideString.equals("1")? RecordSide.BUY:
+						(sideString.equals("2")? RecordSide.SELL: null);
 					oo.setSide(side);
 					oo.setOrdType(objArray.get(9).getAsString());
 					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					
-					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
-						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
-					));
 					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 					oo.setVolume(objArray.get(13).getAsBigDecimal());
 					oo.setTimeInForce(objArray.get(14).getAsString());
 					oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));
+					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
+						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
+					));
 				}
 			}
 		}
@@ -284,7 +284,7 @@ public class BtApiService extends ApiService {
 	}
 	
 	@Override
-	public List<Operation> getUserOperations(String coin, String currency, Long since, Long end) throws ApiProviderException {
+	public List<Operation> getUserOperations() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
@@ -319,79 +319,80 @@ public class BtApiService extends ApiService {
 					oo.setCoin(objArray.get(7).getAsString().substring(0, 3).toUpperCase());
 					oo.setCurrency(objArray.get(7).getAsString().substring(3, 6).toUpperCase());
 					String sideString = objArray.get(8).getAsString();
-					OrderSide side = sideString.equals("1")? OrderSide.BUY:
-						(sideString.equals("2")? OrderSide.SELL: null);
+					RecordSide side = sideString.equals("1")? RecordSide.BUY:
+						(sideString.equals("2")? RecordSide.SELL: null);
 					oo.setSide(side);
 					oo.setOrdType(objArray.get(9).getAsString());
 					oo.setOrderQty(objArray.get(10).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
 					
-					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
-						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
-					));
 					oo.setCreationDate( Utils.getCalendar(objArray.get(12).getAsString()));
 					oo.setVolume(objArray.get(13).getAsBigDecimal());
 					oo.setTimeInForce(objArray.get(14).getAsString());
 					oo.setCoinAmount(oo.getCumQty().add(oo.getLeavesQty()));
+					oo.setCurrencyPrice(objArray.get(11).getAsBigDecimal().divide(
+						BlinktradeCurrency.getCurrencyBySimbol(oo.getCurrency()).getRate()
+					));
 				}
 			}
 		}
 		return clientOperations;
 	}
+	
+	@Override
+	public Order createBuyOrder(Order order) throws ApiProviderException {
+		sendNewOrder(
+			new Integer((int)(System.currentTimeMillis()/1000)),
+			order.getCoin(), order.getCurrency(), RecordSide.BUY,
+			BlinktradeOrderType.LIMITED,
+			order.getCoinAmount(), order.getCurrencyPrice()
+		);
+		
+		return null;
+	}
+	
+	@Override
+	public Order createSellOrder(Order order) throws ApiProviderException {
+		sendNewOrder(
+			new Integer((int)(System.currentTimeMillis()/1000)),
+			order.getCoin(), order.getCurrency(), RecordSide.SELL,
+			BlinktradeOrderType.LIMITED,
+			order.getCoinAmount(), order.getCurrencyPrice()
+		);
+		
+		return null;
+	}
+	
+	@Override
+	public Order cancelOrder(Order order) throws ApiProviderException {
 
-	/**
-	 * Generating a bitcoin deposit address.
-	 * 
-	 * @param depositRequestID
-	 *            An ID assigned by you. It can be any number. The response
-	 *            message associated with this request will contain the same ID.
-	 * 
-	 * @return JSON Message which contains information about bitcoin address
-	 *         generated.
-	 * 
-	 * @throws ApiProviderException
-	 *             Throws an exception if some error occurs.
-	 */
-	public String createBitcoinAddressForDeposit(Integer depositRequestID)
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		request.put("MsgType", "F");
+		request.put("ClOrdID", ((BtOpenOrder) order).getClientCustomOrderID());
+		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
+
+		sendMessage(GSON.toJson(request));
+		
+		return null;
+
+	}
+
+	public String createCoinAddressForDeposit(Integer depositRequestID)
 			throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
 		request.put("MsgType", "U18");
 		request.put("DepositReqID", depositRequestID);
-		request.put("Currency", "BTC");
-		request.put("BrokerID", broker.getBrokerID());
+		request.put("Currency", userConfiguration.getCoin());
+		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
 
 		return sendMessage(GSON.toJson(request));
 
 	}
 
-	/**
-	 * Send trade Order (buy/sell).
-	 * 
-	 * @param clientOrderId
-	 *            Client Order ID. Must be unique.
-	 * @param symbol
-	 *            Trade Symbol (BTC???, where '???' must be a valid Currency
-	 *            Symbol).
-	 * @param side
-	 *            Order Side (Buy/Sell)
-	 * @param type
-	 *            Order Type (Market/Limited)
-	 * @param currencyPrice
-	 *            Price, with decimal symbol, without integer separator
-	 *            (example: 5.00, 10.45, 230.4567).
-	 * @param satoshiAmount
-	 *            Amount of bitcoin to be bought/sold in satoshi (example:
-	 *            12345678)
-	 *            
-	 * @return JSON message which contains information about performed order.
-	 * 
-	 * @throws ApiProviderException
-	 *             Throws an exception if some error occurs.
-	 * 
-	 */
 	public String sendNewOrder(Integer clientOrderId, String coin,
-			String currency, OrderSide side, BlinktradeOrderType type,
+			String currency, RecordSide side, BlinktradeOrderType type,
 			BigDecimal coinAmount, BigDecimal currencyPrice)
 			throws ApiProviderException {
 
@@ -420,44 +421,22 @@ public class BtApiService extends ApiService {
 			throw new ApiProviderException("Amount (satoshi) cannot be null");
 		}
 
-		currencyPrice = currencyPrice.multiply(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate().add(new BigDecimal(1)));
 		coinAmount = coinAmount.multiply(new BigDecimal(SATOSHI_BASE));
-
+		currencyPrice = currencyPrice.multiply(BlinktradeCurrency.getCurrencyBySimbol(currency).getRate().add(new BigDecimal(1)));
+		
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
 		request.put("MsgType", "D");
 		request.put("ClOrdID", clientOrderId);
 		request.put("Symbol", coin + currency);
-		request.put("Side", side == OrderSide.BUY? "1": (side == OrderSide.SELL? "2": null));
+		request.put("Side", side == RecordSide.BUY? "1": (side == RecordSide.SELL? "2": null));
 		request.put("OrdType", type.getOrderType());
-		request.put("Price", currencyPrice.toBigInteger());
 		request.put("OrderQty", coinAmount.toBigInteger());
-		request.put("BrokerID", broker.getBrokerID());
+		request.put("Price", currencyPrice.toBigInteger());
+		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
 
 		return sendMessage(GSON.toJson(request));
 
-	}
-	
-	public void createBuyOrder(
-		String coin, String currency, BigDecimal coinAmount, BigDecimal currencyPrice
-	) throws ApiProviderException {
-		sendNewOrder(
-			new Integer((int)(System.currentTimeMillis()/1000)),
-			coin, currency, OrderSide.BUY,
-			BlinktradeOrderType.LIMITED,
-			coinAmount, currencyPrice
-		);
-	}
-	
-	public void createSellOrder(
-		String coin, String currency, BigDecimal coinAmount, BigDecimal currencyPrice
-	) throws ApiProviderException {
-		sendNewOrder(
-			new Integer((int)(System.currentTimeMillis()/1000)),
-			coin, currency, OrderSide.SELL,
-			BlinktradeOrderType.LIMITED,
-			coinAmount, currencyPrice
-		);
 	}
 
 	/**
@@ -478,19 +457,7 @@ public class BtApiService extends ApiService {
 
 		request.put("MsgType", "F");
 		request.put("ClOrdID", clientOrderId);
-		request.put("BrokerID", broker.getBrokerID());
-
-		return sendMessage(GSON.toJson(request));
-
-	}
-	
-	public String cancelOrder(Order order) throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		request.put("MsgType", "F");
-		request.put("ClOrdID", ((BtOpenOrder) order).getClientCustomOrderID());
-		request.put("BrokerID", broker.getBrokerID());
+		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
 
 		return sendMessage(GSON.toJson(request));
 
@@ -512,7 +479,7 @@ public class BtApiService extends ApiService {
 		 */
 		String signature = null;
 		try {
-			signature = hash(apiSecret, nonce);
+			signature = hash(userConfiguration.getSecret(), nonce);
 		} catch (Exception e) {
 			throw new ApiProviderException("Message signature fail", e);
 		}
@@ -526,7 +493,7 @@ public class BtApiService extends ApiService {
 
 		try {
 
-			if (BlinktradeBroker.TESTNET.equals(broker)) {
+			if (BlinktradeBroker.TESTNET.equals(userConfiguration.getBroker())) {
 				url = new URL(BLINKTRADE_API_TESTNET_URL);
 			} else {
 				url = new URL(BLINKTRADE_API_PRODUCAO_URL);
@@ -553,7 +520,7 @@ public class BtApiService extends ApiService {
 		 * Required headers initialization
 		 */
 		http.setRequestProperty("Content-Type", "application/json");
-		http.setRequestProperty("APIKey", apiKey);
+		http.setRequestProperty("APIKey", userConfiguration.getKey());
 		http.setRequestProperty("Nonce", nonce);
 		http.setRequestProperty("Signature", signature);
 

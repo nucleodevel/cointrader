@@ -9,17 +9,34 @@ import net.trader.exception.ApiProviderException;
 @SuppressWarnings("serial")
 public class BtBalance extends Balance implements Serializable {
 
+	private BigDecimal coinAmount;
+	private BigDecimal coinLocked;
 	private BigDecimal currencyAmount;
 	private BigDecimal currencyLocked;
-	private BigDecimal btcAmount;
-	private BigDecimal btcLocked;
 	private String clientID;
 	private Integer balanceRequestID;
 	
 	public BtBalance(String coin, String currency) {
 		super(coin, currency);
 	}
+
+	@Override
+	public BigDecimal getCoinAmount() throws ApiProviderException {
+		return coinAmount;
+	}
+
+	public void setCoinAmount(BigDecimal coinAmount) {
+		this.coinAmount = coinAmount;
+	}
 	
+	public BigDecimal getCoinLocked() {
+		return coinLocked;
+	}
+
+	public void setCoinLocked(BigDecimal coinLocked) {
+		this.coinLocked = coinLocked;
+	}
+
 	@Override
 	public BigDecimal getCurrencyAmount() {
 		return currencyAmount;
@@ -35,27 +52,6 @@ public class BtBalance extends Balance implements Serializable {
 
 	public void setCurrencyLocked(BigDecimal currencyLocked) {
 		this.currencyLocked = currencyLocked;
-	}
-
-	@Override
-	public BigDecimal getCoinAmount() throws ApiProviderException {
-		return getCoin().equals("BTC")? getBtcAmount(): null;
-	}
-
-	public BigDecimal getBtcAmount() {
-		return btcAmount;
-	}
-
-	public void setBtcAmount(BigDecimal btcAmount) {
-		this.btcAmount = btcAmount;
-	}
-
-	public BigDecimal getBtcLocked() {
-		return btcLocked;
-	}
-
-	public void setBtcLocked(BigDecimal btcLocked) {
-		this.btcLocked = btcLocked;
 	}
 
 	public void setClientID(String clientID) {
@@ -79,9 +75,9 @@ public class BtBalance extends Balance implements Serializable {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append('{');
-		sb.append("btcLocked=").append(btcLocked);
+		sb.append("coinAmount=").append(coinAmount);
+		sb.append(", coinLocked=").append(coinLocked);
 		sb.append(", currencyAmount=").append(currencyAmount);
-		sb.append(", btcAmount=").append(btcAmount);
 		sb.append(", currencyLocked=").append(currencyLocked);
 		sb.append(", clientID=").append(clientID);
 		sb.append(", balanceRequestID=").append(balanceRequestID);

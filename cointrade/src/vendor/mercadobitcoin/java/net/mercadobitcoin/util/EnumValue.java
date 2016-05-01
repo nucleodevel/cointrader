@@ -1,4 +1,4 @@
-package net.trader.beans;
+package net.mercadobitcoin.util;
 
 public interface EnumValue {
 

@@ -12,15 +12,7 @@ import net.trader.exception.ParamValueErrorException;
 public class Robot {
 
 	private File file;
-	private Integer delayTime;
-	private String operationMode;
-	private String currency;
-	private String coin;
-	private Double minimumBuyRate;
-	private Double minimumSellRate;
-	private Double minimumCoinAmount;
-	private Double incDecPrice;
-	private Double sellRateAfterBreakdown;
+	
 	private UserConfiguration userConfiguration;
 
 	public Robot() {
@@ -43,78 +35,6 @@ public class Robot {
 
 	public void setFileName(String fileName) {
 		this.file = new File(fileName);
-	}
-
-	public Integer getDelayTime() {
-		return delayTime;
-	}
-
-	public void setDelayTime(Integer delayTime) {
-		this.delayTime = delayTime;
-	}
-
-	public String getOperationMode() {
-		return operationMode;
-	}
-
-	public void setOperationMode(String operationMode) {
-		this.operationMode = operationMode;
-	}
-
-	public String getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(String currency) {
-		this.currency = currency;
-	}
-
-	public String getCoin() {
-		return coin;
-	}
-
-	public void setCoin(String coin) {
-		this.coin = coin;
-	}
-
-	public Double getMinimumBuyRate() {
-		return minimumBuyRate;
-	}
-
-	public void setMinimumBuyRate(Double minimumBuyRate) {
-		this.minimumBuyRate = minimumBuyRate;
-	}
-
-	public Double getMinimumSellRate() {
-		return minimumSellRate;
-	}
-
-	public void setMinimumSellRate(Double minimumSellRate) {
-		this.minimumSellRate = minimumSellRate;
-	}
-
-	public Double getMinimumCoinAmount() {
-		return minimumCoinAmount;
-	}
-
-	public void setMinimumCoinAmount(Double minimumCoinAmount) {
-		this.minimumCoinAmount = minimumCoinAmount;
-	}
-
-	public Double getIncDecPrice() {
-		return incDecPrice;
-	}
-
-	public void setIncDecPrice(Double incDecPrice) {
-		this.incDecPrice = incDecPrice;
-	}
-
-	public Double getSellRateAfterBreakdown() {
-		return sellRateAfterBreakdown;
-	}
-
-	public void setSellRateAfterBreakdown(Double sellRateAfterBreakdown) {
-		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 
 	public UserConfiguration getUserConfiguration() {
@@ -174,7 +94,7 @@ public class Robot {
 					switch (paramLabel) {
 						case "-dt": 
 							try {
-								setDelayTime(Integer.parseInt(paramValue));
+								userConfiguration.setDelayTime(Integer.parseInt(paramValue));
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
@@ -185,45 +105,55 @@ public class Robot {
 								!paramValue.equals("bs")
 							)
 								throw new ParamValueErrorException(paramLabel);
-							operationMode = paramValue;					
-							break;
-						case "-curr": 
-							currency = paramValue;
+							userConfiguration.setOperationMode(paramValue);					
 							break;
 						case "-coin": 
-							coin = paramValue;
+							userConfiguration.setCoin(paramValue);
+							break;
+						case "-curr": 
+							userConfiguration.setCurrency(paramValue);
 							break;
 						case "-mbr": 
 							try {
-								minimumBuyRate = Double.parseDouble(paramValue);
+								userConfiguration.setMinimumBuyRate(
+									Double.parseDouble(paramValue)
+								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
 						case "-msr": 
 							try {
-								minimumSellRate = Double.parseDouble(paramValue);
+								userConfiguration.setMinimumSellRate(
+									Double.parseDouble(paramValue)
+								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
 						case "-mca": 
 							try {
-								minimumCoinAmount = Double.parseDouble(paramValue);
+								userConfiguration.setMinimumCoinAmount(
+									Double.parseDouble(paramValue)
+								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
 						case "-idp": 
 							try {
-								incDecPrice = Double.parseDouble(paramValue);
+								userConfiguration.setIncDecPrice(
+									Double.parseDouble(paramValue)
+								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
 						case "-srab": 
 							try {
-								sellRateAfterBreakdown = Double.parseDouble(paramValue);
+								userConfiguration.setSellRateAfterBreakdown(
+									Double.parseDouble(paramValue)
+								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}

@@ -38,16 +38,6 @@ public class MbBalance extends Balance implements Serializable {
 	}
 	
 	@Override
-	public BigDecimal getCurrencyAmount() throws ApiProviderException {
-		BigDecimal currencyAmount;
-		if (getCurrency().equals("BRL"))
-			currencyAmount = getFunds().getBrlWithOpenOrders();
-		else
-			currencyAmount = null;
-		return currencyAmount;
-	}
-	
-	@Override
 	public BigDecimal getCoinAmount() throws ApiProviderException {
 		BigDecimal coinAmount;
 		if (getCoin().equals("BTC"))
@@ -57,6 +47,16 @@ public class MbBalance extends Balance implements Serializable {
 		else
 			coinAmount = null;
 		return coinAmount;
+	}
+	
+	@Override
+	public BigDecimal getCurrencyAmount() throws ApiProviderException {
+		BigDecimal currencyAmount;
+		if (getCurrency().equals("BRL"))
+			currencyAmount = getFunds().getBrlWithOpenOrders();
+		else
+			currencyAmount = null;
+		return currencyAmount;
 	}
 
 	public Integer getServerTime() {

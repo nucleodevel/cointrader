@@ -11,6 +11,7 @@ public abstract class Balance {
 	
 	public Balance(String coin, String currency) {
 		this.coin = coin;
+		this.currency = currency;
 	}
 
 	public String getCoin() {

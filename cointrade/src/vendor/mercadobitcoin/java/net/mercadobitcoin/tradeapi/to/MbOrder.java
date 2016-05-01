@@ -8,33 +8,20 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import net.mercadobitcoin.util.JsonHashMap;
-import net.trader.beans.EnumValue;
+import net.mercadobitcoin.util.EnumValue;
+import net.trader.beans.Operation;
 import net.trader.beans.Order;
-import net.trader.beans.OrderSide;
-import net.trader.exception.ApiProviderException;
+import net.trader.beans.RecordSide;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-
-/**
- * Order information.
- */
 public class MbOrder extends Order implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
 	
 	
-	/**
-	 * Define the Status of an Order (Active, Canceled or Completed).
-	 */
 	public enum OrderStatus implements EnumValue {
 		ACTIVE("active"),
 		CANCELED("canceled"),
@@ -60,19 +47,16 @@ public class MbOrder extends Order implements Serializable {
 	private Long orderId;
 	private String status;
 	
-	private List<MbOperation> operations;
+	private List<Operation> operations;
 	
 	private Boolean flagSmall = false;
 
 	
-	/**
-	 * Constructor. Request a new Order with the specified parameters.
-	 * @param pair The pair of coins of to be exchanged.
-	 * @param side Define if it is a 'buy' or 'sell' order.
-	 * @param coinAmount The amount to be exchanged.
-	 * @param price The price the exchange should be dealt.
-	 */
-	public MbOrder(String coin, String currency, OrderSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
+	public MbOrder() {
+		
+	}
+
+	public MbOrder(String coin, String currency, RecordSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
 		this.coin = coin;
 		this.currency = currency;
 		this.coinAmount = coinAmount;
@@ -81,56 +65,32 @@ public class MbOrder extends Order implements Serializable {
 		this.flagSmall = true;
 	}
 
-	/**
-	 * Constructor. Response from the Trade API, sent to the User.
-	 */
-	public MbOrder(Long orderId, JsonObject jsonObject) {
-		this.orderId = orderId;
-		String coinPair = jsonObject.get("pair").asString().toUpperCase();
-		this.coin = coinPair.substring(0, 3).toUpperCase();
-		this.currency = coinPair.substring(4, 7).toUpperCase();
-		this.side = OrderSide.valueOf(jsonObject.get("type").asString().toUpperCase());
-		this.coinAmount = new BigDecimal(jsonObject.get("volume").asString());
-		this.currencyPrice = new BigDecimal(jsonObject.get("price").asString());
-		this.status = jsonObject.get("status").asString();
+	public MbOrder(Long orderId) {
 		
-		this.operations = new ArrayList<MbOperation>();
-		for (String operationId: jsonObject.get("operations").asObject().names()) {
-			if (operationId.matches("-?\\d+(\\.\\d+)?")) {
-				operations.add(new MbOperation(
-								Long.valueOf(operationId),
-								jsonObject.get("operations").asObject().get(operationId).asObject() ));
-			}
-		}
-		
-		long created = Integer.valueOf(jsonObject.get("created").asString());
-		this.creationDate = Calendar.getInstance();
-		this.creationDate.setTimeInMillis((long)created * 1000);
-	}
-	
-	/**
-	 * Constructor. Response from the API, used by Orderbook.
-	 */
-	public MbOrder(JsonArray jsonArray, String coin, String currency,  OrderSide side) {
-		this.coin = coin;
-		this.currency = currency;
-		this.coinAmount = new BigDecimal(jsonArray.get(1).toString());
-		this.currencyPrice = new BigDecimal(jsonArray.get(0).toString());
-		this.side = side;
-		
-		this.flagSmall = true;
 	}
 
 	public Long getOrderId() {
 		return orderId;
 	}
 
+	public void setOrderId(Long orderId) {
+		this.orderId = orderId;
+	}
+
 	public String getStatus() {
 		return status;
 	}
 
-	public List<MbOperation> getOperations() {
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public List<Operation> getOperations() {
 		return operations;
+	}
+
+	public void setOperations(List<Operation> operations) {
+		this.operations = operations;
 	}
 
 	public Calendar getCreatedDate() {
@@ -159,42 +119,6 @@ public class MbOrder extends Order implements Serializable {
 	@Override
 	public String toDisplayString() {
 		return toString();
-	}
-
-	public int compareTo(Order another) {
-		return -1 * super.compareTo(another);
-	}
-
-	/**
-	 * Get the Parameters of the Object and return them as a list with the name and the value of each parameter.
-	 * 
-	 * @throws ApiProviderException Generic exception to point any error with the execution.
-	 */
-	public JsonHashMap toParams() throws ApiProviderException {
-		JsonHashMap hashMap = new JsonHashMap();
-		try {
-			Map<String, Object> params = new HashMap<String, Object>();
-			
-			if (getCoin() != null && getCurrency() != null)
-				params.put("pair", getCoin().toLowerCase() + "_" + getCurrency().toLowerCase());
-			if (side != null)
-				params.put("type", side == OrderSide.BUY? "buy": (side == OrderSide.SELL? "sell": null));
-			if (coinAmount != null)
-				params.put("volume", coinAmount);
-			if (currencyPrice != null)
-				params.put("price", currencyPrice);
-			if (orderId != null)
-				params.put("order_id", orderId);
-			if (status != null)
-				params.put("status", status);
-			if (creationDate != null)
-				params.put("created", creationDate.getTime());
-			
-			hashMap.putAll(params);
-		} catch (Throwable e) {
-			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
-		}
-		return hashMap;
 	}
 	
 }

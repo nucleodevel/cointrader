@@ -6,20 +6,36 @@ import net.trader.beans.Balance;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
+import net.trader.beans.Ticker;
 import net.trader.exception.ApiProviderException;
+import net.trader.robot.UserConfiguration;
 
 public abstract class ApiService {
+	
+	protected UserConfiguration userConfiguration;
+	
+	public ApiService(UserConfiguration userConfiguration) {
+		this.userConfiguration = userConfiguration;
+	}
 
-	public abstract Balance getBalance(String coin, String currency) throws ApiProviderException;
+	public abstract Ticker getTicker() throws ApiProviderException;
+
+	public abstract Balance getBalance() throws ApiProviderException;
 	
-	public abstract OrderBook getOrderBook(String coin, String currency) throws ApiProviderException;
+	public abstract OrderBook getOrderBook() throws ApiProviderException;
 	
-	public abstract List<Order> getUserActiveOrders(String coin, String currency) throws ApiProviderException;
+	public abstract List<Order> getUserActiveOrders() throws ApiProviderException;
 	
-	public abstract List<Order> getUserCanceledOrders(String coin, String currency, Long since, Long end) throws ApiProviderException;
+	public abstract List<Order> getUserCanceledOrders() throws ApiProviderException;
 	
-	public abstract List<Order> getUserCompletedOrders(String coin, String currency, Long since, Long end) throws ApiProviderException;
+	public abstract List<Order> getUserCompletedOrders() throws ApiProviderException;
 	
-	public abstract List<Operation> getUserOperations(String coin, String currency, Long since, Long end) throws ApiProviderException;
+	public abstract List<Operation> getUserOperations() throws ApiProviderException;
+	
+	public abstract Order cancelOrder(Order order) throws ApiProviderException;
+	
+	public abstract Order createBuyOrder(Order order) throws ApiProviderException;
+	
+	public abstract Order createSellOrder(Order order) throws ApiProviderException;
 	
 }

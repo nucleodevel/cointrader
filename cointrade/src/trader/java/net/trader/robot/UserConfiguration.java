@@ -7,6 +7,16 @@ public class UserConfiguration {
 	private String provider;
 	private String broker;
 	
+	private Integer delayTime;
+	private String operationMode;
+	private String coin;
+	private String currency;
+	private Double minimumBuyRate;
+	private Double minimumSellRate;
+	private Double minimumCoinAmount;
+	private Double incDecPrice;
+	private Double sellRateAfterBreakdown;
+	
 	public UserConfiguration() {
 		
 	}
@@ -41,6 +51,78 @@ public class UserConfiguration {
 
 	public void setBroker(String broker) {
 		this.broker = broker;
+	}
+
+	public Integer getDelayTime() {
+		return delayTime;
+	}
+
+	public void setDelayTime(Integer delayTime) {
+		this.delayTime = delayTime;
+	}
+
+	public String getOperationMode() {
+		return operationMode;
+	}
+
+	public void setOperationMode(String operationMode) {
+		this.operationMode = operationMode;
+	}
+
+	public String getCoin() {
+		return coin;
+	}
+
+	public void setCoin(String coin) {
+		this.coin = coin;
+	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
+
+	public Double getMinimumBuyRate() {
+		return minimumBuyRate;
+	}
+
+	public void setMinimumBuyRate(Double minimumBuyRate) {
+		this.minimumBuyRate = minimumBuyRate;
+	}
+
+	public Double getMinimumSellRate() {
+		return minimumSellRate;
+	}
+
+	public void setMinimumSellRate(Double minimumSellRate) {
+		this.minimumSellRate = minimumSellRate;
+	}
+
+	public Double getMinimumCoinAmount() {
+		return minimumCoinAmount;
+	}
+
+	public void setMinimumCoinAmount(Double minimumCoinAmount) {
+		this.minimumCoinAmount = minimumCoinAmount;
+	}
+
+	public Double getIncDecPrice() {
+		return incDecPrice;
+	}
+
+	public void setIncDecPrice(Double incDecPrice) {
+		this.incDecPrice = incDecPrice;
+	}
+
+	public Double getSellRateAfterBreakdown() {
+		return sellRateAfterBreakdown;
+	}
+
+	public void setSellRateAfterBreakdown(Double sellRateAfterBreakdown) {
+		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 	
 }

@@ -1,11 +1,11 @@
 package net.trader.beans;
 
-public enum OrderSide {
+public enum RecordSide {
 	BUY("BUY"),
 	SELL("SELL");
 	private final String value;
 
-	private OrderSide(String value) {
+	private RecordSide(String value) {
 		this.value = value;
 	}
 

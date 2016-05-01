@@ -12,15 +12,14 @@ import java.util.List;
 
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
-import net.trader.beans.OrderSide;
-
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
 
 /**
  * Mercado Bitcoin order book, contains open Orders, 'asks' for SELL orders and 'bids' for BUY orders.
  */
 public class MbOrderBook extends OrderBook {
+	
+	private String coin;
+	private String currency;
 	
 	private MbOrder[] asks;
 	private MbOrder[] bids;
@@ -31,20 +30,27 @@ public class MbOrderBook extends OrderBook {
 	 * @param jsonObject Trade API JSON response
 	 * @param pair Side of coins for the relationship, for instance, Bitcoin and Real.
 	 */
-	public MbOrderBook(JsonObject jsonObject, String coin, String currency) {
-		JsonArray asking = jsonObject.get("asks").asArray();
-		asks = new MbOrder[asking.size()];
-		for (int i = 0; i < asking.size(); i++) {
-			asks[i] = new MbOrder(asking.get(i).asArray(), coin, currency, OrderSide.SELL);
-		}
-		
-		JsonArray bidding = jsonObject.get("bids").asArray();
-		bids = new MbOrder[bidding.size()];
-		for (int i = 0; i < bidding.size(); i++) {
-			bids[i] = new MbOrder(bidding.get(i).asArray(), coin, currency, OrderSide.BUY);
-		}
+	public MbOrderBook(String coin, String currency) {
+		this.coin = coin;
+		this.currency = currency;
 	}
 	
+	public String getCoin() {
+		return coin;
+	}
+
+	public void setCoin(String coin) {
+		this.coin = coin;
+	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
+
 	@Override
 	public List<Order> getAsks() {
 		ArrayList<Order> orders = new ArrayList<Order>();
@@ -53,12 +59,20 @@ public class MbOrderBook extends OrderBook {
 		return orders;
 	}
 
+	public void setAsks(MbOrder[] asks) {
+		this.asks = asks;
+	}
+
 	@Override
 	public List<Order> getBids() {
 		ArrayList<Order> orders = new ArrayList<Order>();
 		for (Order bid: bids)
 			orders.add(bid);
 		return orders;
+	}
+
+	public void setBids(MbOrder[] bids) {
+		this.bids = bids;
 	}
 
 	@Override

@@ -10,12 +10,9 @@ public class BtSimpleOrder extends Order implements Serializable {
 	
 	private String clientID;
 	
-	public BtSimpleOrder() {
-	}
-	
 	BtSimpleOrder(BigDecimal currencyPrice, BigDecimal coinAmount) {
-		this.currencyPrice = currencyPrice;
 		this.coinAmount = coinAmount;
+		this.currencyPrice = currencyPrice;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -33,8 +30,8 @@ public class BtSimpleOrder extends Order implements Serializable {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append('{');
-		sb.append("currencyPrice=").append(currencyPrice);
-		sb.append(", coinAmount=").append(coinAmount.divide(new BigDecimal(100000000)));
+		sb.append("coinAmount=").append(coinAmount.divide(new BigDecimal(100000000)));
+		sb.append(", currencyPrice=").append(currencyPrice);
 		sb.append(", clientID=").append(clientID);
 		sb.append('}');
 		

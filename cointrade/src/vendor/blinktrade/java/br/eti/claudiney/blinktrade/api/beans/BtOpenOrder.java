@@ -37,11 +37,11 @@ public class BtOpenOrder extends Order implements Serializable {
 		this.side = another.getSide();
 		this.ordType = another.getOrdType();
 		this.orderQty = another.getOrderQty();
-		this.currencyPrice = another.getCurrencyPrice();
 		this.creationDate = another.getCreationDate();
 		this.volume = another.getVolume();
 		this.timeInForce = another.getTimeInForce();
-		this.coinAmount = this.cumQty.add(this.leavesQty);	
+		this.coinAmount = this.cumQty.add(this.leavesQty);
+		this.currencyPrice = another.getCurrencyPrice();	
 	}
 
 	public BigInteger getClientCustomOrderID() {

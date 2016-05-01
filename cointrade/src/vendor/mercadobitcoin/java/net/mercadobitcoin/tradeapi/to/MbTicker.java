@@ -8,6 +8,8 @@ package net.mercadobitcoin.tradeapi.to;
 
 import java.math.BigDecimal;
 
+import net.trader.beans.Ticker;
+
 import com.eclipsesource.json.JsonObject;
 
 /**
@@ -20,7 +22,7 @@ import com.eclipsesource.json.JsonObject;
  * <b>sell</b>: Sell order's lowest value, in Brazilian Real.
  * <b>date</b>: Unix time of Ticker's last update.
  */
-public class Ticker {
+public class MbTicker extends Ticker {
 	
 	private BigDecimal high;
 	private BigDecimal low;
@@ -35,7 +37,7 @@ public class Ticker {
 	 * 
 	 * @param jsonObject Trade API JSON response
 	 */
-	public Ticker(JsonObject jsonObject) {
+	public MbTicker(JsonObject jsonObject) {
 		this.high = new BigDecimal(jsonObject.get("high").toString());
 		this.low = new BigDecimal(jsonObject.get("low").toString());
 		this.vol = new BigDecimal(jsonObject.get("vol").toString());
