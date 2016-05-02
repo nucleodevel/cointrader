@@ -23,7 +23,6 @@ import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
 import net.trader.beans.OrderType;
-import net.trader.beans.Record;
 import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
@@ -242,7 +241,7 @@ public class BlinktradeApiService extends ApiService {
 			for (JsonElement jsonElement: activeOrdListGrp)
 				if (jsonElement != null) {
 					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Order order = (Order) getRecord(jsonArray);
+					Order order = getOrder(jsonArray);
 					activeOrders.add(order);
 				}
 		return activeOrders;
@@ -277,7 +276,7 @@ public class BlinktradeApiService extends ApiService {
 			for (JsonElement jsonElement: completedOrdListGrp)
 				if (jsonElement != null) {
 					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Order order = (Order) getRecord(jsonArray);
+					Order order = getOrder(jsonArray);
 					completedOrders.add(order);
 				}
 		return completedOrders;
@@ -307,7 +306,7 @@ public class BlinktradeApiService extends ApiService {
 			for (JsonElement jsonElement: completedOrdListGrp)
 				if (jsonElement != null) {
 					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Operation operation = (Operation) getRecord(jsonArray);
+					Operation operation = getOperation(jsonArray);
 					clientOperations.add(operation);
 				}
 		return clientOperations;
@@ -557,7 +556,7 @@ public class BlinktradeApiService extends ApiService {
 
 	}
 	
-	public Record getRecord(JsonArray jsonArray) {
+	public Order getOrder(JsonArray jsonArray) {
 		String sideString = jsonArray.get(8).getAsString();
 		RecordSide side = sideString.equals("1")? RecordSide.BUY:
 			(sideString.equals("2")? RecordSide.SELL: null);
@@ -567,47 +566,46 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal().divide(
 			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1));
 		
-		Record record = new Record(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
+		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 		
-		record.setClientId(jsonArray.get(0).getAsBigInteger());
-		record.setId(jsonArray.get(1).getAsBigInteger());
-		//record.setOrdStatus(jsonArray.get(3).getAsString());
-		/*record.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-		record.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
+		order.setClientId(jsonArray.get(0).getAsBigInteger());
+		order.setId(jsonArray.get(1).getAsBigInteger());
+		//order.setOrdStatus(jsonArray.get(3).getAsString());
+		/*order.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+		order.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
 		
 		
-		record.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
-		/*record.setVolume(jsonArray.get(13).getAsBigDecimal());
-		record.setTimeInForce(jsonArray.get(14).getAsString());*/
+		order.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
+		/*order.setVolume(jsonArray.get(13).getAsBigDecimal());
+		order.setTimeInForce(jsonArray.get(14).getAsString());*/
 		
-		return record;
+		return order;
 	}
 	
-	/*public Operation getOperation(JsonArray jsonArray) {
-		Operation operation = new Operation();
-		
-		operation.setClientId(jsonArray.get(0).getAsBigInteger());
-		operation.setId(jsonArray.get(1).getAsBigInteger());
-		BigDecimal cumQty = jsonArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
-		//operation.setOrdStatus(jsonArray.get(3).getAsString());
-		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
-		//operation.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-		//operation.setAvgPx(jsonArray.get(6).getAsBigDecimal());
-		operation.setCoin(Coin.valueOf(jsonArray.get(7).getAsString().substring(0, 3).toUpperCase()));
-		operation.setCurrency(Currency.valueOf(jsonArray.get(7).getAsString().substring(3, 6).toUpperCase()));
+	public Operation getOperation(JsonArray jsonArray) {
 		String sideString = jsonArray.get(8).getAsString();
 		RecordSide side = sideString.equals("1")? RecordSide.BUY:
 			(sideString.equals("2")? RecordSide.SELL: null);
-		operation.setSide(side);
+		BigDecimal cumQty = jsonArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
+		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
+		BigDecimal coinAmount = cumQty.add(leavesQty);
+		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal().divide(
+			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1));
+		
+		Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
+		
+		operation.setClientId(jsonArray.get(0).getAsBigInteger());
+		operation.setId(jsonArray.get(1).getAsBigInteger());
+		//operation.setOrdStatus(jsonArray.get(3).getAsString());
+		/*operation.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+		operation.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
+		
+		
 		operation.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
-		//operation.setVolume(jsonArray.get(13).getAsBigDecimal());
-		//operation.setTimeInForce(jsonArray.get(14).getAsString());
-		operation.setCoinAmount(cumQty.add(leavesQty));
-		operation.setCurrencyPrice(jsonArray.get(11).getAsBigDecimal().divide(
-			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1))
-		);
+		/*operation.setVolume(jsonArray.get(13).getAsBigDecimal());
+		operation.setTimeInForce(jsonArray.get(14).getAsString());*/
 		
 		return operation;
-	}*/
+	}
 
 }

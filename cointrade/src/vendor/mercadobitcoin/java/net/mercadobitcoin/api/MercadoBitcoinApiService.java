@@ -427,20 +427,22 @@ public class MercadoBitcoinApiService extends ApiService {
 		Operation[] operationList = new Operation[jsonArray.size()];
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JsonObject jsonObject = jsonArray.get(i).asObject();
-			Operation operation = new Operation();
+			
 			long created = Integer.valueOf(jsonObject.get("date").toString());
-			operation.setCoinAmount(new BigDecimal(jsonObject.get("amount").toString()));
-			operation.setCurrencyPrice(new BigDecimal(jsonObject.get("price").toString()));
-			operation.setId(new BigInteger(jsonObject.get("tid").asString()));
-			operation.setSide(
-				RecordSide.valueOf(jsonObject.get("side").asString().toUpperCase())
+			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").toString());
+			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("price").toString());
+			RecordSide side = 
+				RecordSide.valueOf(jsonObject.get("side").asString().toUpperCase());
+			
+			Operation operation = new Operation(
+				getCoin(), getCurrency(), side, coinAmount, currencyPrice
 			);
 
+			operation.setId(new BigInteger(jsonObject.get("tid").asString()));
 			operation.setRate(null);
-			
 			operation.setCreationDate(Calendar.getInstance());
-			operation.getCreationDate().setTimeInMillis(created * 1000);
-			
+			operation.getCreationDate().setTimeInMillis(created * 1000);			
+
 			operationList[i] = operation;
 		}
 		return operationList;
@@ -702,7 +704,7 @@ public class MercadoBitcoinApiService extends ApiService {
 	}
 	
 	public Ticker getTicker(JsonObject jsonObject) {
-		Ticker ticker = new Ticker();
+		Ticker ticker = new Ticker(getCoin(), getCurrency());
 		
 		ticker.setHigh(new BigDecimal(jsonObject.get("high").toString()));
 		ticker.setLow(new BigDecimal(jsonObject.get("low").toString()));
@@ -716,14 +718,14 @@ public class MercadoBitcoinApiService extends ApiService {
 	}
 	
 	public Order getOrder(JsonObject jsonObject) {
-		Order order = new Order();
-		
 		String coinPair = jsonObject.get("pair").asString().toUpperCase();
-		order.setCoin(Coin.valueOf(coinPair.substring(0, 3).toUpperCase()));
-		order.setCurrency(Currency.valueOf(coinPair.substring(4, 7).toUpperCase()));
-		order.setSide(RecordSide.valueOf(jsonObject.get("type").asString().toUpperCase()));
-		order.setCoinAmount(new BigDecimal(jsonObject.get("volume").asString()));
-		order.setCurrencyPrice(new BigDecimal(jsonObject.get("price").asString()));
+		Coin coin = Coin.valueOf(coinPair.substring(0, 3).toUpperCase());
+		Currency currency = Currency.valueOf(coinPair.substring(4, 7).toUpperCase());
+		RecordSide side = RecordSide.valueOf(jsonObject.get("type").asString().toUpperCase());
+		BigDecimal coinAmount = new BigDecimal(jsonObject.get("volume").asString());
+		BigDecimal currencyPrice = new BigDecimal(jsonObject.get("price").asString());
+		
+		Order order = new Order(coin, currency, side, coinAmount, currencyPrice);
 		order.setStatus(OrderStatus.valueOf(jsonObject.get("status").asString().toUpperCase()));
 		
 		List<Operation> operations = new ArrayList<Operation>();
@@ -733,6 +735,7 @@ public class MercadoBitcoinApiService extends ApiService {
 					jsonObject.get("operations").asObject().get(operationId).asObject()
 				);
 				operation.setId(new BigInteger(operationId));
+				operation.setSide(order.getSide());
 				operations.add(operation);
 			}
 		}
@@ -746,23 +749,32 @@ public class MercadoBitcoinApiService extends ApiService {
 	}
 	
 	public Operation getOperation(JsonObject jsonObject) {
-		Operation operation = new Operation();
+		Operation operation;
 		
 		if (jsonObject.get("date") != null && !jsonObject.get("date").toString().equals("null")) {
 			long created = Integer.valueOf(jsonObject.get("date").toString());
-			operation.setCoinAmount(new BigDecimal(jsonObject.get("amount").toString()));
-			operation.setCurrencyPrice(new BigDecimal(jsonObject.get("price").toString()));
-			operation.setId(new BigInteger(jsonObject.get("tid").asString()));
-			operation.setSide(
-				RecordSide.valueOf(jsonObject.get("side").asString().toUpperCase())
+			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").toString());
+			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("price").toString());
+			RecordSide side = 
+				RecordSide.valueOf(jsonObject.get("side").asString().toUpperCase());
+			
+			operation = new Operation(
+				getCoin(), getCurrency(), side, coinAmount, currencyPrice
 			);
+			
+			operation.setId(new BigInteger(jsonObject.get("tid").asString()));
 			operation.setRate(null);
 			operation.setCreationDate(Calendar.getInstance());
 			operation.getCreationDate().setTimeInMillis(created * 1000);
 		}
 		else {
-			operation.setCoinAmount(new BigDecimal(jsonObject.get("volume").asString()));
-			operation.setCurrencyPrice(new BigDecimal(jsonObject.get("price").asString()));
+			BigDecimal coinAmount = new BigDecimal(jsonObject.get("volume").asString());
+			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("price").asString());
+			
+			operation = new Operation(
+				getCoin(), getCurrency(), null, coinAmount, currencyPrice
+			);
+			
 			operation.setRate(new BigDecimal(jsonObject.get("rate").asString()));
 			long created = Integer.valueOf(jsonObject.get("created").asString());
 			operation.setRate(null);
