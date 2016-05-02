@@ -4,7 +4,7 @@
  * @see more details in /LICENSE.txt
  */
 
-package net.mercadobitcoin.tradeapi.service;
+package net.mercadobitcoin.api;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,7 +61,7 @@ import com.eclipsesource.json.JsonValue;
  * Public API Client service to communicate with Mercado Bitcoin API.
  * Used to retrieve general information about trades and orders in Mercado Bitcoin.
  */
-public class MbApiService extends ApiService {
+public class MercadoBitcoinApiService extends ApiService {
 	
 	protected enum HttpMethod {
 		GET,
@@ -103,7 +103,7 @@ public class MbApiService extends ApiService {
 	private static List<Order> userCanceledOrders;
 	private byte[] mbTapiCodeBytes;
 
-	public MbApiService(UserConfiguration userConfiguration) throws ApiProviderException {
+	public MercadoBitcoinApiService(UserConfiguration userConfiguration) throws ApiProviderException {
 		super(userConfiguration);
 		
 		try {

@@ -1,17 +1,18 @@
 package net.trader.beans;
 
-public enum OrderStatus {
-	ACTIVE("ACTIVE"),
-	CANCELED("CANCELED"),
-	COMPLETED("COMPLETED");
+public enum Provider {
+
+	MERCADO_BITCOIN("MERCADO_BITCOIN"),
+	BLINKTRADE("BLINKTRADE");
 	
 	private final String value;
 
-	private OrderStatus(String value) {
+	private Provider(String value) {
 		this.value = value;
 	}
 
 	public String getValue() {
 		return this.value;
 	}
+
 }

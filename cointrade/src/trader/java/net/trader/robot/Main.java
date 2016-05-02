@@ -10,19 +10,19 @@ import net.trader.exception.ApiProviderException;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
 import net.trader.exception.ParamValueErrorException;
-import net.trader.robot.Robot;
+import net.trader.robot.ParamReader;
 
 public class Main {
 	
-	private static Robot robot;
+	private static ParamReader paramReader;
 	private static UserConfiguration userConfiguration;
 	
 	public static void main(String[] args) {
 		
-		robot = new Robot();
+		paramReader = new ParamReader();
 		
 		try {
-			robot.readParams(args);
+			paramReader.readParams(args);
 		} catch (ParamLabelErrorException e) {
 			System.out.println("There is no parameter " + e.getParamLabel() + "!");
 			return;
@@ -36,7 +36,7 @@ public class Main {
 		
 		for (;;) {
 			try {
-				robot.readParamsFromFile();
+				paramReader.readParamsFromFile();
 			} catch (ParamLabelErrorException e) {
 				System.out.println("There is no parameter " + e.getParamLabel() + "!");
 				return;
@@ -47,7 +47,7 @@ public class Main {
 				System.out.println("The parameter " + e.getParamLabel() + " can't accept this value!");
 				return;
 			} catch (IOException e) {
-				System.out.println("The file " + robot.getFileName() + " doesn't exist!");
+				System.out.println("The file " + paramReader.getFileName() + " doesn't exist!");
 				return;
 			}
 			
@@ -59,10 +59,10 @@ public class Main {
 				System.out.println("");
 				System.out.println("\n---- Params");
 				
-				System.out.println(robot.getFileContent());
+				System.out.println(paramReader.getFileContent());
 				
-				// creating robot and reading APIs
-				userConfiguration = robot.getUserConfiguration();
+				// creating paramReader and reading APIs
+				userConfiguration = paramReader.getUserConfiguration();
 				ProviderReport report = new ProviderReport(userConfiguration);
 				
 				// descriptions

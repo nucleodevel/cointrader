@@ -5,20 +5,22 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import net.trader.beans.Broker;
 import net.trader.beans.Coin;
 import net.trader.beans.Currency;
+import net.trader.beans.Provider;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
 import net.trader.exception.ParamValueErrorException;
 
-public class Robot {
+public class ParamReader {
 
 	private File file;
 	
 	private UserConfiguration userConfiguration;
 
-	public Robot() {
+	public ParamReader() {
 		userConfiguration = new UserConfiguration();
 	}
 
@@ -168,10 +170,10 @@ public class Robot {
 							userConfiguration.setSecret(paramValue);
 							break;
 						case "-up": 
-							userConfiguration.setProvider(paramValue);
+							userConfiguration.setProvider(Provider.valueOf(paramValue));
 							break;
 						case "-ub": 
-							userConfiguration.setBroker(paramValue);
+							userConfiguration.setBroker(Broker.valueOf(paramValue));
 							break;
 						default:
 							throw new ParamLabelErrorException(paramLabel);

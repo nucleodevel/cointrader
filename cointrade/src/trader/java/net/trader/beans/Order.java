@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Order extends Record {
-	
+
+	protected OrderType type;
 	protected OrderStatus status;
 	private List<Operation> operations;
 
@@ -24,6 +25,14 @@ public class Order extends Record {
 	) {
 		super(coin, currency, side, coinAmount, currencyPrice);
 		this.operations = new ArrayList<Operation>();
+	}
+
+	public OrderType getType() {
+		return type;
+	}
+
+	public void setType(OrderType type) {
+		this.type = type;
 	}
 
 	public OrderStatus getStatus() {

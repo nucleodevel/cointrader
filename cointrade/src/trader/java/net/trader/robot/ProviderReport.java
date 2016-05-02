@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import br.eti.claudiney.blinktrade.api.BtApiService;
-import net.mercadobitcoin.tradeapi.service.MbApiService;
+import net.blinktrade.api.BlinktradeApiService;
+import net.mercadobitcoin.api.MercadoBitcoinApiService;
 import net.trader.api.ApiService;
 import net.trader.beans.Balance;
 import net.trader.beans.Coin;
@@ -16,6 +16,8 @@ import net.trader.beans.Currency;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
+import net.trader.beans.OrderType;
+import net.trader.beans.Provider;
 import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
@@ -78,10 +80,10 @@ public class ProviderReport {
 	
 	private ApiService getApiService() throws ApiProviderException {
 		if (apiService == null) {
-			if (userConfiguration.getProvider().equals("Blinktrade"))
-				apiService = new BtApiService(getUserConfiguration());
-			else if (userConfiguration.getProvider().equals("MercadoBitcoin"))
-				apiService = new MbApiService(getUserConfiguration());
+			if (userConfiguration.getProvider() == Provider.MERCADO_BITCOIN)
+				apiService = new MercadoBitcoinApiService(getUserConfiguration());
+			else if (userConfiguration.getProvider() == Provider.BLINKTRADE)
+				apiService = new BlinktradeApiService(getUserConfiguration());
 		}
 		return apiService;
 	}
@@ -353,11 +355,6 @@ public class ProviderReport {
 				Order myBuyOrder = getUserActiveBuyOrders().size() > 0?
 					getUserActiveBuyOrders().get(0): null;
 				
-				if (myBuyOrder != null) {
-					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(myBuyOrder.getCurrencyPrice())));
-					System.out.println(order.getCoinAmount().doubleValue() + " - " + coinAmount.doubleValue());
-					System.out.println(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue());
-				}
 				// if my order isn't the best, delete it and create another 
 				if (
 					myBuyOrder == null || 
@@ -372,6 +369,7 @@ public class ProviderReport {
 							newOrder.setCurrency(userConfiguration.getCurrency());
 							newOrder.setCoinAmount(coinAmount);
 							newOrder.setCurrencyPrice(currencyPrice);
+							newOrder.setType(OrderType.LIMITED);
 							createBuyOrder(newOrder);
 							System.out.println(
 								"Buy order created: " +
@@ -448,11 +446,6 @@ public class ProviderReport {
 				Order mySellOrder = getUserActiveSellOrders().size() > 0?
 					getUserActiveSellOrders().get(0): null;
 					
-				if (mySellOrder != null) {
-					System.out.println(decFmt.format(order.getCurrencyPrice()) + "-" + (decFmt.format(mySellOrder.getCurrencyPrice())));
-					System.out.println(Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()));
-					System.out.println(nextOrder.getCurrencyPrice().doubleValue() - order.getCurrencyPrice().doubleValue());
-				}
 				// if my order isn't the best, delete it and create another 
 				if (
 					mySellOrder == null || 
@@ -467,6 +460,7 @@ public class ProviderReport {
 							newOrder.setCurrency(userConfiguration.getCurrency());
 							newOrder.setCoinAmount(coinAmount);
 							newOrder.setCurrencyPrice(currencyPrice);
+							newOrder.setType(OrderType.LIMITED);
 							createSellOrder(newOrder);
 							System.out.println(
 								"Sell order created: " +

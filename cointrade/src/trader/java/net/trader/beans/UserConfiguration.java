@@ -4,8 +4,8 @@ public class UserConfiguration {
 
 	private String key;
 	private String secret;
-	private String provider;
-	private String broker;
+	private Provider provider;
+	private Broker broker;
 	
 	private Integer delayTime;
 	private String operationMode;
@@ -37,19 +37,19 @@ public class UserConfiguration {
 		this.secret = secret;
 	}
 
-	public String getProvider() {
+	public Provider getProvider() {
 		return provider;
 	}
 
-	public void setProvider(String provider) {
+	public void setProvider(Provider provider) {
 		this.provider = provider;
 	}
 
-	public String getBroker() {
+	public Broker getBroker() {
 		return broker;
 	}
 
-	public void setBroker(String broker) {
+	public void setBroker(Broker broker) {
 		this.broker = broker;
 	}
 

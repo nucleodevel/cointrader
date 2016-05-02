@@ -1,17 +1,18 @@
 package net.trader.beans;
 
-public enum OrderStatus {
-	ACTIVE("ACTIVE"),
-	CANCELED("CANCELED"),
-	COMPLETED("COMPLETED");
+public enum OrderType {
+	
+	MARKET("MARKET"),
+	LIMITED("LIMITED");
 	
 	private final String value;
 
-	private OrderStatus(String value) {
+	private OrderType(String value) {
 		this.value = value;
 	}
 
 	public String getValue() {
 		return this.value;
 	}
+
 }

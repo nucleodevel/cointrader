@@ -1,4 +1,4 @@
-package br.eti.claudiney.blinktrade.api;
+package net.blinktrade.api;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,11 +16,13 @@ import javax.crypto.spec.SecretKeySpec;
 
 import net.trader.api.ApiService;
 import net.trader.beans.Balance;
+import net.trader.beans.Broker;
 import net.trader.beans.Coin;
 import net.trader.beans.Currency;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
+import net.trader.beans.OrderType;
 import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
@@ -29,9 +31,6 @@ import net.trader.utils.Utils;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-
-import br.eti.claudiney.blinktrade.enums.BlinktradeBroker;
-import br.eti.claudiney.blinktrade.enums.BlinktradeOrderType;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -55,10 +54,9 @@ import com.google.gson.JsonParser;
  * @since September/2015
  * 
  */
-public class BtApiService extends ApiService {
+public class BlinktradeApiService extends ApiService {
 
 	private static final String BLINKTRADE_API_PRODUCAO_URL = "https://api.blinktrade.com/tapi/v1/message";
-	private static final String BLINKTRADE_API_TESTNET_URL = "https://api.testnet.blinktrade.com/tapi/v1/message";
 	
 	private static final String BLINKTRADE_PUBLIC_API_ORDERBOOK = "https://api.blinktrade.com/api/v1/BRL/orderbook";
 	//private static final String BLINKTRADE_PUBLIC_API_TRADES = "https://api.blinktrade.com/api/v1/BRL/trades";
@@ -67,7 +65,7 @@ public class BtApiService extends ApiService {
 	
 	private static final Gson GSON = new Gson();
 	
-	public BtApiService(UserConfiguration userConfiguration) throws ApiProviderException {
+	public BlinktradeApiService(UserConfiguration userConfiguration) throws ApiProviderException {
 		
 		super(userConfiguration);
 
@@ -85,9 +83,9 @@ public class BtApiService extends ApiService {
 
 	}
 	
-	private BlinktradeBroker getBlinktradeBroker() {
-		if (userConfiguration.getBroker().equals("Foxbit"))
-			return BlinktradeBroker.FOXBIT;
+	private String getBrokerId() {
+		if (userConfiguration.getBroker() == Broker.FOXBIT)
+			return "4";
 		return null;
 	}
 	
@@ -311,7 +309,7 @@ public class BtApiService extends ApiService {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
 			order.getCoin(), order.getCurrency(), RecordSide.BUY,
-			BlinktradeOrderType.LIMITED,
+			OrderType.LIMITED,
 			order.getCoinAmount(), order.getCurrencyPrice()
 		);
 		
@@ -323,7 +321,7 @@ public class BtApiService extends ApiService {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
 			order.getCoin(), order.getCurrency(), RecordSide.SELL,
-			BlinktradeOrderType.LIMITED,
+			OrderType.LIMITED,
 			order.getCoinAmount(), order.getCurrencyPrice()
 		);
 		
@@ -337,7 +335,7 @@ public class BtApiService extends ApiService {
 
 		request.put("MsgType", "F");
 		request.put("ClOrdID", ((Order) order).getClientId());
-		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
+		request.put("BrokerID", getBrokerId());
 
 		sendMessage(GSON.toJson(request));
 		
@@ -353,14 +351,14 @@ public class BtApiService extends ApiService {
 		request.put("MsgType", "U18");
 		request.put("DepositReqID", depositRequestID);
 		request.put("Currency", userConfiguration.getCoin());
-		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
+		request.put("BrokerID", getBrokerId());
 
 		return sendMessage(GSON.toJson(request));
 
 	}
 
 	public String sendNewOrder(Integer clientOrderId, Coin coin,
-			Currency currency, RecordSide side, BlinktradeOrderType type,
+			Currency currency, RecordSide side, OrderType type,
 			BigDecimal coinAmount, BigDecimal currencyPrice)
 			throws ApiProviderException {
 
@@ -398,10 +396,10 @@ public class BtApiService extends ApiService {
 		request.put("ClOrdID", clientOrderId);
 		request.put("Symbol", coin.getValue() + currency.getValue());
 		request.put("Side", side == RecordSide.BUY? "1": (side == RecordSide.SELL? "2": null));
-		request.put("OrdType", type.getOrderType());
+		request.put("OrdType", type == OrderType.MARKET? "1": (type == OrderType.LIMITED? "2": null));
 		request.put("OrderQty", coinAmount.toBigInteger());
 		request.put("Price", currencyPrice.toBigInteger());
-		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
+		request.put("BrokerID", getBrokerId());
 
 		return sendMessage(GSON.toJson(request));
 
@@ -425,7 +423,7 @@ public class BtApiService extends ApiService {
 
 		request.put("MsgType", "F");
 		request.put("ClOrdID", clientOrderId);
-		request.put("BrokerID", getBlinktradeBroker().getBrokerID());
+		request.put("BrokerID", getBrokerId());
 
 		return sendMessage(GSON.toJson(request));
 
@@ -461,11 +459,7 @@ public class BtApiService extends ApiService {
 
 		try {
 
-			if (BlinktradeBroker.TESTNET.equals(userConfiguration.getBroker())) {
-				url = new URL(BLINKTRADE_API_TESTNET_URL);
-			} else {
-				url = new URL(BLINKTRADE_API_PRODUCAO_URL);
-			}
+			url = new URL(BLINKTRADE_API_PRODUCAO_URL);
 
 			http = url.openConnection();
 
