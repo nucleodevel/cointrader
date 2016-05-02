@@ -23,6 +23,7 @@ import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
 import net.trader.beans.OrderType;
+import net.trader.beans.Record;
 import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
@@ -87,6 +88,14 @@ public class BlinktradeApiService extends ApiService {
 		if (userConfiguration.getBroker() == Broker.FOXBIT)
 			return "4";
 		return null;
+	}
+	
+	private Coin getCoin() {
+		return userConfiguration.getCoin();
+	}
+	
+	private Currency getCurrency() {
+		return userConfiguration.getCurrency();
 	}
 	
 	@Override
@@ -233,7 +242,7 @@ public class BlinktradeApiService extends ApiService {
 			for (JsonElement jsonElement: activeOrdListGrp)
 				if (jsonElement != null) {
 					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Order order = getOrder(jsonArray);
+					Order order = (Order) getRecord(jsonArray);
 					activeOrders.add(order);
 				}
 		return activeOrders;
@@ -268,7 +277,7 @@ public class BlinktradeApiService extends ApiService {
 			for (JsonElement jsonElement: completedOrdListGrp)
 				if (jsonElement != null) {
 					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Order order = getOrder(jsonArray);
+					Order order = (Order) getRecord(jsonArray);
 					completedOrders.add(order);
 				}
 		return completedOrders;
@@ -298,7 +307,7 @@ public class BlinktradeApiService extends ApiService {
 			for (JsonElement jsonElement: completedOrdListGrp)
 				if (jsonElement != null) {
 					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Operation operation = getOperation(jsonArray);
+					Operation operation = (Operation) getRecord(jsonArray);
 					clientOperations.add(operation);
 				}
 		return clientOperations;
@@ -548,34 +557,33 @@ public class BlinktradeApiService extends ApiService {
 
 	}
 	
-	public Order getOrder(JsonArray jsonArray) {
-		Order order = new Order();
-		
-		order.setClientId(jsonArray.get(0).getAsBigInteger());
-		order.setId(jsonArray.get(1).getAsBigInteger());
-		BigDecimal cumQty = jsonArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
-		//order.setOrdStatus(jsonArray.get(3).getAsString());
-		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
-		/*order.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-		order.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
-		order.setCoin(Coin.valueOf(jsonArray.get(7).getAsString().substring(0, 3).toUpperCase()));
-		order.setCurrency(Currency.valueOf(jsonArray.get(7).getAsString().substring(3, 6).toUpperCase()));
+	public Record getRecord(JsonArray jsonArray) {
 		String sideString = jsonArray.get(8).getAsString();
 		RecordSide side = sideString.equals("1")? RecordSide.BUY:
 			(sideString.equals("2")? RecordSide.SELL: null);
-		order.setSide(side);
-		order.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
-		/*order.setVolume(jsonArray.get(13).getAsBigDecimal());
-		order.setTimeInForce(jsonArray.get(14).getAsString());*/
-		order.setCoinAmount(cumQty.add(leavesQty));
-		order.setCurrencyPrice(jsonArray.get(11).getAsBigDecimal().divide(
-			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1))
-		);
+		BigDecimal cumQty = jsonArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
+		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
+		BigDecimal coinAmount = cumQty.add(leavesQty);
+		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal().divide(
+			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1));
 		
-		return order;
+		Record record = new Record(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
+		
+		record.setClientId(jsonArray.get(0).getAsBigInteger());
+		record.setId(jsonArray.get(1).getAsBigInteger());
+		//record.setOrdStatus(jsonArray.get(3).getAsString());
+		/*record.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+		record.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
+		
+		
+		record.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
+		/*record.setVolume(jsonArray.get(13).getAsBigDecimal());
+		record.setTimeInForce(jsonArray.get(14).getAsString());*/
+		
+		return record;
 	}
 	
-	public Operation getOperation(JsonArray jsonArray) {
+	/*public Operation getOperation(JsonArray jsonArray) {
 		Operation operation = new Operation();
 		
 		operation.setClientId(jsonArray.get(0).getAsBigInteger());
@@ -583,8 +591,8 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal cumQty = jsonArray.get(2).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
 		//operation.setOrdStatus(jsonArray.get(3).getAsString());
 		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
-		/*operation.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-		operation.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
+		//operation.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
+		//operation.setAvgPx(jsonArray.get(6).getAsBigDecimal());
 		operation.setCoin(Coin.valueOf(jsonArray.get(7).getAsString().substring(0, 3).toUpperCase()));
 		operation.setCurrency(Currency.valueOf(jsonArray.get(7).getAsString().substring(3, 6).toUpperCase()));
 		String sideString = jsonArray.get(8).getAsString();
@@ -592,14 +600,14 @@ public class BlinktradeApiService extends ApiService {
 			(sideString.equals("2")? RecordSide.SELL: null);
 		operation.setSide(side);
 		operation.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
-		/*operation.setVolume(jsonArray.get(13).getAsBigDecimal());
-		operation.setTimeInForce(jsonArray.get(14).getAsString());*/
+		//operation.setVolume(jsonArray.get(13).getAsBigDecimal());
+		//operation.setTimeInForce(jsonArray.get(14).getAsString());
 		operation.setCoinAmount(cumQty.add(leavesQty));
 		operation.setCurrencyPrice(jsonArray.get(11).getAsBigDecimal().divide(
 			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1))
 		);
 		
 		return operation;
-	}
+	}*/
 
 }

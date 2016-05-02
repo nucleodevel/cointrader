@@ -7,10 +7,9 @@ public class UserConfiguration {
 	private Provider provider;
 	private Broker broker;
 	
+	protected CoinCurrencyPair coinCurrencyPair;
 	private Integer delayTime;
 	private String operationMode;
-	private Coin coin;
-	private Currency currency;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double minimumCoinAmount;
@@ -18,7 +17,7 @@ public class UserConfiguration {
 	private Double sellRateAfterBreakdown;
 	
 	public UserConfiguration() {
-		
+		this.coinCurrencyPair = new CoinCurrencyPair();
 	}
 
 	public String getKey() {
@@ -53,6 +52,30 @@ public class UserConfiguration {
 		this.broker = broker;
 	}
 
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
+	public Coin getCoin() {
+		return coinCurrencyPair.getCoin();
+	}
+
+	public void setCoin(Coin coin) {
+		coinCurrencyPair.setCoin(coin);
+	}
+
+	public Currency getCurrency() {
+		return coinCurrencyPair.getCurrency();
+	}
+
+	public void setCurrency(Currency currency) {
+		coinCurrencyPair.setCurrency(currency);
+	}
+
 	public Integer getDelayTime() {
 		return delayTime;
 	}
@@ -67,22 +90,6 @@ public class UserConfiguration {
 
 	public void setOperationMode(String operationMode) {
 		this.operationMode = operationMode;
-	}
-
-	public Coin getCoin() {
-		return coin;
-	}
-
-	public void setCoin(Coin coin) {
-		this.coin = coin;
-	}
-
-	public Currency getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(Currency currency) {
-		this.currency = currency;
 	}
 
 	public Double getMinimumBuyRate() {

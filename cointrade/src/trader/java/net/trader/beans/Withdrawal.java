@@ -16,11 +16,10 @@ public class Withdrawal implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
+	protected CoinCurrencyPair coinCurrencyPair;
 	private Long withdrawalId;
 	private Integer status;
 	private String statusDescrition;
-	private Coin coin;
-	private Currency currency;
 	private String transaction;
 	private String address;
 	private BigDecimal volume;
@@ -28,8 +27,31 @@ public class Withdrawal implements Serializable {
 	private long updated;
 	
 	public Withdrawal(Coin coin, Currency currency) {
-		this.coin = coin;
-		this.currency = currency;
+		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
+	}
+
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
+	public Coin getCoin() {
+		return coinCurrencyPair.getCoin();
+	}
+
+	public void setCoin(Coin coin) {
+		coinCurrencyPair.setCoin(coin);
+	}
+
+	public Currency getCurrency() {
+		return coinCurrencyPair.getCurrency();
+	}
+
+	public void setCurrency(Currency currency) {
+		coinCurrencyPair.setCurrency(currency);
 	}
 
 	public Long getWithdrawalId() {
@@ -54,22 +76,6 @@ public class Withdrawal implements Serializable {
 
 	public void setStatusDescrition(String statusDescrition) {
 		this.statusDescrition = statusDescrition;
-	}
-
-	public Coin getCoin() {
-		return coin;
-	}
-
-	public void setCoin(Coin coin) {
-		this.coin = coin;
-	}
-
-	public Currency getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(Currency currency) {
-		this.currency = currency;
 	}
 
 	public String getTransaction() {
@@ -116,7 +122,7 @@ public class Withdrawal implements Serializable {
 	public String toString() {
 		return "Withdrawal [withdrawalId=" + withdrawalId + ", status="
 				+ status + ", statusDescrition=" + statusDescrition + ", coin="
-				+ coin + ", currency=" + currency + ", transaction=" + transaction 
+				+ getCoin() + ", currency=" + getCurrency() + ", transaction=" + transaction 
 				+ ", address=" + address + ", volume=" + volume + ", created=" 
 				+ created + ", updated=" + updated + "]";
 	}	

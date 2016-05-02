@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public class Ticker {
 	
+	protected CoinCurrencyPair coinCurrencyPair;
 	private BigDecimal high;
 	private BigDecimal low;
 	private BigDecimal vol;
@@ -12,8 +13,32 @@ public class Ticker {
 	private BigDecimal sell;
 	private BigDecimal date;
 	
-	public Ticker() {
-		
+	public Ticker(Coin coin, Currency currency) {
+		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
+	}
+
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
+	public Coin getCoin() {
+		return coinCurrencyPair.getCoin();
+	}
+
+	public void setCoin(Coin coin) {
+		coinCurrencyPair.setCoin(coin);
+	}
+
+	public Currency getCurrency() {
+		return coinCurrencyPair.getCurrency();
+	}
+
+	public void setCurrency(Currency currency) {
+		coinCurrencyPair.setCurrency(currency);
 	}
 
 	public BigDecimal getHigh() {

@@ -15,8 +15,7 @@ public class RecordFilter implements Serializable {
 
 	private static final long serialVersionUID = 6302408184251869680L;
 
-	private Coin coin;
-	private Currency currency;
+	protected CoinCurrencyPair coinCurrencyPair;
 	private RecordSide side;
 	private OrderStatus status;
 	private Long fromId;
@@ -24,62 +23,41 @@ public class RecordFilter implements Serializable {
 	private Long since;
 	private Long end;
 
-	/**
-	 * Constructor for the Object sent to request a list of Orders, with the defined parameters as filters.
-	 * 
-	 * @param pair Define the Coin Pair to filter the list.
-	 */
 	public RecordFilter(Coin coin, Currency currency) {
-		super();
-		this.coin =  coin;
-		this.currency = currency;
+		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 	}
 
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
 	public Coin getCoin() {
-		return coin;
+		return coinCurrencyPair.getCoin();
 	}
 
 	public void setCoin(Coin coin) {
-		this.coin = coin;
+		coinCurrencyPair.setCoin(coin);
 	}
 
 	public Currency getCurrency() {
-		return currency;
+		return coinCurrencyPair.getCurrency();
 	}
 
 	public void setCurrency(Currency currency) {
-		this.currency = currency;
-	}
-
-	/**
-	 * @param pair Set the Coin Pair ("btc_brl" or "ltc_brl") filter.
-	 */
-	public void setPair(Coin coin, Currency currency) { 
-		if (coin != null && currency != null) {
-			this.coin =  coin;
-			this.currency = currency;
-		}
-	}
-	
-	/**
-	 * @param side Set the Order Side ("buy" or "sell") filter.
-	 */
-	public void setSide(RecordSide side) { 
-		if (side != null) {
-			this.side = side;
-		}
+		coinCurrencyPair.setCurrency(currency);
 	}
 	
 	public RecordSide getSide() {
 		return side;
 	}
-
-	/**
-	 * @param status Filter the list by "Active", "Canceled" or "Completed" status.
-	 */
-	public void setStatus(OrderStatus status) { 
-		if (status != null) {
-			this.status = status;
+	
+	public void setSide(RecordSide side) { 
+		if (side != null) {
+			this.side = side;
 		}
 	}
 
@@ -87,12 +65,9 @@ public class RecordFilter implements Serializable {
 		return status;
 	}
 
-	/**
-	 * @param fromId Add an initial Id for the list.
-	 */
-	public void setFromId(Long fromId) { 
-		if (fromId != null) {
-			this.fromId = fromId;
+	public void setStatus(OrderStatus status) { 
+		if (status != null) {
+			this.status = status;
 		}
 	}
 
@@ -100,12 +75,9 @@ public class RecordFilter implements Serializable {
 		return fromId;
 	}
 
-	/**
-	 * @param endId Add a final Id for the list.
-	 */
-	public void setEndId(Long endId) { 
-		if (endId != null) {
-			this.endId = endId;
+	public void setFromId(Long fromId) { 
+		if (fromId != null) {
+			this.fromId = fromId;
 		}
 	}
 
@@ -113,12 +85,9 @@ public class RecordFilter implements Serializable {
 		return endId;
 	}
 
-	/**
-	 * @param since Add a starting Unix Time for the list.
-	 */
-	public void setSince(Long since) { 
-		if (since != null) {
-			this.since = since;
+	public void setEndId(Long endId) { 
+		if (endId != null) {
+			this.endId = endId;
 		}
 	}
 
@@ -126,22 +95,26 @@ public class RecordFilter implements Serializable {
 		return since;
 	}
 
-	/**
-	 * @param end Add a final Unix Time for the list.
-	 */
+	public void setSince(Long since) { 
+		if (since != null) {
+			this.since = since;
+		}
+	}
+
+	public Long getEnd() {
+		return end;
+	}
+
 	public void setEnd(Long end) { 
 		if (end != null) {
 			this.end = end;
 		}
 	}	
 
-	public Long getEnd() {
-		return end;
-	}
-
 	@Override
 	public String toString() {
-		return "OrderFilter [coin=" + coin + ", currency=" + currency + ", side=" + side + ", status="
+		return "OrderFilter [coin=" + getCoin() + ", currency=" + getCurrency() 
+				+ ", side=" + side + ", status="
 				+ status + ", fromId=" + fromId + ", endId=" + endId
 				+ ", since=" + since + ", end=" + end + "]";
 	}

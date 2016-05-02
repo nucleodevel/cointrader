@@ -1,19 +1,10 @@
 package net.trader.beans;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public class Operation extends Record {
 
 	protected BigDecimal rate;
-
-	public Operation() {
-		super();
-	}
-
-	public Operation(BigInteger id) {
-		super(id);
-	}
 
 	public Operation(
 		Coin coin, Currency currency, RecordSide side,
@@ -23,11 +14,11 @@ public class Operation extends Record {
 	}
 	
 	public Operation(Operation another) {
-		this.coinAmount = another.getCoinAmount();
-		this.currencyPrice = another.getCurrencyPrice();
-		this.side = another.getSide();
-		this.rate = another.getRate();		
-		this.creationDate = another.getCreationDate();
+		super(
+			another.getCoin(), another.getCurrency(), another.side, 
+			another.coinAmount, another.currencyPrice
+		);
+		this.rate = another.getRate();
 	}
 
 	public BigDecimal getRate() {

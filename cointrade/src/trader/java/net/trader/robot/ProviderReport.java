@@ -364,11 +364,10 @@ public class ProviderReport {
 						cancelOrder(myBuyOrder);
 					try {
 						if (coinAmount.doubleValue() > userConfiguration.getMinimumCoinAmount()) {
-							Order newOrder = new Order();
-							newOrder.setCoin(userConfiguration.getCoin());
-							newOrder.setCurrency(userConfiguration.getCurrency());
-							newOrder.setCoinAmount(coinAmount);
-							newOrder.setCurrencyPrice(currencyPrice);
+							Order newOrder = new Order(
+								userConfiguration.getCoin(), userConfiguration.getCurrency(),
+								RecordSide.BUY, coinAmount, currencyPrice
+							);
 							newOrder.setType(OrderType.LIMITED);
 							createBuyOrder(newOrder);
 							System.out.println(
@@ -455,11 +454,11 @@ public class ProviderReport {
 						cancelOrder(mySellOrder);
 					try {
 						if (coinAmount.doubleValue() > userConfiguration.getMinimumCoinAmount()) {
-							Order newOrder = new Order();
-							newOrder.setCoin(userConfiguration.getCoin());
-							newOrder.setCurrency(userConfiguration.getCurrency());
-							newOrder.setCoinAmount(coinAmount);
-							newOrder.setCurrencyPrice(currencyPrice);
+							Order newOrder = new Order(
+								userConfiguration.getCoin(), userConfiguration.getCurrency(),
+								RecordSide.SELL, coinAmount, currencyPrice
+							);
+							newOrder.setType(OrderType.LIMITED);
 							newOrder.setType(OrderType.LIMITED);
 							createSellOrder(newOrder);
 							System.out.println(

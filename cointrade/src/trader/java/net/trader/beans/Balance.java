@@ -6,33 +6,39 @@ import java.text.DecimalFormatSymbols;
 
 public class Balance {
 
-	protected Coin coin;
-	protected Currency currency;
+	protected CoinCurrencyPair coinCurrencyPair;
 	protected BigDecimal coinAmount;
 	protected BigDecimal coinLocked;
 	protected BigDecimal currencyAmount;
 	protected BigDecimal currencyLocked;
 	protected String clientId;
-	
+
 	public Balance(Coin coin, Currency currency) {
-		this.coin = coin;
-		this.currency = currency;
+		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 	}
 
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
 	public Coin getCoin() {
-		return coin;
+		return coinCurrencyPair.getCoin();
 	}
 
 	public void setCoin(Coin coin) {
-		this.coin = coin;
+		coinCurrencyPair.setCoin(coin);
 	}
 
 	public Currency getCurrency() {
-		return currency;
+		return coinCurrencyPair.getCurrency();
 	}
 
 	public void setCurrency(Currency currency) {
-		this.currency = currency;
+		coinCurrencyPair.setCurrency(currency);
 	}
 
 	public BigDecimal getCoinAmount() {
@@ -86,8 +92,8 @@ public class Balance {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(this.getClass().getSimpleName() + ": ["); 
-		sb.append("coin: " + coin);
-		sb.append("; currency: " + currency);
+		sb.append("coin: " + getCoin());
+		sb.append("; currency: " + getCurrency());
 		sb.append("; coinAmount: " + decFmt.format(coinAmount));
 		sb.append("; coinLocked: " + decFmt.format(coinLocked));
 		sb.append("; currencyAmount: " + decFmt.format(currencyAmount));

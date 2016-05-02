@@ -5,32 +5,38 @@ import java.util.List;
 
 public class OrderBook {
 	
-	protected Coin coin;
-	protected Currency currency;
+	protected CoinCurrencyPair coinCurrencyPair;
 	protected List<Order> bidOrders;
 	protected List<Order> askOrders;
 	
 	public OrderBook(Coin coin, Currency currency) {
-		this.coin = coin;
-		this.currency = currency;
+		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 		this.bidOrders = new ArrayList<Order>();
 		this.askOrders = new ArrayList<Order>();
 	}
 
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
 	public Coin getCoin() {
-		return coin;
+		return coinCurrencyPair.getCoin();
 	}
 
 	public void setCoin(Coin coin) {
-		this.coin = coin;
+		coinCurrencyPair.setCoin(coin);
 	}
 
 	public Currency getCurrency() {
-		return currency;
+		return coinCurrencyPair.getCurrency();
 	}
 
 	public void setCurrency(Currency currency) {
-		this.currency = currency;
+		coinCurrencyPair.setCurrency(currency);
 	}
 
 	public List<Order> getBidOrders() {

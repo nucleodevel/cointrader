@@ -8,42 +8,53 @@ import java.util.Calendar;
 
 public class Record implements Comparable<Record> {
 	
+	protected CoinCurrencyPair coinCurrencyPair;
 	protected BigInteger id;
 	protected BigInteger clientId;
-	protected Coin coin;
-	protected Currency currency;
 	protected RecordSide side;
 	protected BigDecimal coinAmount;
 	protected BigDecimal currencyPrice;
 	protected Calendar creationDate;
 	
-	public Record() {
-		
-	}
-
-	public Record(BigInteger id) {
-		this.id = id;
-	}
-
 	public Record(
 		Coin coin, Currency currency, RecordSide side,
 		BigDecimal coinAmount, BigDecimal currencyPrice
 	) {
-		this.coin = coin;
-		this.currency = currency;
+		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 		this.side = side;
 		this.coinAmount = coinAmount;
 		this.currencyPrice = currencyPrice;
 	}
 
 	public Record getClone() {
-		Record newOperation = new Record();
-		newOperation.side = this.side;
-		newOperation.coin = this.coin;
-		newOperation.currency = this.currency;
-		newOperation.coinAmount = this.coinAmount;
-		newOperation.currencyPrice = this.currencyPrice;
-		return newOperation;
+		Record newRecord = new Record(
+			this.getCoin(), this.getCurrency(), side, coinAmount, currencyPrice
+		);
+		return newRecord;
+	}
+
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+	
+	public Coin getCoin() {
+		return coinCurrencyPair.getCoin();
+	}
+
+	public void setCoin(Coin coin) {
+		coinCurrencyPair.setCoin(coin);
+	}
+
+	public Currency getCurrency() {
+		return coinCurrencyPair.getCurrency();
+	}
+
+	public void setCurrency(Currency currency) {
+		coinCurrencyPair.setCurrency(currency);
 	}
 
 	public BigInteger getId() {
@@ -68,22 +79,6 @@ public class Record implements Comparable<Record> {
 
 	public void setSide(RecordSide side) {
 		this.side = side;
-	}
-	
-	public Coin getCoin() {
-		return coin;
-	}
-
-	public void setCoin(Coin coin) {
-		this.coin = coin;
-	}
-
-	public Currency getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(Currency currency) {
-		this.currency = currency;
 	}
 
 	public BigDecimal getCoinAmount() {
@@ -122,8 +117,8 @@ public class Record implements Comparable<Record> {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(this.getClass().getSimpleName() + ": ["); 
-		sb.append("coin: " + coin);
-		sb.append("; currency: " + currency);
+		sb.append("coin: " + getCoin());
+		sb.append("; currency: " + getCurrency());
 		sb.append("; side: " + side);
 		sb.append("; coinAmount: " + decFmt.format(coinAmount));
 		sb.append("; currencyPrice: " + decFmt.format(currencyPrice));

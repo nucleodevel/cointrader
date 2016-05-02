@@ -1,7 +1,6 @@
 package net.trader.beans;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,14 +9,6 @@ public class Order extends Record {
 	protected OrderType type;
 	protected OrderStatus status;
 	private List<Operation> operations;
-
-	public Order() {
-		super();
-	}
-
-	public Order(BigInteger id) {
-		super(id);
-	}
 
 	public Order(
 		Coin coin, Currency currency, RecordSide side,
