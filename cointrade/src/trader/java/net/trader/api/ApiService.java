@@ -7,8 +7,8 @@ import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
 import net.trader.beans.Ticker;
+import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
-import net.trader.robot.UserConfiguration;
 
 public abstract class ApiService {
 	

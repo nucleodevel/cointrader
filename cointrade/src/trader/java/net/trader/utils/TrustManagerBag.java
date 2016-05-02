@@ -1,4 +1,4 @@
-package net.mercadobitcoin.common.security;
+package net.trader.utils;
 
 import java.security.SecureRandom;
 

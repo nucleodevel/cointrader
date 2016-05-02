@@ -5,31 +5,31 @@ import java.util.List;
 
 public class OrderBook {
 	
-	protected String coin;
-	protected String currency;
+	protected Coin coin;
+	protected Currency currency;
 	protected List<Order> bidOrders;
 	protected List<Order> askOrders;
 	
-	public OrderBook(String coin, String currency) {
+	public OrderBook(Coin coin, Currency currency) {
 		this.coin = coin;
 		this.currency = currency;
 		this.bidOrders = new ArrayList<Order>();
 		this.askOrders = new ArrayList<Order>();
 	}
-	
-	public String getCoin() {
+
+	public Coin getCoin() {
 		return coin;
 	}
 
-	public void setCoin(String coin) {
+	public void setCoin(Coin coin) {
 		this.coin = coin;
 	}
 
-	public String getCurrency() {
+	public Currency getCurrency() {
 		return currency;
 	}
 
-	public void setCurrency(String currency) {
+	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
 

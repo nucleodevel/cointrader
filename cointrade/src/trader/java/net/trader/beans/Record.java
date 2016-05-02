@@ -10,8 +10,8 @@ public class Record implements Comparable<Record> {
 	
 	protected BigInteger id;
 	protected BigInteger clientId;
-	protected String coin;
-	protected String currency;
+	protected Coin coin;
+	protected Currency currency;
 	protected RecordSide side;
 	protected BigDecimal coinAmount;
 	protected BigDecimal currencyPrice;
@@ -26,7 +26,7 @@ public class Record implements Comparable<Record> {
 	}
 
 	public Record(
-		String coin, String currency, RecordSide side,
+		Coin coin, Currency currency, RecordSide side,
 		BigDecimal coinAmount, BigDecimal currencyPrice
 	) {
 		this.coin = coin;
@@ -69,23 +69,23 @@ public class Record implements Comparable<Record> {
 	public void setSide(RecordSide side) {
 		this.side = side;
 	}
-
-	public String getCoin() {
+	
+	public Coin getCoin() {
 		return coin;
 	}
 
-	public void setCoin(String coin) {
+	public void setCoin(Coin coin) {
 		this.coin = coin;
 	}
 
-	public String getCurrency() {
+	public Currency getCurrency() {
 		return currency;
 	}
 
-	public void setCurrency(String currency) {
+	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
-	
+
 	public BigDecimal getCoinAmount() {
 		return coinAmount;
 	}

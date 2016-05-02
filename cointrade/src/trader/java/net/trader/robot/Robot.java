@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import net.trader.beans.Coin;
+import net.trader.beans.Currency;
+import net.trader.beans.UserConfiguration;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
 import net.trader.exception.ParamValueErrorException;
@@ -108,10 +111,10 @@ public class Robot {
 							userConfiguration.setOperationMode(paramValue);					
 							break;
 						case "-coin": 
-							userConfiguration.setCoin(paramValue);
+							userConfiguration.setCoin(Coin.valueOf(paramValue));
 							break;
 						case "-curr": 
-							userConfiguration.setCurrency(paramValue);
+							userConfiguration.setCurrency(Currency.valueOf(paramValue));
 							break;
 						case "-mbr": 
 							try {

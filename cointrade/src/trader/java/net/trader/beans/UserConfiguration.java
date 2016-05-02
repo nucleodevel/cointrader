@@ -1,4 +1,4 @@
-package net.trader.robot;
+package net.trader.beans;
 
 public class UserConfiguration {
 
@@ -9,8 +9,8 @@ public class UserConfiguration {
 	
 	private Integer delayTime;
 	private String operationMode;
-	private String coin;
-	private String currency;
+	private Coin coin;
+	private Currency currency;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double minimumCoinAmount;
@@ -69,19 +69,19 @@ public class UserConfiguration {
 		this.operationMode = operationMode;
 	}
 
-	public String getCoin() {
+	public Coin getCoin() {
 		return coin;
 	}
 
-	public void setCoin(String coin) {
+	public void setCoin(Coin coin) {
 		this.coin = coin;
 	}
 
-	public String getCurrency() {
+	public Currency getCurrency() {
 		return currency;
 	}
 
-	public void setCurrency(String currency) {
+	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
 

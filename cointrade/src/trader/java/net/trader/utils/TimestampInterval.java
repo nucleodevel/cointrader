@@ -4,7 +4,7 @@
  * @see more details in /LICENSE.txt
  */
 
-package net.mercadobitcoin.util;
+package net.trader.utils;
 
 import java.io.Serializable;
 import java.util.Date;

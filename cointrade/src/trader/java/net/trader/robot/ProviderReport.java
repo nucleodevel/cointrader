@@ -11,11 +11,14 @@ import br.eti.claudiney.blinktrade.api.BtApiService;
 import net.mercadobitcoin.tradeapi.service.MbApiService;
 import net.trader.api.ApiService;
 import net.trader.beans.Balance;
+import net.trader.beans.Coin;
+import net.trader.beans.Currency;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
 import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
+import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
 
 public class ProviderReport {
@@ -65,11 +68,11 @@ public class ProviderReport {
 		this.userConfiguration = userConfiguration;
 	}
 
-	public String getCoin() {
+	public Coin getCoin() {
 		return userConfiguration.getCoin();
 	}
 
-	public String getCurrency() {
+	public Currency getCurrency() {
 		return userConfiguration.getCurrency();
 	}
 	

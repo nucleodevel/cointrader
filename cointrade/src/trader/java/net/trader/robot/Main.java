@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import net.trader.beans.Order;
+import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;

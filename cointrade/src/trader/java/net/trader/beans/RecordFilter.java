@@ -4,24 +4,21 @@
  * @see more details in /LICENSE.txt
  */
 
-package net.mercadobitcoin.tradeapi.to;
+package net.trader.beans;
 
 import java.io.Serializable;
-
-import net.mercadobitcoin.enums.MbOrderStatus;
-import net.trader.beans.RecordSide;
 
 /**
  * Filter object to be used on order list request.
  */
-public class MbOrderFilter implements Serializable {
+public class RecordFilter implements Serializable {
 
 	private static final long serialVersionUID = 6302408184251869680L;
 
-	private String coin;
-	private String currency;
+	private Coin coin;
+	private Currency currency;
 	private RecordSide side;
-	private MbOrderStatus status;
+	private OrderStatus status;
 	private Long fromId;
 	private Long endId;
 	private Long since;
@@ -32,32 +29,32 @@ public class MbOrderFilter implements Serializable {
 	 * 
 	 * @param pair Define the Coin Pair to filter the list.
 	 */
-	public MbOrderFilter(String coin, String currency) {
+	public RecordFilter(Coin coin, Currency currency) {
 		super();
 		this.coin =  coin;
 		this.currency = currency;
 	}
 
-	public String getCoin() {
+	public Coin getCoin() {
 		return coin;
 	}
 
-	public void setCoin(String coin) {
+	public void setCoin(Coin coin) {
 		this.coin = coin;
 	}
 
-	public String getCurrency() {
+	public Currency getCurrency() {
 		return currency;
 	}
 
-	public void setCurrency(String currency) {
+	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
 
 	/**
 	 * @param pair Set the Coin Pair ("btc_brl" or "ltc_brl") filter.
 	 */
-	public void setPair(String coin, String currency) { 
+	public void setPair(Coin coin, Currency currency) { 
 		if (coin != null && currency != null) {
 			this.coin =  coin;
 			this.currency = currency;
@@ -80,13 +77,13 @@ public class MbOrderFilter implements Serializable {
 	/**
 	 * @param status Filter the list by "Active", "Canceled" or "Completed" status.
 	 */
-	public void setStatus(MbOrderStatus status) { 
+	public void setStatus(OrderStatus status) { 
 		if (status != null) {
 			this.status = status;
 		}
 	}
 
-	public MbOrderStatus getStatus() {
+	public OrderStatus getStatus() {
 		return status;
 	}
 

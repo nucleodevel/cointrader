@@ -16,7 +16,7 @@ public class Operation extends Record {
 	}
 
 	public Operation(
-		String coin, String currency, RecordSide side,
+		Coin coin, Currency currency, RecordSide side,
 		BigDecimal coinAmount, BigDecimal currencyPrice
 	) {
 		super(coin, currency, side, coinAmount, currencyPrice);

@@ -1,4 +1,4 @@
-package br.eti.claudiney.blinktrade.utils;
+package net.trader.utils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
