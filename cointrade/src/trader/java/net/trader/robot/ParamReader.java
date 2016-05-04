@@ -103,13 +103,21 @@ public class ParamReader {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
-						case "-om":
+						case "-bm":
 							if (
-								!paramValue.equals("b") && !paramValue.equals("s") &&
-								!paramValue.equals("bs")
+								!paramValue.equals("none") && !paramValue.equals("order") &&
+								!paramValue.equals("operation")
 							)
 								throw new ParamValueErrorException(paramLabel);
-							userConfiguration.setOperationMode(paramValue);					
+							userConfiguration.setBuyMode(paramValue);					
+							break;
+						case "-sm":
+							if (
+								!paramValue.equals("none") && !paramValue.equals("order") &&
+								!paramValue.equals("operation")
+							)
+								throw new ParamValueErrorException(paramLabel);
+							userConfiguration.setSellMode(paramValue);					
 							break;
 						case "-coin": 
 							userConfiguration.setCoin(Coin.valueOf(paramValue));
@@ -120,7 +128,7 @@ public class ParamReader {
 						case "-mbr": 
 							try {
 								userConfiguration.setMinimumBuyRate(
-									Double.parseDouble(paramValue)
+									-1 * Math.abs(Double.parseDouble(paramValue))
 								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
@@ -129,7 +137,7 @@ public class ParamReader {
 						case "-msr": 
 							try {
 								userConfiguration.setMinimumSellRate(
-									Double.parseDouble(paramValue)
+									Math.abs(Double.parseDouble(paramValue))
 								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
@@ -147,15 +155,6 @@ public class ParamReader {
 						case "-idp": 
 							try {
 								userConfiguration.setIncDecPrice(
-									Double.parseDouble(paramValue)
-								);
-							} catch (NumberFormatException e) {
-								throw new ParamValueErrorException(paramLabel);
-							}
-							break;
-						case "-srab": 
-							try {
-								userConfiguration.setSellRateAfterBreakdown(
 									Double.parseDouble(paramValue)
 								);
 							} catch (NumberFormatException e) {

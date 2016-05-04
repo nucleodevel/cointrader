@@ -9,15 +9,17 @@ public class UserConfiguration {
 	
 	private CoinCurrencyPair coinCurrencyPair;
 	private Integer delayTime;
-	private String operationMode;
+	private String buyMode;
+	private String sellMode;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
-	private Double sellRateAfterBreakdown;
 	
 	public UserConfiguration() {
 		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
+		minimumBuyRate = -1.0;
+		minimumSellRate = 1.0;
 	}
 
 	public String getKey() {
@@ -84,12 +86,33 @@ public class UserConfiguration {
 		this.delayTime = delayTime;
 	}
 
-	public String getOperationMode() {
-		return operationMode;
+	public String getBuyMode() {
+		return buyMode;
 	}
 
-	public void setOperationMode(String operationMode) {
-		this.operationMode = operationMode;
+	public void setBuyMode(String buyMode) {
+		this.buyMode = buyMode;
+	}
+
+	public String getSellMode() {
+		return sellMode;
+	}
+
+	public void setSellMode(String sellMode) {
+		this.sellMode = sellMode;
+	}
+
+	public Double getMinimumRate(RecordSide side) {
+		Double rate = 0.0;
+		switch (side) {
+			case BUY:
+				rate = minimumBuyRate;
+			break;
+			case SELL:
+				rate = minimumSellRate;
+			break;
+		}
+		return rate;
 	}
 
 	public Double getMinimumBuyRate() {
@@ -122,14 +145,6 @@ public class UserConfiguration {
 
 	public void setIncDecPrice(Double incDecPrice) {
 		this.incDecPrice = incDecPrice;
-	}
-
-	public Double getSellRateAfterBreakdown() {
-		return sellRateAfterBreakdown;
-	}
-
-	public void setSellRateAfterBreakdown(Double sellRateAfterBreakdown) {
-		this.sellRateAfterBreakdown = sellRateAfterBreakdown;
 	}
 	
 }

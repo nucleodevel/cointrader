@@ -89,6 +89,10 @@ public class Record implements Comparable<Record> {
 	public void setCurrencyPrice(BigDecimal price) {
 		this.currencyPrice = price;
 	}
+
+	public BigDecimal getCurrencyAmount() {
+		return coinAmount.multiply(currencyPrice);
+	}
 	
 	public Calendar getCreationDate() {
 		return creationDate;

@@ -12,4 +12,12 @@ public enum RecordSide {
 	public String getValue() {
 		return this.value;
 	}
+	
+	public RecordSide getOther() {
+		if (this == BUY)
+			return SELL;
+		else if (this == SELL)
+			return BUY;
+		return null;
+	}
 }

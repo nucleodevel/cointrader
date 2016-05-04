@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import net.trader.beans.Order;
+import net.trader.beans.RecordSide;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
 import net.trader.exception.ParamLabelErrorException;
@@ -82,10 +83,6 @@ public class Main {
 					System.out.println(report.getLastUserBuyOrder().toString());
 				if (report.getLastUserSellOrder() != null)
 					System.out.println(report.getLastUserSellOrder().toString());
-				if (report.getLastRelevantBuyPrice() != null)
-					System.out.println("");
-				if (report.getLastRelevantSellPrice() != null)
-					System.out.println("");
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");
@@ -94,27 +91,40 @@ public class Main {
 				
 				
 				// analise and make orders
-				if (!userConfiguration.getOperationMode().contains("b")) {
-					// get the unique buy order or null
-					Order myBuyOrder = report.getUserActiveBuyOrders().size() > 0?
-						report.getUserActiveBuyOrders().get(0): null;
-					if (myBuyOrder != null)
-						report.cancelOrder(myBuyOrder);
-					System.out.println("\nDon't make buy order but cancel any!");
+				
+				String buyMode = userConfiguration.getBuyMode();
+				switch (buyMode) {
+					case "none":
+						Order myBuyOrder = report.getUserActiveBuyOrders().size() > 0?
+							report.getUserActiveBuyOrders().get(0): null;
+						if (myBuyOrder != null)
+							report.cancelOrder(myBuyOrder);
+						System.out.println("\nDon't make buy order but cancel any!");
+						break;
+					case "operation":
+						report.makeOrdersByLastRelevantPriceByOperations(RecordSide.BUY);
+						break;
+					case "order":
+						report.makeOrdersByLastRelevantPriceByOrders(RecordSide.BUY);
+						break;
 				}
-				else
-					report.makeBuyOrders();
-	
-				if (!userConfiguration.getOperationMode().contains("s")) {
-					// get the unique buy order or null
-					Order mySellOrder = report.getUserActiveSellOrders().size() > 0?
-						report.getUserActiveSellOrders().get(0): null;
-					if (mySellOrder != null)
-						report.cancelOrder(mySellOrder);
-					System.out.println("\nDon't make sell order but cancel any!");
+				
+				String sellMode = userConfiguration.getSellMode();
+				switch (sellMode) {
+					case "none":
+						Order mySellOrder = report.getUserActiveSellOrders().size() > 0?
+							report.getUserActiveSellOrders().get(0): null;
+						if (mySellOrder != null)
+							report.cancelOrder(mySellOrder);
+						System.out.println("\nDon't make sell order but cancel any!");
+						break;
+					case "operation":
+						report.makeOrdersByLastRelevantPriceByOperations(RecordSide.SELL);
+						break;
+					case "order":
+						report.makeOrdersByLastRelevantPriceByOrders(RecordSide.SELL);
+						break;
 				}
-				else
-					report.makeSellOrders();
 				
 				System.out.println("\n---- Finish reading: " + (new Date()));
 			} catch (ApiProviderException e) {
