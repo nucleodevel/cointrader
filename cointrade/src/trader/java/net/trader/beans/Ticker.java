@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public class Ticker {
 	
-	protected CoinCurrencyPair coinCurrencyPair;
+	private CoinCurrencyPair coinCurrencyPair;
 	private BigDecimal high;
 	private BigDecimal low;
 	private BigDecimal vol;

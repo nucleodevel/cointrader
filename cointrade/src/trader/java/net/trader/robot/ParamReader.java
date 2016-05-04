@@ -82,7 +82,6 @@ public class ParamReader {
 		if (!file.exists())
 			throw new IOException();
 		else {		
-			// Construct BufferedReader from FileReader
 			BufferedReader br = new BufferedReader(new FileReader(getFileName()));
 			
 			try { 
@@ -188,7 +187,6 @@ public class ParamReader {
 	}
 	
 	public String getFileContent() throws IOException {
-		// Construct BufferedReader from FileReader
 		BufferedReader br = new BufferedReader(new FileReader(getFileName()));
 		String fileContent = "";
 		try { 

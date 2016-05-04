@@ -16,7 +16,7 @@ public class Withdrawal implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	protected CoinCurrencyPair coinCurrencyPair;
+	private CoinCurrencyPair coinCurrencyPair;
 	private Long withdrawalId;
 	private Integer status;
 	private String statusDescrition;

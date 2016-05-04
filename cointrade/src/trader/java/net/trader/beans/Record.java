@@ -8,13 +8,13 @@ import java.util.Calendar;
 
 public class Record implements Comparable<Record> {
 	
-	protected CoinCurrencyPair coinCurrencyPair;
-	protected BigInteger id;
-	protected BigInteger clientId;
-	protected RecordSide side;
-	protected BigDecimal coinAmount;
-	protected BigDecimal currencyPrice;
-	protected Calendar creationDate;
+	private CoinCurrencyPair coinCurrencyPair;
+	private BigInteger id;
+	private BigInteger clientId;
+	private RecordSide side;
+	private BigDecimal coinAmount;
+	private BigDecimal currencyPrice;
+	private Calendar creationDate;
 	
 	public Record(
 		Coin coin, Currency currency, RecordSide side,
@@ -24,13 +24,6 @@ public class Record implements Comparable<Record> {
 		this.side = side;
 		this.coinAmount = coinAmount;
 		this.currencyPrice = currencyPrice;
-	}
-
-	public Record getClone() {
-		Record newRecord = new Record(
-			this.getCoin(), this.getCurrency(), side, coinAmount, currencyPrice
-		);
-		return newRecord;
 	}
 
 	public CoinCurrencyPair getCoinCurrencyPair() {

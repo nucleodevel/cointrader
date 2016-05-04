@@ -5,9 +5,9 @@ import java.util.List;
 
 public class OrderBook {
 	
-	protected CoinCurrencyPair coinCurrencyPair;
-	protected List<Order> bidOrders;
-	protected List<Order> askOrders;
+	private CoinCurrencyPair coinCurrencyPair;
+	private List<Order> bidOrders;
+	private List<Order> askOrders;
 	
 	public OrderBook(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);

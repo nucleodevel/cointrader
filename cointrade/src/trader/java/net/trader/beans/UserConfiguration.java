@@ -7,7 +7,7 @@ public class UserConfiguration {
 	private Provider provider;
 	private Broker broker;
 	
-	protected CoinCurrencyPair coinCurrencyPair;
+	private CoinCurrencyPair coinCurrencyPair;
 	private Integer delayTime;
 	private String operationMode;
 	private Double minimumBuyRate;
@@ -17,7 +17,7 @@ public class UserConfiguration {
 	private Double sellRateAfterBreakdown;
 	
 	public UserConfiguration() {
-		this.coinCurrencyPair = new CoinCurrencyPair();
+		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
 	}
 
 	public String getKey() {

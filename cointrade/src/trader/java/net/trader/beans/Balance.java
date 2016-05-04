@@ -6,12 +6,12 @@ import java.text.DecimalFormatSymbols;
 
 public class Balance {
 
-	protected CoinCurrencyPair coinCurrencyPair;
-	protected BigDecimal coinAmount;
-	protected BigDecimal coinLocked;
-	protected BigDecimal currencyAmount;
-	protected BigDecimal currencyLocked;
-	protected String clientId;
+	private CoinCurrencyPair coinCurrencyPair;
+	private BigDecimal coinAmount;
+	private BigDecimal coinLocked;
+	private BigDecimal currencyAmount;
+	private BigDecimal currencyLocked;
+	private String clientId;
 
 	public Balance(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);

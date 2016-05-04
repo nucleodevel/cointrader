@@ -2,12 +2,8 @@ package net.trader.beans;
 
 public class CoinCurrencyPair {
 	
-	protected Coin coin;
-	protected Currency currency;
-
-	public CoinCurrencyPair() {
-		
-	}
+	private Coin coin;
+	private Currency currency;
 
 	public CoinCurrencyPair(Coin coin, Currency currency) {
 		this.coin = coin;

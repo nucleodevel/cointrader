@@ -6,8 +6,8 @@ import java.util.List;
 
 public class Order extends Record {
 
-	protected OrderType type;
-	protected OrderStatus status;
+	private OrderType type;
+	private OrderStatus status;
 	private List<Operation> operations;
 
 	public Order(

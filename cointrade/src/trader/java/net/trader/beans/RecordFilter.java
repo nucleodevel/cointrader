@@ -15,7 +15,7 @@ public class RecordFilter implements Serializable {
 
 	private static final long serialVersionUID = 6302408184251869680L;
 
-	protected CoinCurrencyPair coinCurrencyPair;
+	private CoinCurrencyPair coinCurrencyPair;
 	private RecordSide side;
 	private OrderStatus status;
 	private Long fromId;
@@ -56,9 +56,7 @@ public class RecordFilter implements Serializable {
 	}
 	
 	public void setSide(RecordSide side) { 
-		if (side != null) {
-			this.side = side;
-		}
+		this.side = side;
 	}
 
 	public OrderStatus getStatus() {
@@ -66,9 +64,7 @@ public class RecordFilter implements Serializable {
 	}
 
 	public void setStatus(OrderStatus status) { 
-		if (status != null) {
-			this.status = status;
-		}
+		this.status = status;
 	}
 
 	public Long getFromId() {
@@ -76,9 +72,7 @@ public class RecordFilter implements Serializable {
 	}
 
 	public void setFromId(Long fromId) { 
-		if (fromId != null) {
-			this.fromId = fromId;
-		}
+		this.fromId = fromId;
 	}
 
 	public Long getEndId() {
@@ -86,9 +80,7 @@ public class RecordFilter implements Serializable {
 	}
 
 	public void setEndId(Long endId) { 
-		if (endId != null) {
-			this.endId = endId;
-		}
+		this.endId = endId;
 	}
 
 	public Long getSince() {
@@ -96,9 +88,7 @@ public class RecordFilter implements Serializable {
 	}
 
 	public void setSince(Long since) { 
-		if (since != null) {
-			this.since = since;
-		}
+		this.since = since;
 	}
 
 	public Long getEnd() {
@@ -106,9 +96,7 @@ public class RecordFilter implements Serializable {
 	}
 
 	public void setEnd(Long end) { 
-		if (end != null) {
-			this.end = end;
-		}
+		this.end = end;
 	}	
 
 	@Override
