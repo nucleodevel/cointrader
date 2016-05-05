@@ -5,6 +5,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 public class Balance {
+	
+	private static final BigDecimal CURRENCY_MARGIN = new BigDecimal(0.01);
 
 	private CoinCurrencyPair coinCurrencyPair;
 	private BigDecimal coinAmount;
@@ -71,6 +73,48 @@ public class Balance {
 
 	public void setCurrencyLocked(BigDecimal currencyLocked) {
 		this.currencyLocked = currencyLocked;
+	}
+
+	public BigDecimal getSideAmount(RecordSide side) {
+		BigDecimal amount = new BigDecimal(0);
+		switch (side) {
+			case BUY:
+				amount = currencyAmount.subtract(CURRENCY_MARGIN);
+			break;
+			case SELL:
+				amount = coinAmount;
+			break;
+		}
+		return amount;
+	}
+
+	public BigDecimal getEstimatedCoinAmount(RecordSide side, BigDecimal currencyPrice) {
+		BigDecimal amount = new BigDecimal(0);
+		switch (side) {
+			case BUY:
+				amount = new BigDecimal(
+					(currencyAmount.doubleValue() - CURRENCY_MARGIN.doubleValue()) / 
+					currencyPrice.doubleValue()
+				);
+			break;
+			case SELL:
+				amount = coinAmount;
+			break;
+		}
+		return amount;
+	}
+
+	public BigDecimal getEstimatedCurrencyAmount(RecordSide side, BigDecimal currencyPrice) {
+		BigDecimal amount = new BigDecimal(0);
+		switch (side) {
+			case BUY:
+				amount = currencyAmount;
+			break;
+			case SELL:
+				amount = new BigDecimal(coinAmount.doubleValue() * currencyPrice.doubleValue());
+			break;
+		}
+		return amount;
 	}
 
 	public String getClientId() {

@@ -34,6 +34,8 @@ public abstract class ApiService {
 	
 	public abstract Order cancelOrder(Order order) throws ApiProviderException;
 	
+	public abstract Order createOrder(Order order) throws ApiProviderException;
+	
 	public abstract Order createBuyOrder(Order order) throws ApiProviderException;
 	
 	public abstract Order createSellOrder(Order order) throws ApiProviderException;

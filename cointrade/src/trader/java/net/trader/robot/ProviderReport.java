@@ -55,8 +55,23 @@ public class ProviderReport {
 	
 	private List<Operation> userOperations;
 	
+	private static DecimalFormat decFmt;
+	
 	public ProviderReport(UserConfiguration userConfiguration) {
 		this.userConfiguration = userConfiguration;
+		makeDecimalFormat();
+	}
+	
+	private static void makeDecimalFormat() {
+		if (decFmt == null) {
+			decFmt = new DecimalFormat();
+			decFmt.setMaximumFractionDigits(8);
+			
+			DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
+			symbols.setDecimalSeparator('.');
+			symbols.setGroupingSeparator(',');
+			decFmt.setDecimalFormatSymbols(symbols);
+		}
 	}
 	
 	public UserConfiguration getUserConfiguration() {
@@ -333,10 +348,12 @@ public class ProviderReport {
 				}
 			}
 			System.out.println("Calculating last relevant " + side + " price by operations: ");
-			System.out.println("  " + getCurrency() + " with open orders: " + currencyWithOpenOrders);
-			System.out.println("  Considered " + getCurrency() + " sum: " + sumOfCurrency);
+			System.out.println(
+				"  " + getCurrency() + " with open orders: " + decFmt.format(currencyWithOpenOrders)
+			);
+			System.out.println("  Considered " + getCurrency() + " sum: " + decFmt.format(sumOfCurrency));
 			System.out.println("  Considered operations: " + groupOfOperations.size());
-			System.out.println("  Last relevant price: " + lastRelevantPriceByOperations);
+			System.out.println("  Last relevant price: " + decFmt.format(lastRelevantPriceByOperations));
 			System.out.println("  Considered operations: ");
 			for (Operation operation: groupOfOperations)
 				System.out.println("    " + operation.toString()); 
@@ -371,10 +388,10 @@ public class ProviderReport {
 		}
 		
 		System.out.println("Calculating last relevant " + side + " price by orders: ");
-		System.out.println("  Considered numerator sum: " + sumOfNumerators);
-		System.out.println("  Considered denominator sum: " + sumOfCoin);
+		System.out.println("  Considered numerator sum: " + decFmt.format(sumOfNumerators));
+		System.out.println("  Considered denominator sum: " + decFmt.format(sumOfCoin));
 		System.out.println("  Considered orders: " + groupOfOrders.size());
-		System.out.println("  Last relevant price by orders: " + lastRelevantPriceByOrders);
+		System.out.println("  Last relevant price by orders: " + decFmt.format(lastRelevantPriceByOrders));
 		System.out.println("  Considered orders: ");
 		for (Order order: groupOfOrders)
 			System.out.println("    " + order); 
@@ -389,7 +406,7 @@ public class ProviderReport {
 	
 	public void createOrder(Order order, RecordSide side) throws ApiProviderException {
 		order.setSide(side);
-		getApiService().createBuyOrder(order);
+		getApiService().createOrder(order);
 	}
 	
 	public void createBuyOrder(Order order) throws ApiProviderException {
@@ -401,11 +418,19 @@ public class ProviderReport {
 	}
 	
 	public void makeOrdersByLastRelevantPriceByOrders(RecordSide side) throws ApiProviderException {
+		System.out.println("");
+		System.out.println("Analising " + side + " order");
+		System.out.println("");
+		
 		BigDecimal lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther());
 		makeOrdersByLastRelevantPrice(side, lastRelevantPrice);
 	}
 	
-	public void makeOrdersByLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {	
+	public void makeOrdersByLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {
+		System.out.println("");
+		System.out.println("Analising " + side + " order");
+		System.out.println("");
+		
 		BigDecimal lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther());
 		makeOrdersByLastRelevantPrice(side, lastRelevantPrice);
 	}
@@ -419,17 +444,14 @@ public class ProviderReport {
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
 		
-		System.out.println("");
-		System.out.println("Analising " + side + " order");
-		
-		List<Order> orders = getActiveOrders(side);
-		List<Order> userOrders = getUserActiveOrders(side);
+		List<Order> activeOrders = getActiveOrders(side);
+		List<Order> userActiveOrders = getUserActiveOrders(side);
 		
 		
-		for (int i = 0; i < orders.size(); i++) {
+		for (int i = 0; i < activeOrders.size(); i++) {
 			
-			Order order = orders.get(i);
-			Order nextOrder = orders.size() - 1 == i? null: orders.get(i + 1);
+			Order order = activeOrders.get(i);
+			Order nextOrder = activeOrders.size() - 1 == i? null: activeOrders.get(i + 1);
 			
 			double left = 
 				order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
@@ -437,24 +459,19 @@ public class ProviderReport {
 			
 			boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 			if (!isAGoodOrder)
-				isAGoodOrder = left <= right;
+				isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 			
 			if (isAGoodOrder) {
 				
 				BigDecimal currencyPrice = new BigDecimal(
-					order.getCurrencyPrice().doubleValue() - userConfiguration.getIncDecPrice()
+					order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
 				);
 				BigDecimal coinAmount = new BigDecimal(0);
 				
-				if (side == RecordSide.BUY)
-					coinAmount = new BigDecimal(
-						(getBalance().getCurrencyAmount().doubleValue() - 0.01) / currencyPrice.doubleValue()
-					);
-				else if (side == RecordSide.SELL)
-					coinAmount = getBalance().getCoinAmount();
+				coinAmount = getBalance().getEstimatedCoinAmount(side, currencyPrice);
 				
 				// get the unique order or null
-				Order myOrder = userOrders.size() > 0? userOrders.get(0): null;
+				Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
 				
 				// if my order isn't the best, delete it and create another 
 				if (
@@ -470,14 +487,15 @@ public class ProviderReport {
 								side, coinAmount, currencyPrice
 							);
 							newOrder.setType(OrderType.LIMITED);
-							//createOrder(newOrder, side);
+							createOrder(newOrder, side);
 							System.out.println(
-								side + " order created: " +  (i + 1) + "° - " + order
+								side + " order created: " +  (i + 1) + "° - " + newOrder
 							);
 						}
 						else
 							System.out.println(
-								"There are no currency available for " + (i + 1) + "° - " + order
+								"There are no currency available for " + (i + 1) + "° - " 
+								+ getCurrency() + decFmt.format(currencyPrice)
 							);
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -487,10 +505,11 @@ public class ProviderReport {
 				else if (
 					decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice())) &&
 					Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration.getMinimumCoinAmount() &&
-					order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue() <= userConfiguration.getIncDecPrice()
+					Math.abs(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()) <= 
+						Math.abs(userConfiguration.getIncDecPrice())
 				) {
 					System.out.println(
-						"Maintaining previous order " + (i + 1) + "° - " + order
+						"Maintaining previous order " + (i + 1) + "° - " + myOrder
 					);
 					break;
 				}

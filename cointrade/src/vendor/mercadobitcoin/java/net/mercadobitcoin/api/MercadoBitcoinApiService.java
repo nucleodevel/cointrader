@@ -316,6 +316,24 @@ public class MercadoBitcoinApiService extends ApiService {
 	}
 	
 	@Override
+	public Order createOrder(Order order) throws ApiProviderException {
+		if (order == null) {
+			throw new ApiProviderException("Invalid order.");
+		}
+		
+		Order mbOrder = new Order(
+			order.getCoin(), order.getCurrency(), order.getSide(), 
+			order.getCoinAmount(), order.getCurrencyPrice()
+		);
+		
+		JsonObject jsonResponse = makeRequest(getParams(mbOrder), RequestMethod.TRADE.value);
+		String orderId = jsonResponse.names().get(0);
+		Order response = getOrder(jsonResponse.get(orderId).asObject());
+		response.setId(new BigInteger(orderId));
+		return response;
+	}
+	
+	@Override
 	public Order createBuyOrder(Order order) throws ApiProviderException {
 		RecordSide side = RecordSide.BUY;
 		order.setSide(side);
@@ -554,23 +572,6 @@ public class MercadoBitcoinApiService extends ApiService {
 		}
 		
 		return orders;
-	}
-	
-	private Order createOrder(Order order) throws ApiProviderException {
-		if (order == null) {
-			throw new ApiProviderException("Invalid order.");
-		}
-		
-		Order mbOrder = new Order(
-			order.getCoin(), order.getCurrency(), order.getSide(), 
-			order.getCoinAmount(), order.getCurrencyPrice()
-		);
-		
-		JsonObject jsonResponse = makeRequest(getParams(mbOrder), RequestMethod.TRADE.value);
-		String orderId = jsonResponse.names().get(0);
-		Order response = getOrder(jsonResponse.get(orderId).asObject());
-		response.setId(new BigInteger(orderId));
-		return response;
 	}
 
 	/**

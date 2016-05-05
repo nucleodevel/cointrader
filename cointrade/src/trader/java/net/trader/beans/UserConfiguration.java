@@ -146,5 +146,18 @@ public class UserConfiguration {
 	public void setIncDecPrice(Double incDecPrice) {
 		this.incDecPrice = incDecPrice;
 	}
+
+	public Double getIncDecPrice(RecordSide side) {
+		Double incDecPrice = 0.0;
+		switch (side) {
+			case BUY:
+				incDecPrice = Math.abs(this.incDecPrice);
+			break;
+			case SELL:
+				incDecPrice = Math.abs(this.incDecPrice) * (-1);
+			break;
+		}
+		return incDecPrice;
+	}
 	
 }

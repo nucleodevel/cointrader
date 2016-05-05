@@ -313,10 +313,10 @@ public class BlinktradeApiService extends ApiService {
 	}
 	
 	@Override
-	public Order createBuyOrder(Order order) throws ApiProviderException {
+	public Order createOrder(Order order) throws ApiProviderException {
 		sendNewOrder(
 			new Integer((int)(System.currentTimeMillis()/1000)),
-			order.getCoin(), order.getCurrency(), RecordSide.BUY,
+			order.getCoin(), order.getCurrency(), order.getSide(),
 			OrderType.LIMITED,
 			order.getCoinAmount(), order.getCurrencyPrice()
 		);
@@ -325,15 +325,17 @@ public class BlinktradeApiService extends ApiService {
 	}
 	
 	@Override
+	public Order createBuyOrder(Order order) throws ApiProviderException {
+		RecordSide side = RecordSide.BUY;
+		order.setSide(side);
+		return createOrder(order);
+	}
+	
+	@Override
 	public Order createSellOrder(Order order) throws ApiProviderException {
-		sendNewOrder(
-			new Integer((int)(System.currentTimeMillis()/1000)),
-			order.getCoin(), order.getCurrency(), RecordSide.SELL,
-			OrderType.LIMITED,
-			order.getCoinAmount(), order.getCurrencyPrice()
-		);
-		
-		return null;
+		RecordSide side = RecordSide.SELL;
+		order.setSide(side);
+		return createOrder(order);
 	}
 	
 	@Override
