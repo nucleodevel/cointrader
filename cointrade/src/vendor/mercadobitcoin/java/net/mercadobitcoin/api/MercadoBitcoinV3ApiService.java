@@ -90,7 +90,7 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 	private static final String API_PATH = "/api/";
 	private static final String TAPI_PATH = "/tapi/v3/";
 	private static final String ENCRYPT_ALGORITHM = "HmacSHA512";
-	private static final String METHOD_PARAM = "method";
+	private static final String METHOD_PARAM = "tapi_method";
 	private static final String DOMAIN = "https://www.mercadobitcoin.net";
 
 	public static final BigDecimal MINIMUM_VOLUME = new BigDecimal(0.01);
@@ -812,11 +812,11 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 	}
 	
 	private JsonObject makeRequest(JsonHashMap params, String method) throws ApiProviderException {
+		params.put("tapi_nonce", generateTonce());
 		params.put(METHOD_PARAM, method);
-		params.put("tonce", generateTonce());
-
-		String jsonResponse = invokeTapiMethod(params);
 		
+		String jsonResponse = invokeTapiMethod(params);
+		System.out.println(jsonResponse);
 		if (jsonResponse == null) {
 			throw new ApiProviderException("Internal error: null response from the server.");
 		}
@@ -841,6 +841,7 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 	private String invokeTapiMethod(JsonHashMap params) throws ApiProviderException {
 		try {
 			String jsonParams = params.toUrlEncoded();
+			System.out.println(jsonParams);
 			String signature = generateSignature(jsonParams);
 			URL url = generateTapiUrl();
 			HttpURLConnection conn = getHttpPostConnection(url, signature);
@@ -864,7 +865,8 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		mac = Mac.getInstance(ENCRYPT_ALGORITHM);
 		mac.init(key);
 		String sign = encodeHexString(mac.doFinal(parameters.getBytes()));
-
+		System.out.println(mbTapiCodeBytes);
+		System.out.println(sign);
 		return sign;
 	}
 
@@ -883,8 +885,8 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		
 		conn.setRequestMethod(HttpMethod.POST.name());
 		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Key", userConfiguration.getKey());
-		conn.setRequestProperty("Sign", signature);
+		conn.setRequestProperty("TAPI-ID", userConfiguration.getKey());
+		conn.setRequestProperty("TAPI-MAC", signature);
 		conn.setDoOutput(true);
 
 		return conn;

@@ -18,8 +18,12 @@ public class RecordFilter implements Serializable {
 	private CoinCurrencyPair coinCurrencyPair;
 	private RecordSide side;
 	private OrderStatus status;
+	private Boolean hasFills;
 	private Long fromId;
+	private Long toId;
 	private Long endId;
+	private Long fromTimestamp;
+	private Long toTimestamp;
 	private Long since;
 	private Long end;
 
@@ -67,12 +71,28 @@ public class RecordFilter implements Serializable {
 		this.status = status;
 	}
 
+	public Boolean getHasFills() {
+		return hasFills;
+	}
+
+	public void setHasFills(Boolean hasFills) {
+		this.hasFills = hasFills;
+	}
+
 	public Long getFromId() {
 		return fromId;
 	}
 
 	public void setFromId(Long fromId) { 
 		this.fromId = fromId;
+	}
+
+	public Long getToId() {
+		return toId;
+	}
+
+	public void setToId(Long toId) {
+		this.toId = toId;
 	}
 
 	public Long getEndId() {
@@ -85,6 +105,22 @@ public class RecordFilter implements Serializable {
 
 	public Long getSince() {
 		return since;
+	}
+
+	public Long getFromTimestamp() {
+		return fromTimestamp;
+	}
+
+	public void setFromTimestamp(Long fromTimestamp) {
+		this.fromTimestamp = fromTimestamp;
+	}
+
+	public Long getToTimestamp() {
+		return toTimestamp;
+	}
+
+	public void setToTimestamp(Long toTimestamp) {
+		this.toTimestamp = toTimestamp;
 	}
 
 	public void setSince(Long since) { 
