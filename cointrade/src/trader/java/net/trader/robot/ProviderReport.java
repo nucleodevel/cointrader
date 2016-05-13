@@ -433,6 +433,8 @@ public class ProviderReport {
 		System.out.println("");
 		
 		BigDecimal lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther());
+		if (lastRelevantPrice == null)
+			lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther());
 		makeOrdersByLastRelevantPrice(side, lastRelevantPrice);
 	}
 	
@@ -447,7 +449,6 @@ public class ProviderReport {
 		
 		List<Order> activeOrders = getActiveOrders(side);
 		List<Order> userActiveOrders = getUserActiveOrders(side);
-		
 		
 		for (int i = 0; i < activeOrders.size(); i++) {
 			

@@ -96,9 +96,9 @@ public class MercadoBitcoinApiService extends ApiService {
 	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 
 	private static long intervalToReadUserCanceledOrders = 1200;
-	private static long totalTimeToReadUserCanceledOrders = 43200;
+	private static long totalTimeToReadUserCanceledOrders = 86400;
 	private static long lastTimeByReadingUserCanceledOrders = 0;
-	private static long totalTimeToReadUserCompletedOrders = 43200;
+	private static long totalTimeToReadUserCompletedOrders = 86400;
 	
 	private static List<Order> userCanceledOrders;
 	private byte[] mbTapiCodeBytes;

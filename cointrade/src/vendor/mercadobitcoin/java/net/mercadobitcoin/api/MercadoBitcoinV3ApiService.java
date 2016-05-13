@@ -216,6 +216,7 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 			
 		List<Order> orders = getUserOrders(orderFilter);
 		Collections.sort(orders);
+		System.out.println("-------------   " + orders.size());
 		return orders;
 	}
 	
@@ -313,11 +314,10 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		}
 		
 		JsonObject jsonResponse = makeRequest(getParams((Order) order), RequestMethod.CANCEL_ORDER.value);
-
-		String orderId = jsonResponse.names().get(0);
+		/*String orderId = jsonResponse.names().get(0);
 		Order response = getOrder(jsonResponse.get(orderId).asObject());
-		response.setId(new BigInteger(orderId)); 
-		return response;
+		response.setId(new BigInteger(orderId));*/ 
+		return null;
 	}
 	
 	@Override
@@ -361,7 +361,7 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		
 		orders.addAll(getUserActiveOrders());
 		orders.addAll(getUserCompletedOrders());
-		orders.addAll(getUserCanceledOrders());
+		//orders.addAll(getUserCanceledOrders());
 		Collections.sort(orders);
 		
 		return orders;
@@ -571,11 +571,12 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 			throw new ApiProviderException("Invalid filter.");
 		}
 		JsonObject jsonResponse = makeRequest(getParams(filter), RequestMethod.LIST_ORDERS.value);
-
+		
+		JsonArray jsonArray = jsonResponse.get("orders").asArray();
+		
 		List<Order> orders = new ArrayList<Order>();
-		for (String id : jsonResponse.names()) {
-			Order order = getOrder(jsonResponse.get(id).asObject());
-			order.setId(new BigInteger(id)); 
+		for (JsonValue jsonOrder: jsonArray) {
+			Order order = getOrder(jsonOrder.asObject());
 			orders.add(order);
 		}
 		
@@ -654,8 +655,8 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 			if (filter.getCoin() != null && filter.getCurrency() != null)
 				params.put(
 					"coin_pair", 
+					filter.getCurrency().getValue().toUpperCase() + 
 					filter.getCoin().getValue().toUpperCase() 
-					+ filter.getCurrency().getValue().toUpperCase()
 				);
 			if (filter.getSide() != null)
 				params.put(
@@ -666,9 +667,9 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 			if (filter.getStatus() != null)
 				params.put(
 					"status",
-					filter.getStatus() == OrderStatus.ACTIVE? "[2]": 
-					(filter.getStatus() == OrderStatus.CANCELED? "[3]":
-					(filter.getStatus() == OrderStatus.COMPLETED? "[4]": null))
+					filter.getStatus() == OrderStatus.ACTIVE? "2": 
+					(filter.getStatus() == OrderStatus.CANCELED? "3":
+					(filter.getStatus() == OrderStatus.COMPLETED? "4": null))
 				);
 			if (filter.getHasFills() != null)
 				params.put("has_fills", filter.getHasFills());
@@ -682,14 +683,18 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 				params.put("to_timestamp", filter.getToTimestamp());
 			
 			hashMap.putAll(params);
+			System.out.println(filter.getStatus());
+			System.out.println(params.get("status"));
 		} catch (Throwable e) {
 			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
 		}
 		return hashMap;
 	}
 	
-	public Balance getBalance(JsonObject jsonObject) {
+	public Balance getBalance(JsonObject balanceJsonObject) {
 		Balance balance = new Balance(getCoin(), getCurrency());
+		
+		JsonObject jsonObject = balanceJsonObject.get("balance").asObject();
 		
 		JsonObject brlJsonObject = jsonObject.get("brl").asObject();
 		BigDecimal brlAvailable = new BigDecimal(brlJsonObject.get("available").asString());
@@ -698,12 +703,12 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		JsonObject btcJsonObject = jsonObject.get("btc").asObject();
 		BigDecimal btcAvailable = new BigDecimal(btcJsonObject.get("available").asString());
 		BigDecimal btcTotal = new BigDecimal(btcJsonObject.get("total").asString());
-		BigDecimal btcAmountOpenOrders = new BigDecimal(btcJsonObject.get("amount_open_orders").asString());
+		BigDecimal btcAmountOpenOrders = new BigDecimal(btcJsonObject.get("amount_open_orders").asDouble());
 		
 		JsonObject ltcJsonObject = jsonObject.get("ltc").asObject();
 		BigDecimal ltcAvailable = new BigDecimal(ltcJsonObject.get("available").asString());
 		BigDecimal ltcTotal = new BigDecimal(ltcJsonObject.get("total").asString());
-		BigDecimal ltcAmountOpenOrders = new BigDecimal(ltcJsonObject.get("amount_open_orders").asString());
+		BigDecimal ltcAmountOpenOrders = new BigDecimal(ltcJsonObject.get("amount_open_orders").asDouble());
 		
 		BigDecimal coinAmount = getCoin() == Coin.BTC? btcTotal: (getCoin() == Coin.LTC? ltcTotal: null);
 		BigDecimal currencyAmount = getCurrency() == Currency.BRL? brlTotal: null;
@@ -721,8 +726,10 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		return balance;
 	}
 	
-	public Ticker getTicker(JsonObject jsonObject) {
+	public Ticker getTicker(JsonObject tickerJsonObject) {
 		Ticker ticker = new Ticker(getCoin(), getCurrency());
+		
+		JsonObject jsonObject = tickerJsonObject.get("ticker").asObject();
 		
 		ticker.setHigh(new BigDecimal(jsonObject.get("high").toString()));
 		ticker.setLow(new BigDecimal(jsonObject.get("low").toString()));
@@ -736,37 +743,35 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 	}
 	
 	public Order getOrder(JsonObject jsonObject) {
-		String coinPair = jsonObject.get("coin_air").asString().toUpperCase();
-		Coin coin = Coin.valueOf(coinPair.substring(0, 3).toUpperCase());
-		Currency currency = Currency.valueOf(coinPair.substring(3, 6).toUpperCase());
-		String sideString = jsonObject.get("order_type").asString().toUpperCase();
-		RecordSide side = sideString.equals("1")? RecordSide.BUY: 
-			(sideString.equals("2")? RecordSide.SELL: null);
+		String coinPair = jsonObject.get("coin_pair").asString().toUpperCase();
+		Coin coin = Coin.valueOf(coinPair.substring(3, 6).toUpperCase());
+		Currency currency = Currency.valueOf(coinPair.substring(0, 3).toUpperCase());
+		Integer sideInt = jsonObject.get("order_type").asInt();
+		RecordSide side = sideInt == 1? RecordSide.BUY: (sideInt == 2? RecordSide.SELL: null);
 		BigDecimal coinAmount = new BigDecimal(jsonObject.get("quantity").asString());
 		BigDecimal currencyPrice = new BigDecimal(jsonObject.get("limit_price").asString());
 		
 		Order order = new Order(coin, currency, side, coinAmount, currencyPrice);
 		order.setId(BigInteger.valueOf(jsonObject.get("order_id").asLong()));
-		String statusString = jsonObject.get("status").asString().toUpperCase();
+		Integer statusInt = jsonObject.get("status").asInt();
 		OrderStatus status = 
-			statusString.equals("2")? OrderStatus.ACTIVE: 
-			(statusString.equals("3")? OrderStatus.CANCELED:
-			(statusString.equals("4")? OrderStatus.COMPLETED: null));
+			statusInt == 2? OrderStatus.ACTIVE: 
+			(statusInt == 3? OrderStatus.CANCELED:
+			(statusInt == 4? OrderStatus.COMPLETED: null));
 		order.setStatus(status);
 		long created = Integer.valueOf(jsonObject.get("created_timestamp").asString());
 		order.setCreationDate(Calendar.getInstance());
 		order.getCreationDate().setTimeInMillis((long)created * 1000);
 		
 		List<Operation> operations = new ArrayList<Operation>();
-		for (String operationId: jsonObject.get("operations").asObject().names()) {
-			if (operationId.matches("-?\\d+(\\.\\d+)?")) {
-				Operation operation = getOperation(
-					jsonObject.get("operations").asObject().get(operationId).asObject(), side
-				);
-				operation.setId(new BigInteger(operationId));
-				operation.setSide(order.getSide());
-				operations.add(operation);
-			}
+		JsonArray jsonOperationArray = jsonObject.get("operations").asArray();
+		
+		for (JsonValue jsonOperation: jsonOperationArray) {
+			Operation operation = getOperation(
+				jsonOperation.asObject(), side
+			);
+			operation.setSide(order.getSide());
+			operations.add(operation);
 		}
 		order.setOperations(operations);
 		
@@ -816,18 +821,16 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		params.put(METHOD_PARAM, method);
 		
 		String jsonResponse = invokeTapiMethod(params);
-		System.out.println(jsonResponse);
 		if (jsonResponse == null) {
 			throw new ApiProviderException("Internal error: null response from the server.");
 		}
 		
 		JsonObject jsonObject = JsonObject.readFrom(jsonResponse);
-		if (jsonObject.get("success").asInt() == 0) {
+		/*if (jsonObject.get("success").asInt() == 0) {
 			throw new ApiProviderException(jsonObject.get("error").asString());
-		}
+		}*/
 		
-		JsonValue returnData = jsonObject.get("return");
-		
+		JsonValue returnData = jsonObject.get("response_data");
 		// putting delay time
 		try {
 			TimeUnit.MILLISECONDS.sleep(1010);
@@ -841,8 +844,7 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 	private String invokeTapiMethod(JsonHashMap params) throws ApiProviderException {
 		try {
 			String jsonParams = params.toUrlEncoded();
-			System.out.println(jsonParams);
-			String signature = generateSignature(jsonParams);
+			String signature = generateSignature(TAPI_PATH + "?" + jsonParams);
 			URL url = generateTapiUrl();
 			HttpURLConnection conn = getHttpPostConnection(url, signature);
 			postRequestToServer(conn, params);
@@ -865,8 +867,6 @@ public class MercadoBitcoinV3ApiService extends ApiService {
 		mac = Mac.getInstance(ENCRYPT_ALGORITHM);
 		mac.init(key);
 		String sign = encodeHexString(mac.doFinal(parameters.getBytes()));
-		System.out.println(mbTapiCodeBytes);
-		System.out.println(sign);
 		return sign;
 	}
 
