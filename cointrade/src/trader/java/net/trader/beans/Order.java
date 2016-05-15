@@ -1,6 +1,8 @@
 package net.trader.beans;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +42,31 @@ public class Order extends Record {
 
 	public void setOperations(List<Operation> operations) {
 		this.operations = operations;
+	}
+	
+	@Override
+	public String toString() {
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(5);
+		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(this.getClass().getSimpleName() + ": ["); 
+		sb.append("coin: " + getCoin());
+		sb.append("; currency: " + getCurrency());
+		sb.append("; side: " + getSide());
+		sb.append("; status: " + status);
+		sb.append("; coinAmount: " + decFmt.format(getCoinAmount()));
+		sb.append("; currencyPrice: " + decFmt.format(getCurrencyPrice()));
+		if (getCreationDate() != null)
+			sb.append("; creationDate: " + getCreationDate().getTime());
+		sb.append("]");
+		
+		return sb.toString();
 	}
 
 }

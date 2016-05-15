@@ -9,7 +9,6 @@ import java.util.List;
 
 import net.blinktrade.api.BlinktradeApiService;
 import net.mercadobitcoin.api.MercadoBitcoinApiService;
-import net.mercadobitcoin.api.MercadoBitcoinV3ApiService;
 import net.trader.api.ApiService;
 import net.trader.beans.Balance;
 import net.trader.beans.Coin;
@@ -94,7 +93,7 @@ public class ProviderReport {
 	private ApiService getApiService() throws ApiProviderException {
 		if (apiService == null) {
 			if (userConfiguration.getProvider() == Provider.MERCADO_BITCOIN)
-				apiService = new MercadoBitcoinV3ApiService(getUserConfiguration());
+				apiService = new MercadoBitcoinApiService(getUserConfiguration());
 			else if (userConfiguration.getProvider() == Provider.BLINKTRADE)
 				apiService = new BlinktradeApiService(getUserConfiguration());
 		}
