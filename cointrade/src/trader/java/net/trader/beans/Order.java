@@ -62,6 +62,7 @@ public class Order extends Record {
 		sb.append("; status: " + status);
 		sb.append("; coinAmount: " + decFmt.format(getCoinAmount()));
 		sb.append("; currencyPrice: " + decFmt.format(getCurrencyPrice()));
+		sb.append("; estimatedCurrencyAmount: " + decFmt.format(getCurrencyAmount()));
 		if (getCreationDate() != null)
 			sb.append("; creationDate: " + getCreationDate().getTime());
 		sb.append("]");

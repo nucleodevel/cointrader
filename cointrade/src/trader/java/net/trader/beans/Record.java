@@ -119,6 +119,7 @@ public class Record implements Comparable<Record> {
 		sb.append("; side: " + side);
 		sb.append("; coinAmount: " + decFmt.format(coinAmount));
 		sb.append("; currencyPrice: " + decFmt.format(currencyPrice));
+		sb.append("; estimatedCurrencyAmount: " + decFmt.format(getCurrencyAmount()));
 		if (creationDate != null)
 			sb.append("; creationDate: " + creationDate.getTime());
 		sb.append("]");
