@@ -68,6 +68,12 @@ public class Main {
 				
 				// descriptions
 				
+				if (report.getTicker() != null) {
+					System.out.println("");
+					System.out.println("Ticker 24");
+					System.out.println(report.getTicker());
+				}
+				
 				System.out.println("");
 				System.out.println("My account");
 				System.out.println(report.getBalance());
@@ -88,6 +94,22 @@ public class Main {
 					(report.getLastUserOperationInterval().longValue() / 1000 / 60) + 
 					" minutes"
 				);
+				if (report.getTicker() != null) {
+					if (userConfiguration.getMaxBuyInterval() != null) 
+						System.out.println(
+							"Max accepted inactivity time for buying: " 
+							+ (double) (userConfiguration.getMaxBuyInterval() / 
+							  (report.getTicker().getVol().doubleValue()) / (60 * 1000))
+							+ " minutes" 
+						);
+					if (userConfiguration.getMaxSellInterval() != null) 
+						System.out.println(
+							"Max accepted inactivity time for selling: " 
+							+ (double) (userConfiguration.getMaxSellInterval() / 
+							  (report.getTicker().getVol().doubleValue()) / (60 * 1000))
+							+ " minutes" 
+						);
+				}
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");

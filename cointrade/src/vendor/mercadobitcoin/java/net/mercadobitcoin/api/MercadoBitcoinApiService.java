@@ -161,8 +161,7 @@ public class MercadoBitcoinApiService extends ApiService {
 	public Ticker getTicker() throws ApiProviderException {
 		String url = assemblyUrl("ticker");
 		JsonObject jsonObject = JsonObject.readFrom(invokeApiMethod(url));
-		JsonObject ticketJsonObject = jsonObject.get("ticker").asObject();
-		return getTicker(ticketJsonObject);
+		return getTicker(jsonObject);
 	}
 	
 	@Override

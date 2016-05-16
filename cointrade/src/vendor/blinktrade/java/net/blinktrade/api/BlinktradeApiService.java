@@ -22,6 +22,7 @@ import net.trader.beans.Currency;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
+import net.trader.beans.OrderStatus;
 import net.trader.beans.OrderType;
 import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
@@ -192,6 +193,7 @@ public class BlinktradeApiService extends ApiService {
         		rowArray.get(0).getAsBigDecimal()
         	);
         	bidOrder.setClientId(rowArray.get(2).getAsBigInteger());
+			bidOrder.setStatus(OrderStatus.ACTIVE);
         	bidOrders.add(bidOrder);
         }
         
@@ -204,6 +206,7 @@ public class BlinktradeApiService extends ApiService {
         		rowArray.get(0).getAsBigDecimal()
         	);
         	askOrder.setClientId(rowArray.get(2).getAsBigInteger());
+			askOrder.setStatus(OrderStatus.ACTIVE);
         	askOrders.add(askOrder);
         }
         

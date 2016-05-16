@@ -453,18 +453,35 @@ public class ProviderReport {
 			if (!isAGoodOrder)
 				isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 				
-			boolean isLongTimeWithoutOperation = 
-				getLastUserOperationInterval() == null || userConfiguration.getMinimumInterval(side) == null?
-					false:
-					getLastUserOperationInterval().longValue() > 
-					userConfiguration.getMinimumInterval(side);
+			Double maxAcceptedInactivityTime = 
+				getTicker() == null || userConfiguration.getMaxInterval(side) == null?
+					null: userConfiguration.getMaxInterval(side) / (getTicker().getVol().doubleValue());
 				
-			if (isLongTimeWithoutOperation)
-				System.out.println(
-					"Long time " + (userConfiguration.getMinimumInterval(side) / 60000) + " minutes "
-				);
+			boolean isLongTimeWithoutOperation = 
+				getLastUserOperationInterval() == null || maxAcceptedInactivityTime == null?
+					false:
+					getLastUserOperationInterval().longValue() > maxAcceptedInactivityTime;
 			
 			if (isAGoodOrder || isLongTimeWithoutOperation) {
+				
+				if (isLongTimeWithoutOperation)
+					System.out.println(
+						"  Long time " + (userConfiguration.getMaxInterval(side) / 60000) + " minutes "
+					);
+				
+				if (getLastUserOperationInterval() != null && maxAcceptedInactivityTime != null) {
+					System.out.println("  Volume24h: " + getTicker().getVol() + " " + getCoin());
+					System.out.println(
+						"  Inactivity time: " 
+						+ decFmt.format(getLastUserOperationInterval().doubleValue() / (60 * 1000))
+						+ " minutes" 
+					);
+					System.out.println(
+						"  Max accepted inactivity time: " 
+						+ decFmt.format(maxAcceptedInactivityTime / (60 * 1000))
+						+ " minutes" 
+					);
+				}
 				
 				BigDecimal currencyPrice = new BigDecimal(
 					order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
