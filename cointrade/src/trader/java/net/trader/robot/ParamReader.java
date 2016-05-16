@@ -143,6 +143,20 @@ public class ParamReader {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
+						case "-mbi": 
+							try {
+								userConfiguration.setMinimumBuyInterval(Long.parseLong(paramValue));
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						case "-msi": 
+							try {
+								userConfiguration.setMinimumSellInterval(Long.parseLong(paramValue));
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
 						case "-mca": 
 							try {
 								userConfiguration.setMinimumCoinAmount(

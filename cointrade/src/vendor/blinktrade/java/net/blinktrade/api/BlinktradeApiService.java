@@ -248,41 +248,6 @@ public class BlinktradeApiService extends ApiService {
 	}
 	
 	@Override
-	public List<Order> getUserCanceledOrders() throws ApiProviderException {
-		return null;
-	}
-
-	@Override
-	public List<Order> getUserCompletedOrders() throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		List<String> filters = new ArrayList<String>(1);
-		filters.add("has_cum_qty eq 1");
-
-		request.put("MsgType", "U4");
-		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
-		request.put("Page", new Integer(0));
-		request.put("PageSize", new Integer(100));
-		request.put("Filter", filters);
-
-		String response = sendMessage(GSON.toJson(request));
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jo = (JsonObject) jsonParser.parse(response);
-		JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
-		List<Order> completedOrders = new ArrayList<Order>();
-		if(completedOrdListGrp != null)
-			for (JsonElement jsonElement: completedOrdListGrp)
-				if (jsonElement != null) {
-					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Order order = getOrder(jsonArray);
-					completedOrders.add(order);
-				}
-		return completedOrders;
-	}
-	
-	@Override
 	public List<Operation> getUserOperations() throws ApiProviderException {
 
 		Map<String, Object> request = new LinkedHashMap<String, Object>();

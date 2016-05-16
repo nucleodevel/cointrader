@@ -1,10 +1,13 @@
 package net.trader.robot;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import net.blinktrade.api.BlinktradeApiService;
@@ -45,12 +48,9 @@ public class ProviderReport {
 	
 	private List<Order> activeOrders;
 	
-	private Operation lastUserBuyOrder;
-	private Operation lastUserSellOrder;
-		
-	private List<Order> userOrders;
-	private List<Order> userCanceledOrders;
-	private List<Order> userCompletedOrders;
+	private Operation lastUserBuyOperation;
+	private Operation lastUserSellOperation;
+	
 	private List<Order> userActiveOrders;
 	
 	private List<Operation> userOperations;
@@ -167,17 +167,6 @@ public class ProviderReport {
 		return currentTopSell;
 	}
 
-	public List<Order> getUserOrders() throws ApiProviderException {
-		if (userOrders == null) {
-			userOrders = new ArrayList<Order>();
-			userOrders.addAll(getUserActiveOrders());
-			userOrders.addAll(getUserCompletedOrders());
-			userOrders.addAll(getUserCanceledOrders());
-			Collections.sort(userOrders);
-		}
-		return userOrders;
-	}
-
 	public List<Order> getUserActiveOrders() throws ApiProviderException {
 		if (userActiveOrders == null)
 			userActiveOrders = getApiService().getUserActiveOrders();
@@ -197,18 +186,6 @@ public class ProviderReport {
 		}
 		return orders;
 		
-	}
-	
-	public List<Order> getUserCanceledOrders() throws ApiProviderException {
-		if (userCanceledOrders == null)
-			userCanceledOrders = getApiService().getUserCompletedOrders();
-		return userCanceledOrders;
-	}
-
-	public List<Order> getUserCompletedOrders() throws ApiProviderException {
-		if (userCompletedOrders == null)
-			userCompletedOrders = getApiService().getUserCompletedOrders();
-		return userCompletedOrders;
 	}
 
 	public List<Order> getUserActiveBuyOrders() throws ApiProviderException {
@@ -237,30 +214,33 @@ public class ProviderReport {
 		return userOperations;
 	}
 
-	public Operation getLastUserBuyOrder() throws ApiProviderException {
-		if (lastUserBuyOrder == null) {
-			lastUserBuyOrder = null;
-			for (Operation operation: getUserOperations()) {
-				if (lastUserBuyOrder != null)
-					break;
-				if (operation.getSide() == RecordSide.BUY)
-					lastUserBuyOrder = operation;
-			}
+	public Operation getLastUserOperation(RecordSide side) throws ApiProviderException {
+		Operation lastUserOperation = null;
+		for (Operation operation: getUserOperations()) {
+			if (lastUserOperation != null)
+				break;
+			if (operation.getSide() == side)
+				lastUserOperation = operation;
 		}
-		return lastUserBuyOrder;
+		return lastUserOperation;
+	}
+
+	public Operation getLastUserOperation() throws ApiProviderException {
+		if (getUserOperations().size() > 0)
+			return getUserOperations().get(0);
+		return null;
+	}
+
+	public Operation getLastUserBuyOperation() throws ApiProviderException {
+		if (lastUserBuyOperation == null)
+			lastUserBuyOperation = getLastUserOperation(RecordSide.BUY);
+		return lastUserBuyOperation;
 	}
 	
-	public Operation getLastUserSellOrder() throws ApiProviderException {
-		if (lastUserSellOrder == null) {
-			lastUserSellOrder = null;
-			for (Operation operation: getUserOperations()) {
-				if (lastUserSellOrder != null)
-					break;
-				if (operation.getSide() == RecordSide.SELL)
-					lastUserSellOrder = operation;
-			}
-		}
-		return lastUserSellOrder;
+	public Operation getLastUserSellOperation() throws ApiProviderException {
+		if (lastUserSellOperation == null)
+			lastUserSellOperation = getLastUserOperation(RecordSide.SELL);
+		return lastUserSellOperation;
 	}
 	
 	public BigDecimal getLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {
@@ -400,6 +380,17 @@ public class ProviderReport {
 		return lastRelevantPriceByOrders;
 	}
 	
+	public BigInteger getLastUserOperationInterval() throws ApiProviderException {
+		Calendar now = Calendar.getInstance();
+		now.setTime(new Date());
+		Long nowTime = now.getTimeInMillis();
+		Operation lastOperation = getLastUserOperation();
+		if (lastOperation == null)
+			return null;
+		Long lastOperationTime = lastOperation.getCreationDate().getTimeInMillis();
+		return BigInteger.valueOf(nowTime - lastOperationTime);
+	}
+	
 	public void cancelOrder(Order order) throws ApiProviderException {
 		getApiService().cancelOrder(order);
 	}
@@ -461,8 +452,19 @@ public class ProviderReport {
 			boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 			if (!isAGoodOrder)
 				isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
+				
+			boolean isLongTimeWithoutOperation = 
+				getLastUserOperationInterval() == null || userConfiguration.getMinimumInterval(side) == null?
+					false:
+					getLastUserOperationInterval().longValue() > 
+					userConfiguration.getMinimumInterval(side);
+				
+			if (isLongTimeWithoutOperation)
+				System.out.println(
+					"Long time " + (userConfiguration.getMinimumInterval(side) / 60000) + " minutes "
+				);
 			
-			if (isAGoodOrder) {
+			if (isAGoodOrder || isLongTimeWithoutOperation) {
 				
 				BigDecimal currencyPrice = new BigDecimal(
 					order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)

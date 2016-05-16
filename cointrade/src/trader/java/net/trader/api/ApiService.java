@@ -26,10 +26,6 @@ public abstract class ApiService {
 	
 	public abstract List<Order> getUserActiveOrders() throws ApiProviderException;
 	
-	public abstract List<Order> getUserCanceledOrders() throws ApiProviderException;
-	
-	public abstract List<Order> getUserCompletedOrders() throws ApiProviderException;
-	
 	public abstract List<Operation> getUserOperations() throws ApiProviderException;
 	
 	public abstract Order cancelOrder(Order order) throws ApiProviderException;

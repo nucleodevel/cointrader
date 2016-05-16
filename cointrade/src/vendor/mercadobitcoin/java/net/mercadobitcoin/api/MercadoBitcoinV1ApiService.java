@@ -214,7 +214,6 @@ public class MercadoBitcoinV1ApiService extends ApiService {
 		return orders;
 	}
 	
-	@Override
 	public List<Order> getUserCanceledOrders() throws ApiProviderException {
 		long now = (new Date()).getTime() / 1000;
 		
@@ -268,7 +267,6 @@ public class MercadoBitcoinV1ApiService extends ApiService {
 		return userCanceledOrders;
 	}
 	
-	@Override
 	public List<Order> getUserCompletedOrders() throws ApiProviderException {
 		long now = (new Date()).getTime() / 1000;
 		Long since = now - totalTimeToReadUserCompletedOrders;

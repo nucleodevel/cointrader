@@ -21,7 +21,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,12 +101,6 @@ public class MercadoBitcoinApiService extends ApiService {
 	public static final BigDecimal LITECOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
 	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 
-	private static long intervalToReadUserCanceledOrders = 1200;
-	private static long totalTimeToReadUserCanceledOrders = 43200;
-	private static long lastTimeByReadingUserCanceledOrders = 0;
-	//private static long totalTimeToReadUserCompletedOrders = 43200;
-	
-	private static List<Order> userCanceledOrders;
 	private byte[] mbTapiCodeBytes;
 
 	public MercadoBitcoinApiService(UserConfiguration userConfiguration) throws ApiProviderException {
@@ -193,6 +186,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			Order order = new Order(
 				getCoin(), getCurrency(), RecordSide.SELL, coinAmount, currencyPrice
 			);
+			order.setStatus(OrderStatus.ACTIVE);
 			askOrders.add(order);
 		}
 		orderBook.setAskOrders(askOrders);
@@ -206,6 +200,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			Order order = new Order(
 				getCoin(), getCurrency(), RecordSide.BUY, coinAmount, currencyPrice
 			);
+			order.setStatus(OrderStatus.ACTIVE);
 			bidOrders.add(order);
 		}
 		orderBook.setBidOrders(bidOrders);
@@ -223,73 +218,9 @@ public class MercadoBitcoinApiService extends ApiService {
 		return orders;
 	}
 	
-	@Override
-	public List<Order> getUserCanceledOrders() throws ApiProviderException {
-		long now = (new Date()).getTime() / 1000;
-		
-		if (userCanceledOrders == null) {
-			userCanceledOrders = new ArrayList<Order>();
-			
-			for (long time = now; time > now - totalTimeToReadUserCanceledOrders; time -= intervalToReadUserCanceledOrders) {
-				Long since = time - intervalToReadUserCanceledOrders;
-				Long end = time - 1;
-				
-				RecordFilter orderFilter = new RecordFilter(getCoin(), getCurrency());
-				orderFilter.setStatus(OrderStatus.CANCELED);
-				
-				orderFilter.setSince(since);
-				orderFilter.setEnd(end);
-				
-				List<Order> orders = getUserOrders(orderFilter);
-				Collections.sort(orders);
-				
-				for (Order o: orders) {
-					Order order = (Order) o;
-					if (order.getOperations() != null && order.getOperations().size() > 0)
-						userCanceledOrders.add(order);
-				}
-			}
-			Collections.sort(userCanceledOrders);
-		}
-		else {
-			Long since = lastTimeByReadingUserCanceledOrders + 1;
-			Long end = now;
-			
-			RecordFilter orderFilter = new RecordFilter(getCoin(), getCurrency());
-			orderFilter.setStatus(OrderStatus.CANCELED);
-			
-			orderFilter.setSince(since);
-			orderFilter.setEnd(end);
-			
-			List<Order> orders = getUserOrders(orderFilter);
-			
-			int i = 0;
-			for (Order o: orders) {
-				Order order = (Order) o;
-				if (order.getOperations() != null && order.getOperations().size() > 0) {
-					userCanceledOrders.add(i, order);
-					i++;
-				}
-			}
-		}
-		lastTimeByReadingUserCanceledOrders = now;
-		
-		return userCanceledOrders;
-	}
-	
-	@Override
 	public List<Order> getUserCompletedOrders() throws ApiProviderException {
-		/*long now = (new Date()).getTime() / 1000;
-		Long since = null;
-		Long end = null;*/
-		
 		RecordFilter orderFilter = new RecordFilter(getCoin(), getCurrency());
 		orderFilter.setHasFills(true);
-		
-		/*if (since != null)
-			orderFilter.setSince(since);
-		if (end != null)
-			orderFilter.setEnd(end);*/
 		
 		List<Order> orders = getUserOrders(orderFilter);
 		Collections.sort(orders);
@@ -358,17 +289,6 @@ public class MercadoBitcoinApiService extends ApiService {
 		RecordSide side = RecordSide.SELL;
 		order.setSide(side);
 		return createOrder(order);
-	}
-	
-	public List<Order> getUserOrders() throws ApiProviderException {
-		List<Order> orders = new ArrayList<Order>();
-		
-		orders.addAll(getUserActiveOrders());
-		orders.addAll(getUserCompletedOrders());
-		//orders.addAll(getUserCanceledOrders());
-		Collections.sort(orders);
-		
-		return orders;
 	}
 	
 	public List<Order> getUserOrders(Long since, Long end) throws ApiProviderException {

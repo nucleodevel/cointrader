@@ -74,15 +74,20 @@ public class Main {
 				
 				System.out.println("");
 				System.out.println("Reading my last orders... ");
-	            System.out.println("Number of open orders: " + report.getUserActiveOrders().size());
-	            System.out.println("Number of completed orders: " + report.getUserCompletedOrders().size());
+	            System.out.println("Number of active orders: " + report.getUserActiveOrders().size());
+	            System.out.println("Number of operations: " + report.getUserOperations().size());
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
-				if (report.getLastUserBuyOrder() != null)
-					System.out.println(report.getLastUserBuyOrder().toString());
-				if (report.getLastUserSellOrder() != null)
-					System.out.println(report.getLastUserSellOrder().toString());
+				if (report.getLastUserBuyOperation() != null)
+					System.out.println(report.getLastUserBuyOperation().toString());
+				if (report.getLastUserSellOperation() != null)
+					System.out.println(report.getLastUserSellOperation().toString());
+				System.out.println(
+					"Last operation interval: " + 
+					(report.getLastUserOperationInterval().longValue() / 1000 / 60) + 
+					" minutes"
+				);
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");

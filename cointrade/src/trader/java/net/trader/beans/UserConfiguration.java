@@ -13,6 +13,8 @@ public class UserConfiguration {
 	private String sellMode;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
+	private Long minimumBuyInterval;
+	private Long minimumSellInterval;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
 	
@@ -20,6 +22,8 @@ public class UserConfiguration {
 		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
 		minimumBuyRate = -1.0;
 		minimumSellRate = 1.0;
+		minimumBuyInterval = null;
+		minimumSellInterval = null;
 	}
 
 	public String getKey() {
@@ -129,6 +133,35 @@ public class UserConfiguration {
 
 	public void setMinimumSellRate(Double minimumSellRate) {
 		this.minimumSellRate = minimumSellRate;
+	}
+
+	public Long getMinimumInterval(RecordSide side) {
+		Long interval = null;
+		switch (side) {
+			case BUY:
+				interval = minimumBuyInterval;
+			break;
+			case SELL:
+				interval = minimumSellInterval;
+			break;
+		}
+		return interval;
+	}
+
+	public Long getMinimumBuyInterval() {
+		return minimumBuyInterval;
+	}
+
+	public void setMinimumBuyInterval(Long minimumBuyInterval) {
+		this.minimumBuyInterval = minimumBuyInterval;
+	}
+
+	public Long getMinimumSellInterval() {
+		return minimumSellInterval;
+	}
+
+	public void setMinimumSellInterval(Long minimumSellInterval) {
+		this.minimumSellInterval = minimumSellInterval;
 	}
 
 	public Double getMinimumCoinAmount() {
