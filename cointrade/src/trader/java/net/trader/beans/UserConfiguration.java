@@ -13,8 +13,8 @@ public class UserConfiguration {
 	private String sellMode;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
-	private Long maxBuyInterval;
-	private Long maxSellInterval;
+	private Double maxBuyInterval;
+	private Double maxSellInterval;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
 	
@@ -135,8 +135,8 @@ public class UserConfiguration {
 		this.minimumSellRate = minimumSellRate;
 	}
 
-	public Long getMaxInterval(RecordSide side) {
-		Long interval = null;
+	public Double getMaxInterval(RecordSide side) {
+		Double interval = null;
 		switch (side) {
 			case BUY:
 				interval = maxBuyInterval;
@@ -148,19 +148,19 @@ public class UserConfiguration {
 		return interval;
 	}
 
-	public Long getMaxBuyInterval() {
+	public Double getMaxBuyInterval() {
 		return maxBuyInterval;
 	}
 
-	public void setMaxBuyInterval(Long maxBuyInterval) {
+	public void setMaxBuyInterval(Double maxBuyInterval) {
 		this.maxBuyInterval = maxBuyInterval;
 	}
 
-	public Long getMaxSellInterval() {
+	public Double getMaxSellInterval() {
 		return maxSellInterval;
 	}
 
-	public void setMaxSellInterval(Long maxSellInterval) {
+	public void setMaxSellInterval(Double maxSellInterval) {
 		this.maxSellInterval = maxSellInterval;
 	}
 

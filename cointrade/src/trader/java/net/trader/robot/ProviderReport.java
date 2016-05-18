@@ -128,6 +128,10 @@ public class ProviderReport {
 		return activeOrders;
 	}
 	
+	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
+		return getApiService().getOperationList(from, to);
+	}
+	
 	public List<Order> getActiveOrders(RecordSide side) throws ApiProviderException {
 		List<Order> orders = new ArrayList<Order>();
 		switch (side) {
@@ -543,15 +547,16 @@ public class ProviderReport {
 		
 		Double maxAcceptedInactivityTime = 
 			getTicker() == null || userConfiguration.getMaxInterval(side) == null?
-				null: userConfiguration.getMaxInterval(side) / (getTicker().getVol().doubleValue());
-			
+				null: 
+				userConfiguration.getMaxInterval(side) / (getTicker().getLast3HourVolume().doubleValue());
+		
 		boolean isLongTimeWithoutOperation = 
 			lastRelevantInactivityTime == null || maxAcceptedInactivityTime == null?
 				false:
 				lastRelevantInactivityTime.longValue() > maxAcceptedInactivityTime;
 		
 		if (lastRelevantInactivityTime != null && maxAcceptedInactivityTime != null) {
-			System.out.println("  Volume24h: " + getTicker().getVol() + " " + getCoin());
+			System.out.println("  Last 3 hour volume: " + getTicker().getLast3HourVolume() + " " + getCoin());
 			System.out.println(
 				"  Inactivity time: " 
 				+ decFmt.format(lastRelevantInactivityTime.doubleValue() / (60 * 1000))

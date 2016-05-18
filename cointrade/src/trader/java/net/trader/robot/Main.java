@@ -72,6 +72,8 @@ public class Main {
 					System.out.println("");
 					System.out.println("Ticker 24");
 					System.out.println(report.getTicker());
+					
+					System.out.println("Last 3 hour volume: " + report.getTicker().getLast3HourVolume());
 				}
 				
 				System.out.println("");

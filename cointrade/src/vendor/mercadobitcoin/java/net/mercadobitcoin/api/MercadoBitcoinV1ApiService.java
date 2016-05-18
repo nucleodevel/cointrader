@@ -205,6 +205,11 @@ public class MercadoBitcoinV1ApiService extends ApiService {
 	}
 	
 	@Override
+	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
+		return null;
+	}
+	
+	@Override
 	public List<Order> getUserActiveOrders() throws ApiProviderException {
 		RecordFilter orderFilter = new RecordFilter(getCoin(), getCurrency());
 		orderFilter.setStatus(OrderStatus.ACTIVE);
@@ -434,7 +439,7 @@ public class MercadoBitcoinV1ApiService extends ApiService {
 		return tradeList(paths.toArray(new String[0]));
 	}
 
-	private Operation[] tradeList(String ... complements) throws ApiProviderException {
+	public Operation[] tradeList(String ... complements) throws ApiProviderException {
 		String url = assemblyUrl("trades", complements);
 		String response = invokeApiMethod(url.toString());
 		JsonArray jsonArray = JsonArray.readFrom(response);

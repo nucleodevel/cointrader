@@ -1,5 +1,6 @@
 package net.trader.api;
 
+import java.util.Calendar;
 import java.util.List;
 
 import net.trader.beans.Balance;
@@ -23,6 +24,8 @@ public abstract class ApiService {
 	public abstract Balance getBalance() throws ApiProviderException;
 	
 	public abstract OrderBook getOrderBook() throws ApiProviderException;
+	
+	public abstract List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException;
 	
 	public abstract List<Order> getUserActiveOrders() throws ApiProviderException;
 	

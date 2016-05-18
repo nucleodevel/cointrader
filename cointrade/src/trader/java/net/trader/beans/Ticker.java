@@ -8,6 +8,7 @@ public class Ticker {
 	private BigDecimal high;
 	private BigDecimal low;
 	private BigDecimal vol;
+	private BigDecimal last3HourVolume;
 	private BigDecimal last;
 	private BigDecimal buy;
 	private BigDecimal sell;
@@ -63,6 +64,14 @@ public class Ticker {
 
 	public void setVol(BigDecimal vol) {
 		this.vol = vol;
+	}
+
+	public BigDecimal getLast3HourVolume() {
+		return last3HourVolume;
+	}
+
+	public void setLast3HourVolume(BigDecimal last3HourVolume) {
+		this.last3HourVolume = last3HourVolume;
 	}
 
 	public BigDecimal getLast() {

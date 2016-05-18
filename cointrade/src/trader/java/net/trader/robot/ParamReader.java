@@ -16,7 +16,7 @@ import net.trader.exception.ParamValueErrorException;
 
 public class ParamReader {
 	
-	private static long MILISSECONDS_PER_DAY = 86400000;
+	private static long MILISSECONDS_PER_3H = 10800000;
 
 	private File file;
 	
@@ -147,7 +147,7 @@ public class ParamReader {
 							break;
 						case "-mbi": 
 							try {
-								long mbi = MILISSECONDS_PER_DAY * Long.parseLong(paramValue);
+								double mbi = MILISSECONDS_PER_3H * Double.parseDouble(paramValue);
 								userConfiguration.setMaxBuyInterval(mbi);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
@@ -155,7 +155,7 @@ public class ParamReader {
 							break;
 						case "-msi": 
 							try {
-								long msi = MILISSECONDS_PER_DAY * Long.parseLong(paramValue);
+								double msi = MILISSECONDS_PER_3H * Double.parseDouble(paramValue);
 								userConfiguration.setMaxSellInterval(msi);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);

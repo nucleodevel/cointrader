@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -218,6 +219,11 @@ public class BlinktradeApiService extends ApiService {
 		
 		return orderBook;
 
+	}
+	
+	@Override
+	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
+		return null;
 	}
 
 	@Override
