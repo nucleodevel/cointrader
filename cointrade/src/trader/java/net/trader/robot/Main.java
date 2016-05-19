@@ -92,23 +92,22 @@ public class Main {
 				if (report.getLastUserSellOperation() != null)
 					System.out.println(report.getLastUserSellOperation().toString());
 				System.out.println(
-					"Last operation interval: " + 
-					(report.getLastUserOperationInterval().longValue() / 1000 / 60) + 
-					" minutes"
+					"  Last 3 hour volume: " + report.getTicker().getLast3HourVolume() 
+					+ " " + report.getCoin()
 				);
 				if (report.getTicker() != null) {
 					if (userConfiguration.getMaxBuyInterval() != null) 
 						System.out.println(
-							"Max accepted inactivity time for buying: " 
+							"  Max accepted inactivity time for buying: " 
 							+ (double) (userConfiguration.getMaxBuyInterval() / 
-							  (report.getTicker().getVol().doubleValue()) / (60 * 1000))
+							  (report.getTicker().getLast3HourVolume().doubleValue()) / (60 * 1000))
 							+ " minutes" 
 						);
 					if (userConfiguration.getMaxSellInterval() != null) 
 						System.out.println(
-							"Max accepted inactivity time for selling: " 
+							"  Max accepted inactivity time for selling: " 
 							+ (double) (userConfiguration.getMaxSellInterval() / 
-							  (report.getTicker().getVol().doubleValue()) / (60 * 1000))
+							  (report.getTicker().getLast3HourVolume().doubleValue()) / (60 * 1000))
 							+ " minutes" 
 						);
 				}
