@@ -19,6 +19,7 @@ import net.trader.beans.Currency;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
+import net.trader.beans.OrderStatus;
 import net.trader.beans.OrderType;
 import net.trader.beans.Provider;
 import net.trader.beans.RecordSide;
@@ -500,6 +501,7 @@ public class ProviderReport {
 	
 	public void createOrder(Order order, RecordSide side) throws ApiProviderException {
 		order.setSide(side);
+		order.setStatus(OrderStatus.ACTIVE);
 		getApiService().createOrder(order);
 	}
 	

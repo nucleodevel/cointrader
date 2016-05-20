@@ -91,11 +91,11 @@ public class Main {
 					System.out.println(report.getLastUserBuyOperation().toString());
 				if (report.getLastUserSellOperation() != null)
 					System.out.println(report.getLastUserSellOperation().toString());
-				System.out.println(
-					"  Last 3 hour volume: " + report.getTicker().getLast3HourVolume() 
-					+ " " + report.getCoin()
-				);
 				if (report.getTicker() != null) {
+					System.out.println(
+						"  Last 3 hour volume: " + report.getTicker().getLast3HourVolume() 
+						+ " " + report.getCoin()
+					);
 					if (userConfiguration.getMaxBuyInterval() != null) 
 						System.out.println(
 							"  Max accepted inactivity time for buying: " 

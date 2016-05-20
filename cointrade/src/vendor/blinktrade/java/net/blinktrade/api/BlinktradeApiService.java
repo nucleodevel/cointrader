@@ -546,14 +546,9 @@ public class BlinktradeApiService extends ApiService {
 		
 		order.setClientId(jsonArray.get(0).getAsBigInteger());
 		order.setId(jsonArray.get(1).getAsBigInteger());
-		//order.setOrdStatus(jsonArray.get(3).getAsString());
-		/*order.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-		order.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
 		
 		
 		order.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
-		/*order.setVolume(jsonArray.get(13).getAsBigDecimal());
-		order.setTimeInForce(jsonArray.get(14).getAsString());*/
 		
 		return order;
 	}
@@ -566,20 +561,16 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
 		BigDecimal coinAmount = cumQty.add(leavesQty);
 		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal().divide(
-			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1));
+			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1)
+		);
 		
 		Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 		
 		operation.setClientId(jsonArray.get(0).getAsBigInteger());
 		operation.setId(jsonArray.get(1).getAsBigInteger());
-		//operation.setOrdStatus(jsonArray.get(3).getAsString());
-		/*operation.setCxlQty(jsonArray.get(5).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE)));
-		operation.setAvgPx(jsonArray.get(6).getAsBigDecimal());*/
 		
 		
 		operation.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
-		/*operation.setVolume(jsonArray.get(13).getAsBigDecimal());
-		operation.setTimeInForce(jsonArray.get(14).getAsString());*/
 		
 		return operation;
 	}
