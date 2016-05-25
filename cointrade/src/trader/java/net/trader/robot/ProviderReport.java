@@ -56,6 +56,8 @@ public class ProviderReport {
 	
 	private List<Operation> userOperations;
 	
+	private BigDecimal my24hVolume;
+	
 	private static DecimalFormat decFmt;
 	
 	public ProviderReport(UserConfiguration userConfiguration) {
@@ -224,6 +226,27 @@ public class ProviderReport {
 			userOperations = getApiService().getUserOperations();
 		return userOperations;
 	}
+	
+	public BigDecimal getMy24hVolume() throws ApiProviderException {
+		if (my24hVolume == null) {
+			Calendar from = Calendar.getInstance();
+			Calendar to = Calendar.getInstance();
+
+			from.setTime(new Date());
+			from.add(Calendar.HOUR, -24);
+			to.setTime(new Date());
+			
+			BigDecimal volume = new BigDecimal(0);
+			for (Operation operation: getUserOperations())
+				if (operation.getCreationDate().getTimeInMillis() > from.getTimeInMillis())
+					volume = volume.add(operation.getCoinAmount());
+				else
+					break;
+			
+			my24hVolume = volume;
+		}
+		return my24hVolume;
+	}
 
 	public Operation getLastUserOperation(RecordSide side) throws ApiProviderException {
 		Operation lastUserOperation = null;
@@ -256,14 +279,14 @@ public class ProviderReport {
 	
 	public BigDecimal getLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {
 		BigDecimal lastRelevantPriceByOperations = new BigDecimal(0);
+		List<Operation> groupOfOperations = new ArrayList<Operation>(); 
+		BigDecimal oldCoinAmount = new BigDecimal(0);
 		
 		if (side == RecordSide.BUY) {
 			
 			double coinWithOpenOrders = getBalance().getCoinAmount().doubleValue();
 			
-			List<Operation> groupOfOperations = new ArrayList<Operation>(); 
 			double sumOfCoin = 0;
-			BigDecimal oldCoinAmount = new BigDecimal(0);
 			
 			for (Operation operation: getUserOperations()) {
 				if (operation.getSide() == side) {
@@ -289,26 +312,13 @@ public class ProviderReport {
 					); 
 				}
 			}
-			System.out.println("Calculating last relevant " + side + " price by operations: ");
-			System.out.println("  " + getCoin() + " with open orders: " + coinWithOpenOrders);
-			System.out.println("  Considered " + getCoin() + " sum: " + sumOfCoin);
-			System.out.println("  Considered operations: " + groupOfOperations.size());
-			System.out.println("  Last relevant price: " + lastRelevantPriceByOperations);
-			System.out.println("  Considered operations: ");
-			for (Operation operation: groupOfOperations)
-				System.out.println("    " + operation.toString()); 
-			System.out.println("");
-			if (groupOfOperations.size() > 0)
-				groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);
 			
 		} 
 		else if (side == RecordSide.SELL) {
 			
 			double currencyWithOpenOrders = getBalance().getCurrencyAmount().doubleValue();
 			
-			List<Operation> groupOfOperations = new ArrayList<Operation>(); 
 			double sumOfCurrency = 0;
-			BigDecimal oldCoinAmount = new BigDecimal(0);
 			
 			for (Operation operation: getUserOperations()) {
 				BigDecimal currencyAmount = operation.getCurrencyAmount();
@@ -338,21 +348,16 @@ public class ProviderReport {
 					); 
 				}
 			}
-			System.out.println("Calculating last relevant " + side + " price by operations: ");
-			System.out.println(
-				"  " + getCurrency() + " with open orders: " + decFmt.format(currencyWithOpenOrders)
-			);
-			System.out.println("  Considered " + getCurrency() + " sum: " + decFmt.format(sumOfCurrency));
-			System.out.println("  Considered operations: " + groupOfOperations.size());
-			System.out.println("  Last relevant price: " + decFmt.format(lastRelevantPriceByOperations));
-			System.out.println("  Considered operations: ");
-			for (Operation operation: groupOfOperations)
-				System.out.println("    " + operation.toString()); 
-			System.out.println("");
-			if (groupOfOperations.size() > 0)
-				groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);
 			
 		}
+		
+		System.out.println("Last relevant price: " + lastRelevantPriceByOperations);
+		System.out.println("  Considered operations: ");
+		for (Operation operation: groupOfOperations)
+			System.out.println("    " + operation.toString()); 
+		System.out.println("");
+		if (groupOfOperations.size() > 0)
+			groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);
 		
 		
 		return lastRelevantPriceByOperations;
@@ -378,11 +383,7 @@ public class ProviderReport {
 			lastRelevantPriceByOrders = new BigDecimal(sumOfNumerators / sumOfCoin);
 		}
 		
-		System.out.println("Calculating last relevant " + side + " price by orders: ");
-		System.out.println("  Considered numerator sum: " + decFmt.format(sumOfNumerators));
-		System.out.println("  Considered denominator sum: " + decFmt.format(sumOfCoin));
-		System.out.println("  Considered orders: " + groupOfOrders.size());
-		System.out.println("  Last relevant price by orders: " + decFmt.format(lastRelevantPriceByOrders));
+		System.out.println("Last relevant price by orders: " + decFmt.format(lastRelevantPriceByOrders));
 		System.out.println("  Considered orders: ");
 		for (Order order: groupOfOrders)
 			System.out.println("    " + order); 
