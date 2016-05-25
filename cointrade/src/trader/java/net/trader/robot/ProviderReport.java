@@ -317,7 +317,7 @@ public class ProviderReport {
 			}
 		}
 		
-		System.out.println("Last relevant price: " + lastRelevantPriceByOperations);
+		System.out.println("Last relevant " + side + " price: " + lastRelevantPriceByOperations);
 		System.out.println("  Considered operations: ");
 		for (Operation operation: groupOfOperations)
 			System.out.println("    " + operation.toString()); 
