@@ -93,6 +93,11 @@ public class Record implements Comparable<Record> {
 	public BigDecimal getCurrencyAmount() {
 		return coinAmount.multiply(currencyPrice);
 	}
+
+	public BigDecimal getSideAmount(RecordSide side) {
+		return side == RecordSide.BUY? getCurrencyAmount():
+			(side == RecordSide.SELL? getCoinAmount(): null);
+	}
 	
 	public Calendar getCreationDate() {
 		return creationDate;
