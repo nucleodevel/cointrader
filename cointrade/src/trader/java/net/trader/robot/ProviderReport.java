@@ -349,7 +349,9 @@ public class ProviderReport {
 			lastRelevantPriceByOrders = new BigDecimal(sumOfNumerators / sumOfCoin);
 		}
 		
-		System.out.println("Last relevant price by orders: " + decFmt.format(lastRelevantPriceByOrders));
+		System.out.println(
+			"Last relevant " + side + " price by orders: " + decFmt.format(lastRelevantPriceByOrders)
+		);
 		System.out.println("  Considered orders: ");
 		for (Order order: groupOfOrders)
 			System.out.println("    " + order); 
