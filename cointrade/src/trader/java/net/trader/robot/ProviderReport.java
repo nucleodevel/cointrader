@@ -510,25 +510,14 @@ public class ProviderReport {
 			Order order = activeOrders.get(i);
 			Order nextOrder = activeOrders.size() - 1 == i? null: activeOrders.get(i + 1);
 			
-			double left = 
-				order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
+			double left = order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
 			double right = 1 + userConfiguration.getMinimumRate(side);
 			
 			boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 			if (!isAGoodOrder)
 				isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 				
-			if (isLongTimeWithoutOperation && i >= numOfConsideredOrdersForLastRelevantPriceByOrders) {
-				System.out.println(
-					"There was a long time without " + side + " operations and there was no order of mine "
-					+ "among the " + numOfConsideredOrdersForLastRelevantPriceByOrders + " top orders.\n"
-					+ "Then, let's try make order based on " + side.getOther() + " orders, instead of "
-					+ "operations"
-				);
-				BigDecimal newLastRelevantPrice = getLastRelevantPriceByOrders(side);
-				makeOrdersByLastRelevantPrice(side, newLastRelevantPrice, null);
-			}
-			else if (isAGoodOrder) {
+			if (isAGoodOrder || isLongTimeWithoutOperation) {
 				
 				Order bestOtherSideOrder = getCurrentTopOrder(side.getOther());
 				BigDecimal currencyPrice = null;
