@@ -56,7 +56,7 @@ public class ProviderReport {
 	
 	private List<Operation> userOperations;
 	
-	private BigDecimal my24hVolume;
+	private BigDecimal my24hCoinVolume;
 	
 	private static DecimalFormat decFmt;
 	
@@ -227,8 +227,8 @@ public class ProviderReport {
 		return userOperations;
 	}
 	
-	public BigDecimal getMy24hVolume() throws ApiProviderException {
-		if (my24hVolume == null) {
+	public BigDecimal getMy24hCoinVolume() throws ApiProviderException {
+		if (my24hCoinVolume == null) {
 			Calendar from = Calendar.getInstance();
 			Calendar to = Calendar.getInstance();
 
@@ -243,9 +243,9 @@ public class ProviderReport {
 				else
 					break;
 			
-			my24hVolume = volume;
+			my24hCoinVolume = volume;
 		}
-		return my24hVolume;
+		return my24hCoinVolume;
 	}
 
 	public Operation getLastUserOperation(RecordSide side) throws ApiProviderException {

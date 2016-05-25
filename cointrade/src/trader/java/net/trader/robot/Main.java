@@ -73,11 +73,11 @@ public class Main {
 					System.out.println("Ticker 24");
 					System.out.println(report.getTicker());
 					
-					System.out.println("My 24 hour volume: " + report.getMy24hVolume());
+					System.out.println("My 24 hour coin volume: " + report.getMy24hCoinVolume());
 					System.out.println("Global 24 hour volume: " + report.getTicker().getVol());
 					System.out.println(
 						"My participation: " + 
-						(report.getMy24hVolume().doubleValue() / report.getTicker().getVol().doubleValue())
+						(report.getMy24hCoinVolume().doubleValue() / report.getTicker().getVol().doubleValue())
 					);
 					System.out.println("Last 3 hour volume: " + report.getTicker().getLast3HourVolume());
 				}
