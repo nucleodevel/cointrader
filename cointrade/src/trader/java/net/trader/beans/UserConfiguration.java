@@ -1,6 +1,11 @@
 package net.trader.beans;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+
 public class UserConfiguration {
+	
+	private static long MILISSECONDS_PER_3H = 10800000;
 
 	private String key;
 	private String secret;
@@ -20,8 +25,8 @@ public class UserConfiguration {
 	
 	public UserConfiguration() {
 		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
-		minimumBuyRate = -1.0;
-		minimumSellRate = 1.0;
+		minimumBuyRate = 0.8;
+		minimumSellRate = 1.2;
 		maxBuyInterval = null;
 		maxSellInterval = null;
 	}
@@ -110,25 +115,17 @@ public class UserConfiguration {
 		Double rate = 0.0;
 		switch (side) {
 			case BUY:
-				rate = minimumBuyRate;
+				rate = 1 - minimumBuyRate;
 			break;
 			case SELL:
-				rate = minimumSellRate;
+				rate = 1 + minimumSellRate;
 			break;
 		}
 		return rate;
 	}
 
-	public Double getMinimumBuyRate() {
-		return minimumBuyRate;
-	}
-
 	public void setMinimumBuyRate(Double minimumBuyRate) {
 		this.minimumBuyRate = minimumBuyRate;
-	}
-
-	public Double getMinimumSellRate() {
-		return minimumSellRate;
 	}
 
 	public void setMinimumSellRate(Double minimumSellRate) {
@@ -139,25 +136,19 @@ public class UserConfiguration {
 		Double interval = null;
 		switch (side) {
 			case BUY:
-				interval = maxBuyInterval;
+				interval = maxBuyInterval == null?
+					null: MILISSECONDS_PER_3H * maxBuyInterval;
 			break;
 			case SELL:
-				interval = maxSellInterval;
+				interval = maxSellInterval == null?
+					null: MILISSECONDS_PER_3H * maxSellInterval;
 			break;
 		}
 		return interval;
 	}
 
-	public Double getMaxBuyInterval() {
-		return maxBuyInterval;
-	}
-
 	public void setMaxBuyInterval(Double maxBuyInterval) {
 		this.maxBuyInterval = maxBuyInterval;
-	}
-
-	public Double getMaxSellInterval() {
-		return maxSellInterval;
 	}
 
 	public void setMaxSellInterval(Double maxSellInterval) {
@@ -170,10 +161,6 @@ public class UserConfiguration {
 
 	public void setMinimumCoinAmount(Double minimumCoinAmount) {
 		this.minimumCoinAmount = minimumCoinAmount;
-	}
-
-	public Double getIncDecPrice() {
-		return incDecPrice;
 	}
 
 	public void setIncDecPrice(Double incDecPrice) {
@@ -191,6 +178,38 @@ public class UserConfiguration {
 			break;
 		}
 		return incDecPrice;
+	}
+	
+	@Override
+	public String toString() {
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(5);
+		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(this.getClass().getSimpleName() + ": ["); 
+		sb.append("\n  key: " + key.substring(0, 8) + "...");
+		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
+		sb.append(";\n  provider: " + provider);
+		sb.append(";\n  broker: " + broker);
+		sb.append(";\n  coin: " + coinCurrencyPair.getCurrency());
+		sb.append(";\n  currency: " + coinCurrencyPair.getCurrency());
+		sb.append(";\n  delayTime: " + delayTime);
+		sb.append(";\n  buyMode: " + buyMode);
+		sb.append(";\n  sellMode: " + sellMode);
+		sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
+		sb.append(";\n  minimumSellRate: " + decFmt.format(minimumSellRate));
+		sb.append(";\n  maxBuyInterval: " + maxBuyInterval);
+		sb.append(";\n  maxSellInterval: " + maxSellInterval);
+		sb.append(";\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
+		sb.append(";\n  incDecPrice: " + decFmt.format(incDecPrice));
+		sb.append("\n]");
+		
+		return sb.toString();
 	}
 	
 }

@@ -15,8 +15,6 @@ import net.trader.exception.ParamSyntaxErrorException;
 import net.trader.exception.ParamValueErrorException;
 
 public class ParamReader {
-	
-	private static long MILISSECONDS_PER_3H = 10800000;
 
 	private File file;
 	
@@ -130,7 +128,7 @@ public class ParamReader {
 						case "-mbr": 
 							try {
 								userConfiguration.setMinimumBuyRate(
-									-1 * Math.abs(Double.parseDouble(paramValue))
+									Double.parseDouble(paramValue)
 								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
@@ -139,7 +137,7 @@ public class ParamReader {
 						case "-msr": 
 							try {
 								userConfiguration.setMinimumSellRate(
-									Math.abs(Double.parseDouble(paramValue))
+									Double.parseDouble(paramValue)
 								);
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
@@ -147,16 +145,14 @@ public class ParamReader {
 							break;
 						case "-mbi": 
 							try {
-								double mbi = MILISSECONDS_PER_3H * Double.parseDouble(paramValue);
-								userConfiguration.setMaxBuyInterval(mbi);
+								userConfiguration.setMaxBuyInterval(Double.parseDouble(paramValue));
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
 						case "-msi": 
 							try {
-								double msi = MILISSECONDS_PER_3H * Double.parseDouble(paramValue);
-								userConfiguration.setMaxSellInterval(msi);
+								userConfiguration.setMaxSellInterval(Double.parseDouble(paramValue));
 							} catch (NumberFormatException e) {
 								throw new ParamValueErrorException(paramLabel);
 							}

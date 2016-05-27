@@ -57,14 +57,15 @@ public class Main {
 				System.out.println("");
 				System.out.println("\n---- Start reading: " + (new Date()));	
 				
-				System.out.println("");
-				System.out.println("\n---- Params");
-				
-				System.out.println(paramReader.getFileContent());
-				
 				// creating paramReader and reading APIs
 				userConfiguration = paramReader.getUserConfiguration();
 				ProviderReport report = new ProviderReport(userConfiguration);
+				report.readApiAtFirst();
+				
+				System.out.println("");
+				System.out.println("\n---- Params");
+				
+				System.out.println(userConfiguration);
 				
 				// descriptions
 				
@@ -93,26 +94,26 @@ public class Main {
 				
 				System.out.println("");
 				System.out.println("My last operations by type");
-				if (report.getLastUserBuyOperation() != null)
-					System.out.println(report.getLastUserBuyOperation().toString());
-				if (report.getLastUserSellOperation() != null)
-					System.out.println(report.getLastUserSellOperation().toString());
+				if (report.getLastUserOperation(RecordSide.BUY) != null)
+					System.out.println(report.getLastUserOperation(RecordSide.BUY));
+				if (report.getLastUserOperation(RecordSide.SELL) != null)
+					System.out.println(report.getLastUserOperation(RecordSide.SELL));
 				if (report.getTicker() != null) {
 					System.out.println(
 						"  Last 3 hour volume: " + report.getTicker().getLast3HourVolume() 
 						+ " " + report.getCoin()
 					);
-					if (userConfiguration.getMaxBuyInterval() != null) 
+					if (userConfiguration.getMaxInterval(RecordSide.BUY) != null) 
 						System.out.println(
 							"  Max accepted inactivity time for buying: " 
-							+ (double) (userConfiguration.getMaxBuyInterval() / 
+							+ (double) (userConfiguration.getMaxInterval(RecordSide.BUY) / 
 							  (report.getTicker().getLast3HourVolume().doubleValue()) / (60 * 1000))
 							+ " minutes" 
 						);
-					if (userConfiguration.getMaxSellInterval() != null) 
+					if (userConfiguration.getMaxInterval(RecordSide.SELL) != null) 
 						System.out.println(
 							"  Max accepted inactivity time for selling: " 
-							+ (double) (userConfiguration.getMaxSellInterval() / 
+							+ (double) (userConfiguration.getMaxInterval(RecordSide.SELL) / 
 							  (report.getTicker().getLast3HourVolume().doubleValue()) / (60 * 1000))
 							+ " minutes" 
 						);
@@ -120,8 +121,8 @@ public class Main {
 				
 				System.out.println("");
 				System.out.println("Current top orders by type");
-				System.out.println(report.getCurrentTopBuy().toString());
-				System.out.println(report.getCurrentTopSell().toString());
+				System.out.println(report.getActiveOrders(RecordSide.BUY).get(0));
+				System.out.println(report.getActiveOrders(RecordSide.SELL).get(0));
 				
 				
 				// analise and make orders
@@ -129,8 +130,8 @@ public class Main {
 				String buyMode = userConfiguration.getBuyMode();
 				switch (buyMode) {
 					case "none":
-						Order myBuyOrder = report.getUserActiveBuyOrders().size() > 0?
-							report.getUserActiveBuyOrders().get(0): null;
+						Order myBuyOrder = report.getUserActiveOrders(RecordSide.BUY).size() > 0?
+							report.getUserActiveOrders(RecordSide.BUY).get(0): null;
 						if (myBuyOrder != null)
 							report.cancelOrder(myBuyOrder);
 						System.out.println("\nDon't make buy order but cancel any!");
@@ -146,8 +147,8 @@ public class Main {
 				String sellMode = userConfiguration.getSellMode();
 				switch (sellMode) {
 					case "none":
-						Order mySellOrder = report.getUserActiveSellOrders().size() > 0?
-							report.getUserActiveSellOrders().get(0): null;
+						Order mySellOrder = report.getUserActiveOrders(RecordSide.SELL).size() > 0?
+							report.getUserActiveOrders(RecordSide.SELL).get(0): null;
 						if (mySellOrder != null)
 							report.cancelOrder(mySellOrder);
 						System.out.println("\nDon't make sell order but cancel any!");
