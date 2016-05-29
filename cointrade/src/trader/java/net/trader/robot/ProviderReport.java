@@ -26,6 +26,7 @@ import net.trader.beans.RecordSide;
 import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
+import net.trader.exception.NotAvailableMoneyException;
 
 public class ProviderReport {
 	
@@ -415,7 +416,9 @@ public class ProviderReport {
 		System.out.println("");
 		
 		BigDecimal lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther());
-		makeOrdersByLastRelevantPrice(side, lastRelevantPrice, null);
+		BigDecimal lastRelevantInactivityTime =
+			getLastRelevantInactivityTimeByOperations(side.getOther());
+		makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime);
 	}
 	
 	public void makeOrdersByLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {
@@ -424,8 +427,6 @@ public class ProviderReport {
 		System.out.println("");
 		
 		BigDecimal lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther());
-		if (lastRelevantPrice == null)
-			lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther());
 		BigDecimal lastRelevantInactivityTime =
 			getLastRelevantInactivityTimeByOperations(side.getOther());
 		makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime);
@@ -434,10 +435,7 @@ public class ProviderReport {
 	private void makeOrdersByLastRelevantPrice(
 		RecordSide side, BigDecimal lastRelevantPrice, BigDecimal lastRelevantInactivityTime
 	) throws ApiProviderException {
-		Double maxAcceptedInactivityTime = 
-			getTicker() == null || userConfiguration.getMaxInterval(side) == null?
-				null: 
-				userConfiguration.getMaxInterval(side) / (getTicker().getLast3HourVolume().doubleValue());
+		Double maxAcceptedInactivityTime = getMaxAcceptedInactivityTime(side);
 		
 		boolean isLongTimeWithoutOperation = 
 			lastRelevantInactivityTime == null || maxAcceptedInactivityTime == null?
@@ -457,20 +455,42 @@ public class ProviderReport {
 				+ " minutes" 
 			);
 		}
-		if (!isLongTimeWithoutOperation)
-			winTheCurrentOrder(side, 0, lastRelevantPrice);
-		else
-			winTheFirstOrder(side);
+		
+		try {
+			Order newOrder = isLongTimeWithoutOperation?
+				winTheFirstOrder(side): winTheCurrentOrder(side, 0, lastRelevantPrice, true);
+			List<Order> userActiveOrders = getUserActiveOrders(side);
+			Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
+			if (newOrder != null && newOrder == myOrder)
+				System.out.println(
+					"Maintaining previous order " + myOrder
+				);
+		} catch (NotAvailableMoneyException e) {
+			System.out.println(
+				"There are no money available for " + side
+			);
+		}	
 	}
 	
 	private Order winTheCurrentOrder(
-		RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice
-	) throws ApiProviderException {
+		RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice, Boolean keepSearching
+	) throws ApiProviderException, NotAvailableMoneyException {
 		List<Order> activeOrders = getActiveOrders(side);
 		List<Order> userActiveOrders = getUserActiveOrders(side);
 		
 		Order order = activeOrders.get(orderIndex);
-		Order nextOrder = activeOrders.size() - 1 == orderIndex? null: activeOrders.get(orderIndex + 1);
+		Order nextOrder = activeOrders.size() - 1 == orderIndex? 
+			null: activeOrders.get(orderIndex + 1);
+		Order bestOtherSideOrder = getCurrentTopOrder(side.getOther());
+		
+		BigDecimal currencyPrice = new BigDecimal(
+			order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
+		);
+		BigDecimal coinAmount = getBalance().getEstimatedCoinAmount(side, currencyPrice);
+		
+		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+			throw new NotAvailableMoneyException();
+		}
 		
 		double left = order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
 		double right = userConfiguration.getMinimumRate(side);
@@ -480,14 +500,6 @@ public class ProviderReport {
 			isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 			
 		if (isAGoodOrder) {
-			Order bestOtherSideOrder = getCurrentTopOrder(side.getOther());
-			
-			BigDecimal currencyPrice = new BigDecimal(
-				order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
-			);
-			BigDecimal coinAmount = new BigDecimal(0);
-			
-			coinAmount = getBalance().getEstimatedCoinAmount(side, currencyPrice);
 			
 			// get the unique order or null
 			Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
@@ -499,7 +511,7 @@ public class ProviderReport {
 			) {
 				if (myOrder != null)
 					cancelOrder(myOrder);
-				if (coinAmount.doubleValue() > userConfiguration.getMinimumCoinAmount()) {
+				if (coinAmount.doubleValue() >= userConfiguration.getMinimumCoinAmount()) {
 					if (
 						bestOtherSideOrder.getCurrencyPrice() == 
 						order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getIncDecPrice(side)))
@@ -516,86 +528,29 @@ public class ProviderReport {
 					);
 					return newOrder;
 				}
-				else {
-					System.out.println(
-						"There are no money available for " + (orderIndex + 1) + "° - " 
-						+ getCurrency() + decFmt.format(currencyPrice)
-					);
-					return null;
-				}
 			}
 			else if (
-				decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice())) &&
+				!keepSearching ||
+				(decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice())) &&
 				Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration.getMinimumCoinAmount() &&
 				Math.abs(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()) <= 
-					userConfiguration.getIncDecPrice(side)
+					userConfiguration.getIncDecPrice(side))
 			) {
-				System.out.println(
-					"Maintaining previous order " + (orderIndex + 1) + "° - " + myOrder
-				);
 				return myOrder;
 			}
 		}
 		
-		return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice);
+		return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice, true);
 	}
 	
-	private Order winTheFirstOrder(RecordSide side) throws ApiProviderException {
-		List<Order> activeOrders = getActiveOrders(side);
-		List<Order> userActiveOrders = getUserActiveOrders(side);
-		
-		Order order = activeOrders.get(0);
-		
-		BigDecimal currencyPrice = new BigDecimal(
-			order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
-		);
-		BigDecimal coinAmount = new BigDecimal(0);
-		
-		coinAmount = getBalance().getEstimatedCoinAmount(side, currencyPrice);
-		
-		// get the unique order or null
-		Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
-		
-		// if my order isn't the best, delete it and create another 
-		if (
-			myOrder == null || 
-			!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))
-		) {
-			if (myOrder != null)
-				cancelOrder(myOrder);
-			if (coinAmount.doubleValue() > userConfiguration.getMinimumCoinAmount()) {
-				Order bestOtherSideOrder = getCurrentTopOrder(side.getOther());
-				
-				if (
-					bestOtherSideOrder.getCurrencyPrice() == 
-					order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getIncDecPrice(side)))
-				)
-					currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
-				Order newOrder = new Order(
-					userConfiguration.getCoin(), userConfiguration.getCurrency(),
-					side, coinAmount, currencyPrice
-				);
-				newOrder.setType(OrderType.LIMITED);
-				createOrder(newOrder, side);
-				System.out.println(
-					side + " order created: 1° - " + newOrder
-				);
-				return newOrder;
-			}
-			else {
-				System.out.println(
-					"There are no money available for 1° - " 
-					+ getCurrency() + decFmt.format(currencyPrice)
-				);
-				return null;
-			}
-		}
-		else {
-			System.out.println(
-				"Maintaining previous order 1° - " + myOrder
-			);
-			return myOrder;
-		}
+	private Order winTheFirstOrder(RecordSide side) throws ApiProviderException, NotAvailableMoneyException {
+		return winTheCurrentOrder(side, 0, null, false);
+	}
+	
+	private Double getMaxAcceptedInactivityTime(RecordSide side) throws ApiProviderException {
+		return getTicker() == null || userConfiguration.getMaxInterval(side) == null?
+			null: 
+			userConfiguration.getMaxInterval(side) / (getTicker().getLast3HourVolume().doubleValue());
 	}
 
 }
