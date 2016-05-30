@@ -187,6 +187,7 @@ public class MercadoBitcoinApiService extends ApiService {
 				getCoin(), getCurrency(), RecordSide.SELL, coinAmount, currencyPrice
 			);
 			order.setStatus(OrderStatus.ACTIVE);
+			order.setPosition(i + 1);
 			askOrders.add(order);
 		}
 		orderBook.setAskOrders(askOrders);
@@ -201,6 +202,7 @@ public class MercadoBitcoinApiService extends ApiService {
 				getCoin(), getCurrency(), RecordSide.BUY, coinAmount, currencyPrice
 			);
 			order.setStatus(OrderStatus.ACTIVE);
+			order.setPosition(i + 1);
 			bidOrders.add(order);
 		}
 		orderBook.setBidOrders(bidOrders);

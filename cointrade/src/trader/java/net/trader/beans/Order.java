@@ -10,6 +10,7 @@ public class Order extends Record {
 
 	private OrderType type;
 	private OrderStatus status;
+	private Integer position;
 	private List<Operation> operations;
 
 	public Order(
@@ -36,6 +37,14 @@ public class Order extends Record {
 		this.status = status;
 	}
 
+	public Integer getPosition() {
+		return position;
+	}
+
+	public void setPosition(Integer position) {
+		this.position = position;
+	}
+
 	public List<Operation> getOperations() {
 		return operations;
 	}
@@ -55,9 +64,11 @@ public class Order extends Record {
 		
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(this.getClass().getSimpleName() + ": ["); 
+		sb.append(this.getClass().getSimpleName() + ": [");
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
+		if (position != null)
+			sb.append("; position: " + getPosition()); 
 		sb.append("; side: " + getSide());
 		sb.append("; status: " + status);
 		sb.append("; coinAmount: " + decFmt.format(getCoinAmount()));

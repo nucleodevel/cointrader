@@ -463,7 +463,7 @@ public class ProviderReport {
 			Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
 			if (newOrder != null && newOrder == myOrder)
 				System.out.println(
-					"Maintaining previous order " + myOrder
+					"Maintaining previous - " + myOrder
 				);
 		} catch (NotAvailableMoneyException e) {
 			System.out.println(
@@ -492,11 +492,12 @@ public class ProviderReport {
 			throw new NotAvailableMoneyException();
 		}
 		
-		double left = order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
-		double right = userConfiguration.getMinimumRate(side);
+		Double left = lastRelevantPrice == null?
+			null: order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
+		Double right = userConfiguration.getMinimumRate(side);
 		
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
-		if (!isAGoodOrder)
+		if (!isAGoodOrder && left != null)
 			isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 			
 		if (isAGoodOrder) {
@@ -522,10 +523,9 @@ public class ProviderReport {
 						side, coinAmount, currencyPrice
 					);
 					newOrder.setType(OrderType.LIMITED);
+					newOrder.setPosition(orderIndex + 1);
 					createOrder(newOrder, side);
-					System.out.println(
-						side + " order created: " +  (orderIndex + 1) + "° - " + newOrder
-					);
+					System.out.println(side + " created: " +  " - " + newOrder);
 					return newOrder;
 				}
 			}
@@ -536,6 +536,7 @@ public class ProviderReport {
 				Math.abs(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()) <= 
 					userConfiguration.getIncDecPrice(side))
 			) {
+				myOrder.setPosition(orderIndex + 1);
 				return myOrder;
 			}
 		}
