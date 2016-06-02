@@ -73,11 +73,11 @@ public class ProviderReport {
 	}
 	
 	public void readApiAtFirst() throws ApiProviderException {
-		getTicker();
+		/*getTicker();
 		getBalance();
 		getOrderBook();
 		getUserActiveOrders();
-		getUserOperations();
+		getUserOperations();*/
 	}
 	
 	public UserConfiguration getUserConfiguration() {
@@ -457,14 +457,26 @@ public class ProviderReport {
 		}
 		
 		try {
+			Order previousOrder = winThePreviousOrder(side, 0, lastRelevantPrice, true);
+			System.out.println("if win previous: " +  " - " + previousOrder);
+			
 			Order newOrder = isLongTimeWithoutOperation?
-				winTheFirstOrder(side): winTheCurrentOrder(side, 0, lastRelevantPrice, true);
+				winTheFirstOrder(side): 
+				winTheCurrentOrder(side, 0, lastRelevantPrice, true);
+			
 			List<Order> userActiveOrders = getUserActiveOrders(side);
 			Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
-			if (newOrder != null && newOrder == myOrder)
+			
+			if (newOrder == myOrder || (newOrder == null && myOrder != null))
 				System.out.println(
 					"Maintaining previous - " + myOrder
 				);
+			else {
+				if (myOrder != null)
+					cancelOrder(myOrder);
+				createOrder(newOrder, side);
+				System.out.println(side + " created: " +  " - " + newOrder);
+			}
 		} catch (NotAvailableMoneyException e) {
 			System.out.println(
 				"There are no money available for " + side
@@ -476,21 +488,34 @@ public class ProviderReport {
 		RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice, Boolean keepSearching
 	) throws ApiProviderException, NotAvailableMoneyException {
 		List<Order> activeOrders = getActiveOrders(side);
-		List<Order> userActiveOrders = getUserActiveOrders(side);
 		
 		Order order = activeOrders.get(orderIndex);
-		Order nextOrder = activeOrders.size() - 1 == orderIndex? 
-			null: activeOrders.get(orderIndex + 1);
-		Order bestOtherSideOrder = getCurrentTopOrder(side.getOther());
 		
-		BigDecimal currencyPrice = new BigDecimal(
-			order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
-		);
-		BigDecimal coinAmount = getBalance().getEstimatedCoinAmount(side, currencyPrice);
+		Double left = lastRelevantPrice == null?
+			null: order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
+		Double right = userConfiguration.getMinimumRate(side);
 		
-		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
-			throw new NotAvailableMoneyException();
-		}
+		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
+		if (!isAGoodOrder && left != null)
+			isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
+			
+			if (isAGoodOrder) {
+				Order newOrder = tryToWinAnOrder(side, orderIndex);
+				if (newOrder != null)
+					return newOrder;
+			}
+			
+			if (keepSearching)
+				return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice, true);
+			return null; 
+	}
+	
+	private Order winThePreviousOrder(
+		RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice, Boolean keepSearching
+	) throws ApiProviderException, NotAvailableMoneyException {
+		List<Order> activeOrders = getActiveOrders(side);
+		
+		Order order = activeOrders.get(orderIndex);
 		
 		Double left = lastRelevantPrice == null?
 			null: order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
@@ -501,51 +526,71 @@ public class ProviderReport {
 			isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 			
 		if (isAGoodOrder) {
-			
-			// get the unique order or null
-			Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
-			
-			// if my order isn't the best, delete it and create another 
-			if (
-				myOrder == null || 
-				!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))
-			) {
-				if (myOrder != null)
-					cancelOrder(myOrder);
-				if (coinAmount.doubleValue() >= userConfiguration.getMinimumCoinAmount()) {
-					if (
-						bestOtherSideOrder.getCurrencyPrice() == 
-						order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getIncDecPrice(side)))
-					)
-						currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
-					Order newOrder = new Order(
-						userConfiguration.getCoin(), userConfiguration.getCurrency(),
-						side, coinAmount, currencyPrice
-					);
-					newOrder.setType(OrderType.LIMITED);
-					newOrder.setPosition(orderIndex + 1);
-					createOrder(newOrder, side);
-					System.out.println(side + " created: " +  " - " + newOrder);
-					return newOrder;
-				}
-			}
-			else if (
-				!keepSearching ||
-				(decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice())) &&
-				Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration.getMinimumCoinAmount() &&
-				Math.abs(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()) <= 
-					userConfiguration.getIncDecPrice(side))
-			) {
-				myOrder.setPosition(orderIndex + 1);
-				return myOrder;
-			}
+			Order newOrder = tryToWinAnOrder(side, orderIndex > 0? orderIndex - 1: 0);
+			if (newOrder != null)
+				return newOrder;
 		}
 		
-		return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice, true);
+		if (keepSearching)
+			return winThePreviousOrder(side, orderIndex + 1, lastRelevantPrice, true);
+		return null; 
 	}
 	
 	private Order winTheFirstOrder(RecordSide side) throws ApiProviderException, NotAvailableMoneyException {
 		return winTheCurrentOrder(side, 0, null, false);
+	}
+	
+	private Order tryToWinAnOrder(RecordSide side, Integer orderIndex) 
+		throws NotAvailableMoneyException, ApiProviderException {
+		List<Order> activeOrders = getActiveOrders(side);
+		List<Order> userActiveOrders = getUserActiveOrders(side);
+		
+		Order order = activeOrders.get(orderIndex);
+		Order nextOrder = activeOrders.size() - 1 == orderIndex? 
+			null: activeOrders.get(orderIndex + 1);
+		Order bestOtherSideOrder = getCurrentTopOrder(side.getOther());
+		
+		
+		BigDecimal currencyPrice = new BigDecimal(
+			order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side)
+		);
+		BigDecimal coinAmount = getBalance().getEstimatedCoinAmount(side, currencyPrice);
+		
+		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+			throw new NotAvailableMoneyException();
+		}
+		
+		// get the unique order or null
+		Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
+		
+		// if my order isn't the best, delete it and create another 
+		if (
+			myOrder == null || 
+			!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))
+		) {
+			if (
+				bestOtherSideOrder.getCurrencyPrice() == 
+				order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getIncDecPrice(side)))
+			)
+				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
+			Order newOrder = new Order(
+				userConfiguration.getCoin(), userConfiguration.getCurrency(),
+				side, coinAmount, currencyPrice
+			);
+			newOrder.setType(OrderType.LIMITED);
+			newOrder.setPosition(orderIndex + 1);
+			return newOrder;
+		}
+		else if (
+			(decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice())) &&
+			Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration.getMinimumCoinAmount() &&
+			Math.abs(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()) <= 
+				userConfiguration.getIncDecPrice(side))
+		) {
+			myOrder.setPosition(orderIndex + 1);
+			return myOrder;
+		}
+		return null;
 	}
 	
 	private Double getMaxAcceptedInactivityTime(RecordSide side) throws ApiProviderException {
