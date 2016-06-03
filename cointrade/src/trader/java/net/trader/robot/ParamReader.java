@@ -9,6 +9,7 @@ import net.trader.beans.Broker;
 import net.trader.beans.Coin;
 import net.trader.beans.Currency;
 import net.trader.beans.Provider;
+import net.trader.beans.RecordSideMode;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ParamLabelErrorException;
 import net.trader.exception.ParamSyntaxErrorException;
@@ -104,20 +105,20 @@ public class ParamReader {
 							}
 							break;
 						case "-bm":
-							if (
-								!paramValue.equals("none") && !paramValue.equals("order") &&
-								!paramValue.equals("operation")
-							)
+							try {
+								userConfiguration.setBuyMode(RecordSideMode.valueOf(paramValue));
+							}
+							catch (Exception ex) {
 								throw new ParamValueErrorException(paramLabel);
-							userConfiguration.setBuyMode(paramValue);					
+							}
 							break;
 						case "-sm":
-							if (
-								!paramValue.equals("none") && !paramValue.equals("order") &&
-								!paramValue.equals("operation")
-							)
+							try {
+								userConfiguration.setSellMode(RecordSideMode.valueOf(paramValue));
+							}
+							catch (Exception ex) {
 								throw new ParamValueErrorException(paramLabel);
-							userConfiguration.setSellMode(paramValue);					
+							}
 							break;
 						case "-coin": 
 							userConfiguration.setCoin(Coin.valueOf(paramValue));

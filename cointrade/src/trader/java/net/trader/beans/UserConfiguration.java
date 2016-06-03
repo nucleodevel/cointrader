@@ -14,8 +14,8 @@ public class UserConfiguration {
 	
 	private CoinCurrencyPair coinCurrencyPair;
 	private Integer delayTime;
-	private String buyMode;
-	private String sellMode;
+	private RecordSideMode buyMode;
+	private RecordSideMode sellMode;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double maxBuyInterval;
@@ -95,19 +95,32 @@ public class UserConfiguration {
 		this.delayTime = delayTime;
 	}
 
-	public String getBuyMode() {
+	public RecordSideMode getMode(RecordSide side) {
+		RecordSideMode mode = RecordSideMode.NONE;
+		switch (side) {
+			case BUY:
+				mode = buyMode;
+			break;
+			case SELL:
+				mode = sellMode;
+			break;
+		}
+		return mode;
+	}
+
+	public RecordSideMode getBuyMode() {
 		return buyMode;
 	}
 
-	public void setBuyMode(String buyMode) {
+	public void setBuyMode(RecordSideMode buyMode) {
 		this.buyMode = buyMode;
 	}
 
-	public String getSellMode() {
+	public RecordSideMode getSellMode() {
 		return sellMode;
 	}
 
-	public void setSellMode(String sellMode) {
+	public void setSellMode(RecordSideMode sellMode) {
 		this.sellMode = sellMode;
 	}
 

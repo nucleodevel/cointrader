@@ -23,6 +23,7 @@ import net.trader.beans.OrderStatus;
 import net.trader.beans.OrderType;
 import net.trader.beans.Provider;
 import net.trader.beans.RecordSide;
+import net.trader.beans.RecordSideMode;
 import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
@@ -290,7 +291,7 @@ public class ProviderReport {
 			}
 		}
 		
-		System.out.println("Last relevant " + side + " price: " + lastRelevantPriceByOperations);
+		System.out.println("  Last relevant " + side + " price: " + lastRelevantPriceByOperations);
 		System.out.println("  Considered operations: ");
 		for (Operation operation: groupOfOperations)
 			System.out.println("    " + operation.toString()); 
@@ -323,7 +324,7 @@ public class ProviderReport {
 		}
 		
 		System.out.println(
-			"Last relevant " + side + " price by orders: " + decFmt.format(lastRelevantPriceByOrders)
+			"  Last relevant " + side + " price by orders: " + decFmt.format(lastRelevantPriceByOrders)
 		);
 		System.out.println("  Considered orders: ");
 		for (Order order: groupOfOrders)
@@ -410,33 +411,16 @@ public class ProviderReport {
 		getApiService().createOrder(order);
 	}
 	
-	public void makeOrdersByLastRelevantPriceByOrders(RecordSide side) throws ApiProviderException {
+	public void makeOrdersByLastRelevantPrice(RecordSide side, RecordSideMode mode) 
+		throws ApiProviderException {
 		System.out.println("");
 		System.out.println("Analising " + side + " order");
 		System.out.println("");
 		
-		BigDecimal lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther());
 		BigDecimal lastRelevantInactivityTime =
 			getLastRelevantInactivityTimeByOperations(side.getOther());
-		makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime);
-	}
-	
-	public void makeOrdersByLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {
-		System.out.println("");
-		System.out.println("Analising " + side + " order");
-		System.out.println("");
 		
-		BigDecimal lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther());
-		BigDecimal lastRelevantInactivityTime =
-			getLastRelevantInactivityTimeByOperations(side.getOther());
-		makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime);
-	}
-	
-	private void makeOrdersByLastRelevantPrice(
-		RecordSide side, BigDecimal lastRelevantPrice, BigDecimal lastRelevantInactivityTime
-	) throws ApiProviderException {
 		Double maxAcceptedInactivityTime = getMaxAcceptedInactivityTime(side);
-		
 		boolean isLongTimeWithoutOperation = 
 			lastRelevantInactivityTime == null || maxAcceptedInactivityTime == null?
 				false:
@@ -456,44 +440,80 @@ public class ProviderReport {
 			);
 		}
 		
+		Boolean hasToWinCurrent = true;
+		BigDecimal lastRelevantPrice = null;
+		switch (mode) {
+			case ORDERS:
+				lastRelevantPrice = getLastRelevantPriceByOrders(side);
+				break;
+			case OTHER_ORDERS:	
+				lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther()).multiply(
+					new BigDecimal(userConfiguration.getMinimumRate(side))
+				);
+				break;
+			case OPERATIONS:
+				lastRelevantPrice = getLastRelevantPriceByOperations(side);
+				break;
+			case OTHER_OPERATIONS:	
+				if (!isLongTimeWithoutOperation)
+					lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther()).multiply(
+						new BigDecimal(userConfiguration.getMinimumRate(side))
+					);
+				else
+					lastRelevantPrice = getLastRelevantPriceByOrders(side);
+				hasToWinCurrent = !isLongTimeWithoutOperation;
+				break;
+			default:
+				Order myOrder = getUserActiveOrders(side).size() > 0?
+					getUserActiveOrders(side).get(0): null;
+				if (myOrder != null)
+					cancelOrder(myOrder);
+				System.out.println("\n  Don't make buy order but cancel any!");
+				break;
+		}
+		
+		if (mode != RecordSideMode.NONE) {
+			System.out.println("  Price to win: " + lastRelevantPrice);
+			makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime, hasToWinCurrent);
+		}
+	}
+	
+	private void makeOrdersByLastRelevantPrice(
+		RecordSide side, BigDecimal lastRelevantPrice, BigDecimal lastRelevantInactivityTime,
+		Boolean hasToWinCurrent
+	) throws ApiProviderException {
+		
 		try {
-			Order previousOrder = winThePreviousOrder(side, 0, lastRelevantPrice, true);
-			System.out.println("if win previous: " +  " - " + previousOrder);
-			
-			Order newOrder = isLongTimeWithoutOperation?
-				winTheFirstOrder(side): 
-				winTheCurrentOrder(side, 0, lastRelevantPrice, true);
+			Order newOrder = hasToWinCurrent? 
+				winTheCurrentOrder(side, 0, lastRelevantPrice):
+				winThePreviousOrder(side, 0, lastRelevantPrice);
 			
 			List<Order> userActiveOrders = getUserActiveOrders(side);
 			Order myOrder = userActiveOrders.size() > 0? userActiveOrders.get(0): null;
 			
 			if (newOrder == myOrder || (newOrder == null && myOrder != null))
-				System.out.println(
-					"Maintaining previous - " + myOrder
-				);
+				System.out.println("  Maintaining previous - " + myOrder);
 			else {
 				if (myOrder != null)
 					cancelOrder(myOrder);
 				createOrder(newOrder, side);
-				System.out.println(side + " created: " +  " - " + newOrder);
+				System.out.println("  " + side + " created: " +  " - " + newOrder);
 			}
 		} catch (NotAvailableMoneyException e) {
 			System.out.println(
-				"There are no money available for " + side
+				"  There are no money available for " + side
 			);
 		}	
 	}
 	
-	private Order winTheCurrentOrder(
-		RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice, Boolean keepSearching
-	) throws ApiProviderException, NotAvailableMoneyException {
+	private Order winTheCurrentOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice) 
+		throws ApiProviderException, NotAvailableMoneyException {
 		List<Order> activeOrders = getActiveOrders(side);
 		
 		Order order = activeOrders.get(orderIndex);
 		
-		Double left = lastRelevantPrice == null?
-			null: order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
-		Double right = userConfiguration.getMinimumRate(side);
+		Double left = lastRelevantPrice == null? null: order.getCurrencyPrice().doubleValue();
+		Double right =  lastRelevantPrice == null? null: lastRelevantPrice.doubleValue();
 		
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 		if (!isAGoodOrder && left != null)
@@ -505,21 +525,17 @@ public class ProviderReport {
 					return newOrder;
 			}
 			
-			if (keepSearching)
-				return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice, true);
-			return null; 
+			return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice);
 	}
 	
-	private Order winThePreviousOrder(
-		RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice, Boolean keepSearching
-	) throws ApiProviderException, NotAvailableMoneyException {
+	private Order winThePreviousOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice) 
+		throws ApiProviderException, NotAvailableMoneyException {
 		List<Order> activeOrders = getActiveOrders(side);
 		
 		Order order = activeOrders.get(orderIndex);
 		
-		Double left = lastRelevantPrice == null?
-			null: order.getCurrencyPrice().doubleValue() / lastRelevantPrice.doubleValue();
-		Double right = userConfiguration.getMinimumRate(side);
+		Double left = lastRelevantPrice == null? null: order.getCurrencyPrice().doubleValue();
+		Double right =  lastRelevantPrice == null? null: lastRelevantPrice.doubleValue();
 		
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 		if (!isAGoodOrder && left != null)
@@ -531,13 +547,7 @@ public class ProviderReport {
 				return newOrder;
 		}
 		
-		if (keepSearching)
-			return winThePreviousOrder(side, orderIndex + 1, lastRelevantPrice, true);
-		return null; 
-	}
-	
-	private Order winTheFirstOrder(RecordSide side) throws ApiProviderException, NotAvailableMoneyException {
-		return winTheCurrentOrder(side, 0, null, false);
+		return winThePreviousOrder(side, orderIndex + 1, lastRelevantPrice);
 	}
 	
 	private Order tryToWinAnOrder(RecordSide side, Integer orderIndex) 
@@ -578,7 +588,7 @@ public class ProviderReport {
 				side, coinAmount, currencyPrice
 			);
 			newOrder.setType(OrderType.LIMITED);
-			newOrder.setPosition(orderIndex + 1);
+			newOrder.setPosition(orderIndex);
 			return newOrder;
 		}
 		else if (
@@ -587,7 +597,7 @@ public class ProviderReport {
 			Math.abs(order.getCurrencyPrice().doubleValue() - nextOrder.getCurrencyPrice().doubleValue()) <= 
 				userConfiguration.getIncDecPrice(side))
 		) {
-			myOrder.setPosition(orderIndex + 1);
+			myOrder.setPosition(orderIndex);
 			return myOrder;
 		}
 		return null;
