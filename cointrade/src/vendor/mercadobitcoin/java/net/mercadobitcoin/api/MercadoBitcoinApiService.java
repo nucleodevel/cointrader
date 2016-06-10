@@ -81,8 +81,6 @@ public class MercadoBitcoinApiService extends ApiService {
 			this.value = requestMethod;
 		}
 	}
-	
-	private MercadoBitcoinV1ApiService v1Api;
 
 	private static final String API_PATH = "/api/";
 	private static final String TAPI_PATH = "/tapi/v3/";
@@ -101,8 +99,6 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	public MercadoBitcoinApiService(UserConfiguration userConfiguration) throws ApiProviderException {
 		super(userConfiguration);
-		
-		v1Api = new MercadoBitcoinV1ApiService(userConfiguration);
 		
 		try {
 			if (usingHttps()) {
@@ -252,7 +248,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid filter.");
 		}
 		
-		v1Api.cancelOrder(order);
+		v1CancelOrder(order);
 		order.setStatus(OrderStatus.CANCELED);
 		return order;
 	}
@@ -263,7 +259,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid order.");
 		}
 		
-		v1Api.createOrder(order);
+		v1CreateOrder(order);
 		return order;
 	}
 	
@@ -771,6 +767,156 @@ public class MercadoBitcoinApiService extends ApiService {
 	protected static final long generateTonce() {
 		long unixTime = System.currentTimeMillis() / 1000L;
 		return unixTime;
+	}
+	
+	
+	
+	// ----------- V1 API -----------
+	
+	public enum V1RequestMethod {
+		GET_INFO("getInfo"),
+		ORDER_LIST("OrderList"),
+		TRADE("Trade"),
+		CANCEL_ORDER("CancelOrder"),
+		WITHDRAWAL_BITCOIN("withdrawal_bitcoin");
+		
+		public final String value;
+		
+		private V1RequestMethod(String requestMethod) {
+			this.value = requestMethod;
+		}
+	}
+	
+	private static final String V1_METHOD_PARAM = "method";
+	private static final String V1_TAPI_PATH = "/tapi/";
+	
+	protected String getV1DomainTrade() {
+		return DOMAIN + getV1TapiPath();
+	}
+	
+	public String getV1TapiPath() {
+		return V1_TAPI_PATH;
+	}
+	
+	public Order v1CancelOrder(Order order) throws ApiProviderException {
+		if (order == null) {
+			throw new ApiProviderException("Invalid filter.");
+		}
+		
+		v1MakeRequest(getV1Params((Order) order), V1RequestMethod.CANCEL_ORDER.value);
+		return null;
+	}
+	
+	public Order v1CreateOrder(Order order) throws ApiProviderException {
+		if (order == null) {
+			throw new ApiProviderException("Invalid order.");
+		}
+		
+		Order mbOrder = new Order(
+			order.getCoin(), order.getCurrency(), order.getSide(), 
+			order.getCoinAmount(), order.getCurrencyPrice()
+		);
+		
+		v1MakeRequest(getV1Params(mbOrder), V1RequestMethod.TRADE.value);
+		return null;
+	}
+	
+	public JsonHashMap getV1Params(Order order) throws ApiProviderException {
+		JsonHashMap hashMap = new JsonHashMap();
+		try {
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			if (getCoin() != null && getCurrency() != null)
+				params.put("pair", getCoin().getValue().toLowerCase() + "_" + getCurrency().getValue().toLowerCase());
+			if (order.getSide() != null)
+				params.put(
+					"type", 
+					order.getSide() == RecordSide.BUY? "buy": 
+					(order.getSide() == RecordSide.SELL? "sell": null)
+				);
+			if (order.getCoinAmount() != null)
+				params.put("volume", order.getCoinAmount());
+			if (order.getCurrencyPrice() != null)
+				params.put("price", order.getCurrencyPrice());
+			if (order.getId() != null)
+				params.put("order_id", order.getId());
+			if (order.getStatus() != null)
+				params.put("status", order.getStatus());
+			if (order.getCreationDate() != null)
+				params.put("created", order.getCreationDate().getTime());
+			
+			hashMap.putAll(params);
+		} catch (Throwable e) {
+			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
+		}
+		return hashMap;
+	}
+	
+	public com.google.gson.JsonObject v1MakeRequest(JsonHashMap params, String method) throws ApiProviderException {
+		params.put(V1_METHOD_PARAM, method);
+		params.put("tonce", generateTonce());
+
+		String jsonResponse = v1InvokeTapiMethod(params);
+		
+		if (jsonResponse == null) {
+			throw new ApiProviderException("Internal error: null response from the server.");
+		}
+		
+		JsonParser jsonParser = new JsonParser();
+		com.google.gson.JsonObject jsonObject = (com.google.gson.JsonObject)jsonParser.parse(jsonResponse);
+		if (jsonObject.get("success").getAsInt() == 0) {
+			throw new ApiProviderException(jsonObject.get("error").getAsString());
+		}
+		
+		com.google.gson.JsonObject returnData = jsonObject.getAsJsonObject("return");
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(1010);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		return (returnData == null) ? null : returnData;
+	}
+	
+	public String v1InvokeTapiMethod(JsonHashMap params) throws ApiProviderException {
+		try {
+			String jsonParams = params.toUrlEncoded();
+			String signature = generateSignature(jsonParams);
+			URL url = v1GenerateTapiUrl();
+			HttpURLConnection conn = getV1HttpPostConnection(url, signature);
+			postRequestToServer(conn, params);
+			return getResponseFromServer(conn);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new ApiProviderException("Internal error: Failure in connection.");
+		} catch (NoSuchAlgorithmException e) {
+			throw new ApiProviderException("Internal error: Cryptography Algorithm not found.");
+		} catch (InvalidKeyException e) {
+			throw new ApiProviderException("Invalid Key or Signature.");
+		} 
+	}
+
+	public URL v1GenerateTapiUrl() throws MalformedURLException {
+		URL url = new URL(getV1DomainTrade());
+		return url;
+	}
+	
+	public HttpURLConnection getV1HttpPostConnection(URL url, String signature) throws IOException {
+		HttpURLConnection conn;
+		if (usingHttps()) {
+			conn = (HttpsURLConnection) url.openConnection();
+		} else {
+			conn = (HttpURLConnection) url.openConnection();
+		}
+		
+		conn.setRequestMethod(HttpMethod.POST.name());
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Key", userConfiguration.getKey());
+		conn.setRequestProperty("Sign", signature);
+		conn.setDoOutput(true);
+
+		return conn;
 	}
 	
 }
