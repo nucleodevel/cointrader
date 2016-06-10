@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
@@ -53,12 +52,16 @@ import net.trader.utils.JsonHashMap;
 import net.trader.utils.TrustManagerBag;
 import net.trader.utils.TrustManagerBag.SslContextTrustManager;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 public class MercadoBitcoinApiService extends ApiService {
 	
-	protected enum HttpMethod {
+	private enum ApiVersion {
+		V1,
+		V3;
+	}
+	
+	private enum HttpMethod {
 		GET,
 		POST
 	}
@@ -73,7 +76,10 @@ public class MercadoBitcoinApiService extends ApiService {
 		PLACE_SELL_ORDER("place_sell_order"),
 		CANCEL_ORDER("cancel_order"),
 		GET_WITHDRAWAL("get_withdrawal"),
-		WITHDRAWAL_COIN("withdrawal_coin");
+		WITHDRAWAL_COIN("withdrawal_coin"),
+		
+		V1_TRADE("Trade"),
+		V1_CANCEL_ORDER("CancelOrder");
 		
 		public final String value;
 		
@@ -84,16 +90,11 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	private static final String API_PATH = "/api/";
 	private static final String TAPI_PATH = "/tapi/v3/";
+	private static final String V1_TAPI_PATH = "/tapi/";
 	private static final String ENCRYPT_ALGORITHM = "HmacSHA512";
 	private static final String METHOD_PARAM = "tapi_method";
+	private static final String V1_METHOD_PARAM = "method";
 	private static final String DOMAIN = "https://www.mercadobitcoin.net";
-
-	public static final BigDecimal MINIMUM_VOLUME = new BigDecimal(0.01);
-	public static final BigDecimal BITCOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
-	public static final int BITCOIN_DEPOSIT_CONFIRMATIONS = 6;
-	
-	public static final BigDecimal LITECOIN_24H_WITHDRAWAL_LIMIT = new BigDecimal(25);
-	public static final int LITECOIN_DEPOSIT_CONFIRMATIONS = 15;
 
 	private byte[] mbTapiCodeBytes;
 
@@ -121,24 +122,16 @@ public class MercadoBitcoinApiService extends ApiService {
 		this.mbTapiCodeBytes = userConfiguration.getSecret().getBytes();
 	}
 	
-	protected final boolean usingHttps() {
+	private final boolean usingHttps() {
 		return DOMAIN.toUpperCase().startsWith("HTTPS");
 	}
 	
-	protected String getDomain() {
+	private String getDomain() {
 		return DOMAIN + getApiPath();
 	}
-	
-	protected String getDomainTrade() {
-		return DOMAIN + getTapiPath();
-	}
 
-	public String getApiPath() {
+	private String getApiPath() {
 		return API_PATH;
-	}
-	
-	public String getTapiPath() {
-		return TAPI_PATH;
 	}
 	
 	private Coin getCoin() {
@@ -159,7 +152,7 @@ public class MercadoBitcoinApiService extends ApiService {
 	
 	@Override
 	public Balance getBalance() throws ApiProviderException {
-		com.google.gson.JsonObject jsonObject = makeGsonRequest(RequestMethod.GET_ACCOUNT_INFO.value);
+		com.google.gson.JsonObject jsonObject = makeRequest(RequestMethod.GET_ACCOUNT_INFO.value, ApiVersion.V3);
 		return getBalance(jsonObject);		
 	}
 	
@@ -218,7 +211,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return orders;
 	}
 	
-	public List<Order> getUserCompletedOrders() throws ApiProviderException {
+	private List<Order> getUserCompletedOrders() throws ApiProviderException {
 		RecordFilter orderFilter = new RecordFilter(getCoin(), getCurrency());
 		orderFilter.setHasFills(true);
 		
@@ -263,6 +256,29 @@ public class MercadoBitcoinApiService extends ApiService {
 		return order;
 	}
 	
+	private Order v1CancelOrder(Order order) throws ApiProviderException {
+		if (order == null) {
+			throw new ApiProviderException("Invalid filter.");
+		}
+		
+		makeRequest(getParams(order, ApiVersion.V1), RequestMethod.V1_CANCEL_ORDER.value, ApiVersion.V1);
+		return null;
+	}
+	
+	private Order v1CreateOrder(Order order) throws ApiProviderException {
+		if (order == null) {
+			throw new ApiProviderException("Invalid order.");
+		}
+		
+		Order newOrder = new Order(
+			order.getCoin(), order.getCurrency(), order.getSide(), 
+			order.getCoinAmount(), order.getCurrencyPrice()
+		);
+		
+		makeRequest(getParams(newOrder, ApiVersion.V1), RequestMethod.V1_TRADE.value, ApiVersion.V1);
+		return null;
+	}
+	
 	@Override
 	public Order createBuyOrder(Order order) throws ApiProviderException {
 		RecordSide side = RecordSide.BUY;
@@ -277,48 +293,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return createOrder(order);
 	}
 	
-	public List<Order> getUserOrders(Long since, Long end) throws ApiProviderException {
-		RecordFilter filter = new RecordFilter(getCoin(), getCurrency());
-		if (since != null)
-			filter.setSince(since);
-		if (end != null)
-			filter.setEnd(end);
-		
-		com.google.gson.JsonObject jsonResponse = makeGsonRequest(getParams(filter), RequestMethod.LIST_ORDERS.value);
-
-		List<Order> orders = new ArrayList<Order>();
-		for (Entry<String, JsonElement> node : jsonResponse.entrySet()) {
-			String id = node.getKey();
-			com.google.gson.JsonObject jsonObject = jsonResponse.get(id).getAsJsonObject();
-			Order order = getOrder(jsonObject);
-			order.setId(new BigInteger(id));
-			orders.add(order);
-		}
-		
-		return orders;
-	}
-	
-	public List<Operation> tradeList() throws ApiProviderException {
-		Operation[] operationArray = tradeList(getCoin().getValue(), getCurrency().getValue(), "");
-		List<Operation> operations = Arrays.asList(operationArray);
-		
-		return operations;
-	}
-
-	public List<Operation> tradeList(long initialTid) throws ApiProviderException {
-		if (initialTid < 0) {
-			throw new ApiProviderException("Invalid initial tid.");
-		}
-		
-		Operation[] operationArray = tradeList(
-			getCoin().getValue(), getCurrency().getValue(), String.valueOf("?tid=" + initialTid)
-		);
-		List<Operation> operations = Arrays.asList(operationArray);
-		
-		return operations;
-	}
-	
-	public List<Operation> tradeList(Calendar from, Calendar to) throws ApiProviderException {
+	private List<Operation> tradeList(Calendar from, Calendar to) throws ApiProviderException {
 		List<String> paths = new ArrayList<String>();
 		paths.add(from.getTimeInMillis() / 1000 + "/");
 		
@@ -436,11 +411,13 @@ public class MercadoBitcoinApiService extends ApiService {
 		return responseStr;
 	}
 
-	public List<Order> getUserOrders(RecordFilter filter) throws ApiProviderException {
+	private List<Order> getUserOrders(RecordFilter filter) throws ApiProviderException {
 		if (filter == null) {
 			throw new ApiProviderException("Invalid filter.");
 		}
-		com.google.gson.JsonObject jsonResponse = makeGsonRequest(getParams(filter), RequestMethod.LIST_ORDERS.value);
+		com.google.gson.JsonObject jsonResponse = makeRequest(
+			getParams(filter), RequestMethod.LIST_ORDERS.value, ApiVersion.V3
+		);
 		
 		com.google.gson.JsonArray jsonArray = jsonResponse != null? 
 			jsonResponse.get("orders").getAsJsonArray(): new com.google.gson.JsonArray();
@@ -454,17 +431,39 @@ public class MercadoBitcoinApiService extends ApiService {
 		return orders;
 	}
 	
-	public JsonHashMap getParams(Order order) throws ApiProviderException {
+	private JsonHashMap getParams(Order order, ApiVersion version) throws ApiProviderException {
 		JsonHashMap hashMap = new JsonHashMap();
 		try {
 			Map<String, Object> params = new HashMap<String, Object>();
-
-			if (getCoin() != null && getCurrency() != null)
-				params.put("coin_pair", getCurrency().getValue().toUpperCase() + getCoin().getValue().toUpperCase());
-			if (order.getCoinAmount() != null)
-				params.put("quantity", order.getCoinAmount());
-			if (order.getCurrencyPrice() != null)
-				params.put("limit_price", order.getCurrencyPrice());
+			
+			if (version == ApiVersion.V3) {
+				if (getCoin() != null && getCurrency() != null)
+					params.put("coin_pair", getCurrency().getValue().toUpperCase() + getCoin().getValue().toUpperCase());
+				if (order.getCoinAmount() != null)
+					params.put("quantity", order.getCoinAmount());
+				if (order.getCurrencyPrice() != null)
+					params.put("limit_price", order.getCurrencyPrice());
+			}
+			else if (version == ApiVersion.V1) {
+				if (getCoin() != null && getCurrency() != null)
+					params.put("pair", getCoin().getValue().toLowerCase() + "_" + getCurrency().getValue().toLowerCase());
+				if (order.getSide() != null)
+					params.put(
+						"type", 
+						order.getSide() == RecordSide.BUY? "buy": 
+						(order.getSide() == RecordSide.SELL? "sell": null)
+					);
+				if (order.getCoinAmount() != null)
+					params.put("volume", order.getCoinAmount());
+				if (order.getCurrencyPrice() != null)
+					params.put("price", order.getCurrencyPrice());
+				if (order.getId() != null)
+					params.put("order_id", order.getId());
+				if (order.getStatus() != null)
+					params.put("status", order.getStatus());
+				if (order.getCreationDate() != null)
+					params.put("created", order.getCreationDate().getTime());
+			}
 			
 			hashMap.putAll(params);
 		} catch (Throwable e) {
@@ -473,7 +472,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return hashMap;
 	}
 	
-	public JsonHashMap getParams(RecordFilter filter) throws ApiProviderException {
+	private JsonHashMap getParams(RecordFilter filter) throws ApiProviderException {
 		JsonHashMap hashMap = new JsonHashMap();
 		try {
 			Map<String, Object> params = new HashMap<String, Object>();
@@ -515,7 +514,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return hashMap;
 	}
 	
-	public Balance getBalance(com.google.gson.JsonObject balanceJsonObject) {
+	private Balance getBalance(com.google.gson.JsonObject balanceJsonObject) {
 		Balance balance = new Balance(getCoin(), getCurrency());
 		
 		com.google.gson.JsonObject jsonObject = balanceJsonObject.getAsJsonObject("balance");
@@ -550,7 +549,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return balance;
 	}
 	
-	public Ticker getTicker(com.google.gson.JsonObject tickerJsonObject) throws ApiProviderException {
+	private Ticker getTicker(com.google.gson.JsonObject tickerJsonObject) throws ApiProviderException {
 		Ticker ticker = new Ticker(getCoin(), getCurrency());
 		
 		com.google.gson.JsonObject jsonObject = tickerJsonObject.get("ticker").getAsJsonObject();
@@ -580,7 +579,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return ticker;
 	}
 	
-	public Order getOrder(com.google.gson.JsonObject jsonObject) {
+	private Order getOrder(com.google.gson.JsonObject jsonObject) {
 		String coinPair = jsonObject.get("coin_pair").getAsString().toUpperCase();
 		Coin coin = Coin.valueOf(coinPair.substring(3, 6).toUpperCase());
 		Currency currency = Currency.valueOf(coinPair.substring(0, 3).toUpperCase());
@@ -617,7 +616,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return order;
 	}
 	
-	public Operation getOperation(com.google.gson.JsonObject jsonObject, RecordSide side) {
+	private Operation getOperation(com.google.gson.JsonObject jsonObject, RecordSide side) {
 		Operation operation;
 		
 		long created = Long.valueOf(jsonObject.get("executed_timestamp").getAsString());
@@ -636,14 +635,22 @@ public class MercadoBitcoinApiService extends ApiService {
 		return operation;
 	}
 	
-	private com.google.gson.JsonObject makeGsonRequest(String method) throws ApiProviderException {
-		return makeGsonRequest(new JsonHashMap(), method);
+	private com.google.gson.JsonObject makeRequest(String method, ApiVersion version) throws ApiProviderException {
+		return makeRequest(new JsonHashMap(), method, version);
 	}
 	
-	private com.google.gson.JsonObject makeGsonRequest(JsonHashMap params, String method) throws ApiProviderException {
-		params.put("tapi_nonce", generateTonce());
-		params.put(METHOD_PARAM, method);
-		String jsonResponse = invokeTapiMethod(params);
+	private com.google.gson.JsonObject makeRequest(JsonHashMap params, String method, ApiVersion version) 
+		throws ApiProviderException {
+		if (version == ApiVersion.V3) {
+			params.put("tapi_nonce", generateTonce());
+			params.put(METHOD_PARAM, method);
+		}
+		else if (version == ApiVersion.V1) {
+			params.put(V1_METHOD_PARAM, method);
+			params.put("tonce", generateTonce());
+		}
+			
+		String jsonResponse = invokeTapiMethod(params, version);
 		if (jsonResponse == null) {
 			throw new ApiProviderException("Internal error: null response from the server.");
 		}
@@ -651,7 +658,9 @@ public class MercadoBitcoinApiService extends ApiService {
 		JsonParser jsonParser = new JsonParser();
 		com.google.gson.JsonObject jsonObject = (com.google.gson.JsonObject)jsonParser.parse(jsonResponse);
 		
-		com.google.gson.JsonObject returnData = jsonObject.getAsJsonObject("response_data");
+		com.google.gson.JsonObject returnData = jsonObject.getAsJsonObject(
+			version == ApiVersion.V3? "response_data": (version == ApiVersion.V1? "return": null)
+		);
 		// putting delay time
 		try {
 			TimeUnit.MILLISECONDS.sleep(1010);
@@ -662,12 +671,13 @@ public class MercadoBitcoinApiService extends ApiService {
 		return (returnData == null) ? null : returnData;
 	}
 	
-	private String invokeTapiMethod(JsonHashMap params) throws ApiProviderException {
+	private String invokeTapiMethod(JsonHashMap params, ApiVersion version) throws ApiProviderException {
 		try {
 			String jsonParams = params.toUrlEncoded();
-			String signature = generateSignature(TAPI_PATH + "?" + jsonParams);
-			URL url = generateTapiUrl();
-			HttpURLConnection conn = getHttpPostConnection(url, signature);
+			String signature = version == ApiVersion.V3? generateSignature(TAPI_PATH + "?" + jsonParams):
+				(version == ApiVersion.V1? generateSignature(jsonParams): null);
+			URL url = generateTapiUrl(version);
+			HttpURLConnection conn = getHttpPostConnection(url, signature, version);
 			postRequestToServer(conn, params);
 			return getResponseFromServer(conn);
 		} catch (IOException e) {
@@ -691,12 +701,14 @@ public class MercadoBitcoinApiService extends ApiService {
 		return sign;
 	}
 
-	private URL generateTapiUrl() throws MalformedURLException {
-		URL url = new URL(getDomainTrade());
+	private URL generateTapiUrl(ApiVersion version) throws MalformedURLException {
+		URL url = version == ApiVersion.V3? new URL(DOMAIN + TAPI_PATH):
+			(version == ApiVersion.V1? new URL(DOMAIN + V1_TAPI_PATH): null);
 		return url;
 	}
 	
-	private HttpURLConnection getHttpPostConnection(URL url, String signature) throws IOException {
+	private HttpURLConnection getHttpPostConnection(URL url, String signature, ApiVersion version) 
+		throws IOException {
 		HttpURLConnection conn;
 		if (usingHttps()) {
 			conn = (HttpsURLConnection) url.openConnection();
@@ -706,8 +718,14 @@ public class MercadoBitcoinApiService extends ApiService {
 		
 		conn.setRequestMethod(HttpMethod.POST.name());
 		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("TAPI-ID", userConfiguration.getKey());
-		conn.setRequestProperty("TAPI-MAC", signature);
+		if (version == ApiVersion.V3) {
+			conn.setRequestProperty("TAPI-ID", userConfiguration.getKey());
+			conn.setRequestProperty("TAPI-MAC", signature);
+		}
+		else if (version == ApiVersion.V1) {
+			conn.setRequestProperty("Key", userConfiguration.getKey());
+			conn.setRequestProperty("Sign", signature);
+		}
 		conn.setDoOutput(true);
 
 		return conn;
@@ -752,7 +770,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		}
 	}
 	
-	protected static final String encodeHexString(byte[] bytes) {
+	private static final String encodeHexString(byte[] bytes) {
 		StringBuffer hexString = new StringBuffer();
 		for (int i = 0; i < bytes.length; i++) {
 			String hex = Integer.toHexString(0xFF & bytes[i]);
@@ -764,159 +782,9 @@ public class MercadoBitcoinApiService extends ApiService {
 		return hexString.toString();
 	}
 
-	protected static final long generateTonce() {
+	private static final long generateTonce() {
 		long unixTime = System.currentTimeMillis() / 1000L;
 		return unixTime;
-	}
-	
-	
-	
-	// ----------- V1 API -----------
-	
-	public enum V1RequestMethod {
-		GET_INFO("getInfo"),
-		ORDER_LIST("OrderList"),
-		TRADE("Trade"),
-		CANCEL_ORDER("CancelOrder"),
-		WITHDRAWAL_BITCOIN("withdrawal_bitcoin");
-		
-		public final String value;
-		
-		private V1RequestMethod(String requestMethod) {
-			this.value = requestMethod;
-		}
-	}
-	
-	private static final String V1_METHOD_PARAM = "method";
-	private static final String V1_TAPI_PATH = "/tapi/";
-	
-	protected String getV1DomainTrade() {
-		return DOMAIN + getV1TapiPath();
-	}
-	
-	public String getV1TapiPath() {
-		return V1_TAPI_PATH;
-	}
-	
-	public Order v1CancelOrder(Order order) throws ApiProviderException {
-		if (order == null) {
-			throw new ApiProviderException("Invalid filter.");
-		}
-		
-		v1MakeRequest(getV1Params((Order) order), V1RequestMethod.CANCEL_ORDER.value);
-		return null;
-	}
-	
-	public Order v1CreateOrder(Order order) throws ApiProviderException {
-		if (order == null) {
-			throw new ApiProviderException("Invalid order.");
-		}
-		
-		Order mbOrder = new Order(
-			order.getCoin(), order.getCurrency(), order.getSide(), 
-			order.getCoinAmount(), order.getCurrencyPrice()
-		);
-		
-		v1MakeRequest(getV1Params(mbOrder), V1RequestMethod.TRADE.value);
-		return null;
-	}
-	
-	public JsonHashMap getV1Params(Order order) throws ApiProviderException {
-		JsonHashMap hashMap = new JsonHashMap();
-		try {
-			Map<String, Object> params = new HashMap<String, Object>();
-			
-			if (getCoin() != null && getCurrency() != null)
-				params.put("pair", getCoin().getValue().toLowerCase() + "_" + getCurrency().getValue().toLowerCase());
-			if (order.getSide() != null)
-				params.put(
-					"type", 
-					order.getSide() == RecordSide.BUY? "buy": 
-					(order.getSide() == RecordSide.SELL? "sell": null)
-				);
-			if (order.getCoinAmount() != null)
-				params.put("volume", order.getCoinAmount());
-			if (order.getCurrencyPrice() != null)
-				params.put("price", order.getCurrencyPrice());
-			if (order.getId() != null)
-				params.put("order_id", order.getId());
-			if (order.getStatus() != null)
-				params.put("status", order.getStatus());
-			if (order.getCreationDate() != null)
-				params.put("created", order.getCreationDate().getTime());
-			
-			hashMap.putAll(params);
-		} catch (Throwable e) {
-			throw new ApiProviderException("Internal error: Unable to transform the parameters in a request.");
-		}
-		return hashMap;
-	}
-	
-	public com.google.gson.JsonObject v1MakeRequest(JsonHashMap params, String method) throws ApiProviderException {
-		params.put(V1_METHOD_PARAM, method);
-		params.put("tonce", generateTonce());
-
-		String jsonResponse = v1InvokeTapiMethod(params);
-		
-		if (jsonResponse == null) {
-			throw new ApiProviderException("Internal error: null response from the server.");
-		}
-		
-		JsonParser jsonParser = new JsonParser();
-		com.google.gson.JsonObject jsonObject = (com.google.gson.JsonObject)jsonParser.parse(jsonResponse);
-		if (jsonObject.get("success").getAsInt() == 0) {
-			throw new ApiProviderException(jsonObject.get("error").getAsString());
-		}
-		
-		com.google.gson.JsonObject returnData = jsonObject.getAsJsonObject("return");
-		// putting delay time
-		try {
-			TimeUnit.MILLISECONDS.sleep(1010);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		return (returnData == null) ? null : returnData;
-	}
-	
-	public String v1InvokeTapiMethod(JsonHashMap params) throws ApiProviderException {
-		try {
-			String jsonParams = params.toUrlEncoded();
-			String signature = generateSignature(jsonParams);
-			URL url = v1GenerateTapiUrl();
-			HttpURLConnection conn = getV1HttpPostConnection(url, signature);
-			postRequestToServer(conn, params);
-			return getResponseFromServer(conn);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new ApiProviderException("Internal error: Failure in connection.");
-		} catch (NoSuchAlgorithmException e) {
-			throw new ApiProviderException("Internal error: Cryptography Algorithm not found.");
-		} catch (InvalidKeyException e) {
-			throw new ApiProviderException("Invalid Key or Signature.");
-		} 
-	}
-
-	public URL v1GenerateTapiUrl() throws MalformedURLException {
-		URL url = new URL(getV1DomainTrade());
-		return url;
-	}
-	
-	public HttpURLConnection getV1HttpPostConnection(URL url, String signature) throws IOException {
-		HttpURLConnection conn;
-		if (usingHttps()) {
-			conn = (HttpsURLConnection) url.openConnection();
-		} else {
-			conn = (HttpURLConnection) url.openConnection();
-		}
-		
-		conn.setRequestMethod(HttpMethod.POST.name());
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Key", userConfiguration.getKey());
-		conn.setRequestProperty("Sign", signature);
-		conn.setDoOutput(true);
-
-		return conn;
 	}
 	
 }
