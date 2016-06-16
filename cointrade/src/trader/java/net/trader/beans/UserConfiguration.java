@@ -209,7 +209,7 @@ public class UserConfiguration {
 		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
 		sb.append(";\n  provider: " + provider);
 		sb.append(";\n  broker: " + broker);
-		sb.append(";\n  coin: " + coinCurrencyPair.getCurrency());
+		sb.append(";\n  coin: " + coinCurrencyPair.getCoin());
 		sb.append(";\n  currency: " + coinCurrencyPair.getCurrency());
 		sb.append(";\n  delayTime: " + delayTime);
 		sb.append(";\n  buyMode: " + buyMode);

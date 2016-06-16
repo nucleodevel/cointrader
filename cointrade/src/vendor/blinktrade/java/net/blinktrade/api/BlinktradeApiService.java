@@ -120,6 +120,7 @@ public class BlinktradeApiService extends ApiService {
 		Balance balance = new Balance(coin, currency);
 		JsonParser jsonParser = new JsonParser();
         JsonObject jo = (JsonObject)jsonParser.parse(response);
+        System.out.println(jo);
         JsonObject balanceJsonObject = jo.getAsJsonArray("Responses").get(0).getAsJsonObject();
         
         balance.setClientId(balanceJsonObject.getAsJsonPrimitive("ClientID").getAsString());
