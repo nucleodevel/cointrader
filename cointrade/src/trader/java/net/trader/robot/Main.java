@@ -15,12 +15,9 @@ import net.trader.robot.ParamReader;
 
 public class Main {
 	
-	private static ParamReader paramReader;
-	private static UserConfiguration userConfiguration;
-	
 	public static void main(String[] args) {
 		
-		paramReader = new ParamReader();
+		ParamReader paramReader = new ParamReader();
 		
 		try {
 			paramReader.readParams(args);
@@ -51,6 +48,8 @@ public class Main {
 				System.out.println("The file " + paramReader.getFileName() + " doesn't exist!");
 				return;
 			}
+			
+			UserConfiguration userConfiguration = null;
 			
 			try {
 			

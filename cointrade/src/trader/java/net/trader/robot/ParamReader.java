@@ -22,7 +22,7 @@ public class ParamReader {
 	private UserConfiguration userConfiguration;
 
 	public ParamReader() {
-		userConfiguration = new UserConfiguration();
+		
 	}
 
 	public File getFile() {
@@ -75,6 +75,8 @@ public class ParamReader {
 	}
 	
 	public void readParamsFromFile() throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException, IOException {
+		
+		userConfiguration = new UserConfiguration();
 		
 		if (getFileName().equals(""))
 			return;
