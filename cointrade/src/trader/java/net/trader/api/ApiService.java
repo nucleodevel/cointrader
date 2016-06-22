@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.List;
 
 import net.trader.beans.Balance;
+import net.trader.beans.Coin;
+import net.trader.beans.Currency;
 import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
@@ -14,6 +16,14 @@ import net.trader.exception.ApiProviderException;
 public abstract class ApiService {
 	
 	protected UserConfiguration userConfiguration;
+	
+	protected Coin getCoin() {
+		return userConfiguration.getCoin();
+	}
+	
+	protected Currency getCurrency() {
+		return userConfiguration.getCurrency();
+	}
 	
 	public ApiService(UserConfiguration userConfiguration) {
 		this.userConfiguration = userConfiguration;
@@ -34,9 +44,5 @@ public abstract class ApiService {
 	public abstract Order cancelOrder(Order order) throws ApiProviderException;
 	
 	public abstract Order createOrder(Order order) throws ApiProviderException;
-	
-	public abstract Order createBuyOrder(Order order) throws ApiProviderException;
-	
-	public abstract Order createSellOrder(Order order) throws ApiProviderException;
 	
 }

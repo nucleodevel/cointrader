@@ -40,32 +40,24 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-/**
- * Comprise main Blinktrade API operations. <br/>
- * <br/>
- * 
- * The original python-based code, can be found here: <br/>
- * <br/>
- * 
- * https://gist.github.com/pinhopro/60b1fd213b36d576505e
- * 
- * @author Claudiney Nascimento e Silva (Java translator)
- * 
- * @version 1.0 2015-09-27 Alpha
- * 
- * @since September/2015
- * 
- */
 public class BlinktradeApiService extends ApiService {
-
-	private static final String BLINKTRADE_API_PRODUCAO_URL = "https://api.blinktrade.com/tapi/v1/message";
 	
-	private static final String BLINKTRADE_PUBLIC_API_ORDERBOOK = "https://api.blinktrade.com/api/v1/BRL/orderbook";
+	// --------------------- Constants and attributes
+	
+	private static final String DOMAIN = "https://api.blinktrade.com";
+	private static final String API_PATH = "/api/";
+	private static final String TAPI_PATH = "/tapi/";
+
+	private static final String BLINKTRADE_API_PRODUCAO_URL = DOMAIN + TAPI_PATH + "v1/message";
+	
+	private static final String BLINKTRADE_PUBLIC_API_ORDERBOOK = DOMAIN + API_PATH + "v1/BRL/orderbook";
 	//private static final String BLINKTRADE_PUBLIC_API_TRADES = "https://api.blinktrade.com/api/v1/BRL/trades";
 	
 	private static final long SATOSHI_BASE = 100000000;
 	
 	private static final Gson GSON = new Gson();
+	
+	// --------------------- Constructors
 	
 	public BlinktradeApiService(UserConfiguration userConfiguration) throws ApiProviderException {
 		
@@ -85,23 +77,19 @@ public class BlinktradeApiService extends ApiService {
 
 	}
 	
+	// --------------------- Getters and setters
+	
 	private String getBrokerId() {
 		if (userConfiguration.getBroker() == Broker.FOXBIT)
 			return "4";
 		return null;
 	}
 	
-	private Coin getCoin() {
-		return userConfiguration.getCoin();
-	}
-	
-	private Currency getCurrency() {
-		return userConfiguration.getCurrency();
-	}
+	// --------------------- Overrided methods
 	
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
-		return null;
+		return getTicker(null);
 	}
 
 	@Override
@@ -112,16 +100,263 @@ public class BlinktradeApiService extends ApiService {
 		request.put("MsgType", "U2");
 		request.put("BalanceReqID", new Integer((int)(System.currentTimeMillis()/1000))); // new Integer(1)
 
-		String response = sendMessage(GSON.toJson(request));
+		String response = makePrivateRequest(GSON.toJson(request));
 		
-		Coin coin = userConfiguration.getCoin();
-		Currency currency = userConfiguration.getCurrency();
+		JsonParser jsonParser = new JsonParser();
+        JsonObject balanceJsonObject = (JsonObject)jsonParser.parse(response);
+        
+        return getBalance(balanceJsonObject);
+	}
+
+	@Override
+	public OrderBook getOrderBook() throws ApiProviderException {
+
+		String responseMessage = makePublicRequest(BLINKTRADE_PUBLIC_API_ORDERBOOK);
+		
+		JsonParser jsonParser = new JsonParser();
+        JsonObject orderBookJsonObject = (JsonObject)jsonParser.parse(responseMessage);
+        
+        return getOrderBook(orderBookJsonObject);
+	}
+	
+	@Override
+	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
+		return null;
+	}
+
+	@Override
+	public List<Order> getUserActiveOrders() throws ApiProviderException {
+
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		List<String> filters = new ArrayList<String>(1);
+		filters.add("has_leaves_qty eq 1");
+
+		request.put("MsgType", "U4");
+		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
+		request.put("Page", new Integer(0));
+		request.put("PageSize", new Integer(100));
+		request.put("Filter", filters);
+
+		String response = makePrivateRequest(GSON.toJson(request));
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jo = (JsonObject) jsonParser.parse(response);
+		JsonArray activeOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
+		List<Order> activeOrders = new ArrayList<Order>();
+		if(activeOrdListGrp != null)
+			for (JsonElement jsonElement: activeOrdListGrp)
+				if (jsonElement != null) {
+					JsonArray jsonArray = jsonElement.getAsJsonArray();
+					Order order = getOrder(jsonArray);
+					activeOrders.add(order);
+				}
+		return activeOrders;
+	}
+	
+	@Override
+	public List<Operation> getUserOperations() throws ApiProviderException {
+
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		List<String> filters = new ArrayList<String>(1);
+		filters.add("has_cum_qty eq 1");
+
+		request.put("MsgType", "U4");
+		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
+		request.put("Page", new Integer(0));
+		request.put("PageSize", new Integer(100));
+		request.put("Filter", filters);
+
+		String response = makePrivateRequest(GSON.toJson(request));
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject jo = (JsonObject) jsonParser.parse(response);
+		JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
+		List<Operation> clientOperations = new ArrayList<Operation>();
+		if(completedOrdListGrp != null)
+			for (JsonElement jsonElement: completedOrdListGrp)
+				if (jsonElement != null) {
+					JsonArray jsonArray = jsonElement.getAsJsonArray();
+					Operation operation = getOperation(jsonArray);
+					clientOperations.add(operation);
+				}
+		return clientOperations;
+	}
+	
+	@Override
+	public Order cancelOrder(Order order) throws ApiProviderException {
+
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		request.put("MsgType", "F");
+		request.put("ClOrdID", ((Order) order).getClientId());
+		request.put("BrokerID", getBrokerId());
+
+		makePrivateRequest(GSON.toJson(request));
+		
+		return null;
+
+	}
+	
+	@Override
+	public Order createOrder(Order order) throws ApiProviderException {
+		
+		Integer clientOrderId = new Integer((int)(System.currentTimeMillis()/1000));
+		Coin coin = order.getCoin();
+		Currency currency = order.getCurrency();
+		RecordSide side = order.getSide();
+		OrderType type = OrderType.LIMITED;
+		BigDecimal coinAmount = order.getCoinAmount();
+		BigDecimal currencyPrice = order.getCurrencyPrice();
+
+		coinAmount = coinAmount.multiply(new BigDecimal(SATOSHI_BASE));
+		currencyPrice = currencyPrice.multiply(new BigDecimal(currency == Currency.BRL? SATOSHI_BASE + 1: 1));
+		
+		Map<String, Object> request = new LinkedHashMap<String, Object>();
+
+		request.put("MsgType", "D");
+		request.put("ClOrdID", clientOrderId);
+		request.put("Symbol", coin.getValue() + currency.getValue());
+		request.put("Side", side == RecordSide.BUY? "1": (side == RecordSide.SELL? "2": null));
+		request.put("OrdType", type == OrderType.MARKET? "1": (type == OrderType.LIMITED? "2": null));
+		request.put("OrderQty", coinAmount.toBigInteger());
+		request.put("Price", currencyPrice.toBigInteger());
+		request.put("BrokerID", getBrokerId());
+
+		makePrivateRequest(GSON.toJson(request));
+		
+		return null;
+	}
+	
+	// --------------------- Request methods
+	
+	private String makePublicRequest(String requestUrl)
+			throws ApiProviderException {URL url = null;
+		URLConnection http = null;
+
+		try {
+			url = new URL(requestUrl);
+			http = url.openConnection();
+		} catch (Exception e) {
+			throw new ApiProviderException("API URL initialization fail", e);
+		}
+
+		http.setRequestProperty("Content-Type", "application/json");
+		
+		http.setDoInput(true);
+
+		InputStream is = null;
+
+		String responseMessage = null;
+
+		try {
+			is = http.getInputStream();
+			responseMessage = IOUtils.toString(is);
+		} catch (Exception e) {
+			throw new ApiProviderException("API response retrieve fail", e);
+		}
+		
+		return responseMessage;
+	
+	}
+
+	private String makePrivateRequest(String requestMessage)
+			throws ApiProviderException {
+
+		String nonce = Long.toString(System.currentTimeMillis());
+
+		String signature = null;
+		try {
+			final String ALGORITHM = "HmacSHA256";
+
+			try {
+
+				Mac sha_HMAC = Mac.getInstance(ALGORITHM);
+				SecretKeySpec secret_key = new SecretKeySpec(
+					userConfiguration.getSecret().getBytes(), ALGORITHM
+				);
+
+				sha_HMAC.init(secret_key);
+
+				byte encoded[] = sha_HMAC.doFinal(nonce.getBytes());
+
+				signature = Hex.encodeHexString(encoded);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		} catch (Exception e) {
+			throw new ApiProviderException("Message signature fail", e);
+		}
+
+		URL url = null;
+		URLConnection http = null;
+
+		try {
+
+			url = new URL(BLINKTRADE_API_PRODUCAO_URL);
+
+			http = url.openConnection();
+
+		} catch (Exception e) {
+			throw new ApiProviderException("API URL initialization fail", e);
+		}
+
+		try {
+			Method setRequestMethod = http.getClass().getMethod(
+					"setRequestMethod", String.class);
+			setRequestMethod.invoke(http, "POST");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		http.setRequestProperty("Content-Type", "application/json");
+		http.setRequestProperty("APIKey", userConfiguration.getKey());
+		http.setRequestProperty("Nonce", nonce);
+		http.setRequestProperty("Signature", signature);
+
+		http.setDoOutput(true);
+		http.setDoInput(true);
+
+		OutputStream os = null;
+		InputStream is = null;
+
+		try {
+			os = http.getOutputStream();
+			os.write(requestMessage.getBytes());
+			os.flush();
+		} catch (Exception e) {
+			throw new ApiProviderException("API Request fail", e);
+		}
+
+		String responseMessage = null;
+
+		try {
+			is = http.getInputStream();
+			responseMessage = IOUtils.toString(is);
+		} catch (Exception e) {
+			throw new ApiProviderException("API response retrieve fail", e);
+		}
+
+		return responseMessage;
+
+	}
+	
+	// --------------------- Json to object
+	
+	private Ticker getTicker(JsonObject tickerJsonObject) {
+		return null;
+	}
+	
+	private Balance getBalance(JsonObject balanceJsonObject) {
+		Coin coin = getCoin();
+		Currency currency = getCurrency();
 		
 		Balance balance = new Balance(coin, currency);
-		JsonParser jsonParser = new JsonParser();
-        JsonObject jo = (JsonObject)jsonParser.parse(response);
-        System.out.println(jo);
-        JsonObject balanceJsonObject = jo.getAsJsonArray("Responses").get(0).getAsJsonObject();
+		
+        balanceJsonObject = balanceJsonObject.getAsJsonArray("Responses").get(0).getAsJsonObject();
         
         balance.setClientId(balanceJsonObject.getAsJsonPrimitive("ClientID").getAsString());
         
@@ -139,52 +374,11 @@ public class BlinktradeApiService extends ApiService {
         	getAsJsonPrimitive(currency.getValue() + "_locked").getAsBigDecimal().
         		divide(new BigDecimal(currency == Currency.BRL? SATOSHI_BASE: 1)));
         return balance;
-
 	}
-
-	@Override
-	public OrderBook getOrderBook() throws ApiProviderException {
-
-		/*
-		 * API URL initialzation
-		 */
-
-		URL url = null;
-		URLConnection http = null;
-
-		try {
-			url = new URL(BLINKTRADE_PUBLIC_API_ORDERBOOK);
-			http = url.openConnection();
-		} catch (Exception e) {
-			throw new ApiProviderException("API URL initialization fail", e);
-		}
-
-		/*
-		 * Required headers initialization
-		 */
-		http.setRequestProperty("Content-Type", "application/json");
-		
-		http.setDoInput(true);
-
-		InputStream is = null;
-
-		/*
-		 * Retrieve response
-		 */
-		String responseMessage = null;
-
-		try {
-			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is);
-		} catch (Exception e) {
-			throw new ApiProviderException("API response retrieve fail", e);
-		}
-		
-		JsonParser jsonParser = new JsonParser();
-        JsonObject jo = (JsonObject)jsonParser.parse(responseMessage);
-        
-        JsonArray bidArray = jo.getAsJsonArray("bids");
-        JsonArray askArray = jo.getAsJsonArray("asks");
+	
+	private OrderBook getOrderBook(JsonObject orderBookJsonObject) {
+        JsonArray bidArray = orderBookJsonObject.getAsJsonArray("bids");
+        JsonArray askArray = orderBookJsonObject.getAsJsonArray("asks");
         
         List<Order> bidOrders = new ArrayList<Order>();
         for (JsonElement row: bidArray) {
@@ -219,318 +413,6 @@ public class BlinktradeApiService extends ApiService {
         orderBook.setAskOrders(askOrders);
 		
 		return orderBook;
-
-	}
-	
-	@Override
-	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
-		return null;
-	}
-
-	@Override
-	public List<Order> getUserActiveOrders() throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		List<String> filters = new ArrayList<String>(1);
-		filters.add("has_leaves_qty eq 1");
-
-		request.put("MsgType", "U4");
-		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
-		request.put("Page", new Integer(0));
-		request.put("PageSize", new Integer(100));
-		request.put("Filter", filters);
-
-		String response = sendMessage(GSON.toJson(request));
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jo = (JsonObject) jsonParser.parse(response);
-		JsonArray activeOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
-		List<Order> activeOrders = new ArrayList<Order>();
-		if(activeOrdListGrp != null)
-			for (JsonElement jsonElement: activeOrdListGrp)
-				if (jsonElement != null) {
-					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Order order = getOrder(jsonArray);
-					activeOrders.add(order);
-				}
-		return activeOrders;
-	}
-	
-	@Override
-	public List<Operation> getUserOperations() throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		List<String> filters = new ArrayList<String>(1);
-		filters.add("has_cum_qty eq 1");
-
-		request.put("MsgType", "U4");
-		request.put("OrdersReqID", new Integer((int)(System.currentTimeMillis()/1000)));
-		request.put("Page", new Integer(0));
-		request.put("PageSize", new Integer(100));
-		request.put("Filter", filters);
-
-		String response = sendMessage(GSON.toJson(request));
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jo = (JsonObject) jsonParser.parse(response);
-		JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject().getAsJsonArray("OrdListGrp");
-		List<Operation> clientOperations = new ArrayList<Operation>();
-		if(completedOrdListGrp != null)
-			for (JsonElement jsonElement: completedOrdListGrp)
-				if (jsonElement != null) {
-					JsonArray jsonArray = jsonElement.getAsJsonArray();
-					Operation operation = getOperation(jsonArray);
-					clientOperations.add(operation);
-				}
-		return clientOperations;
-	}
-	
-	@Override
-	public Order createOrder(Order order) throws ApiProviderException {
-		sendNewOrder(
-			new Integer((int)(System.currentTimeMillis()/1000)),
-			order.getCoin(), order.getCurrency(), order.getSide(),
-			OrderType.LIMITED,
-			order.getCoinAmount(), order.getCurrencyPrice()
-		);
-		
-		return null;
-	}
-	
-	@Override
-	public Order createBuyOrder(Order order) throws ApiProviderException {
-		RecordSide side = RecordSide.BUY;
-		order.setSide(side);
-		return createOrder(order);
-	}
-	
-	@Override
-	public Order createSellOrder(Order order) throws ApiProviderException {
-		RecordSide side = RecordSide.SELL;
-		order.setSide(side);
-		return createOrder(order);
-	}
-	
-	@Override
-	public Order cancelOrder(Order order) throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		request.put("MsgType", "F");
-		request.put("ClOrdID", ((Order) order).getClientId());
-		request.put("BrokerID", getBrokerId());
-
-		sendMessage(GSON.toJson(request));
-		
-		return null;
-
-	}
-
-	public String createCoinAddressForDeposit(Integer depositRequestID)
-			throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		request.put("MsgType", "U18");
-		request.put("DepositReqID", depositRequestID);
-		request.put("Currency", userConfiguration.getCoin());
-		request.put("BrokerID", getBrokerId());
-
-		return sendMessage(GSON.toJson(request));
-
-	}
-
-	public String sendNewOrder(Integer clientOrderId, Coin coin,
-			Currency currency, RecordSide side, OrderType type,
-			BigDecimal coinAmount, BigDecimal currencyPrice)
-			throws ApiProviderException {
-
-		if (clientOrderId == null) {
-			throw new ApiProviderException("ClientOrderID  cannot be null");
-		}
-
-		if (coin == null || currency == null) {
-			throw new ApiProviderException("Symbol (currency) cannot be null");
-		}
-
-		if (side == null) {
-			throw new ApiProviderException("Side (buy/sell) cannot be null");
-		}
-
-		if (type == null) {
-			throw new ApiProviderException(
-					"Type (market/limited) cannot be null");
-		}
-
-		if (currencyPrice == null) {
-			throw new ApiProviderException("Price cannot be null");
-		}
-
-		if (coinAmount == null) {
-			throw new ApiProviderException("Amount (satoshi) cannot be null");
-		}
-
-		coinAmount = coinAmount.multiply(new BigDecimal(SATOSHI_BASE));
-		currencyPrice = currencyPrice.multiply(new BigDecimal(currency == Currency.BRL? SATOSHI_BASE + 1: 1));
-		
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		request.put("MsgType", "D");
-		request.put("ClOrdID", clientOrderId);
-		request.put("Symbol", coin.getValue() + currency.getValue());
-		request.put("Side", side == RecordSide.BUY? "1": (side == RecordSide.SELL? "2": null));
-		request.put("OrdType", type == OrderType.MARKET? "1": (type == OrderType.LIMITED? "2": null));
-		request.put("OrderQty", coinAmount.toBigInteger());
-		request.put("Price", currencyPrice.toBigInteger());
-		request.put("BrokerID", getBrokerId());
-
-		return sendMessage(GSON.toJson(request));
-
-	}
-
-	/**
-	 * Cancel a previous order.
-	 * 
-	 * @param clientOrderId
-	 *            Client Order ID. Must be unique.
-	 *            
-	 * @return JSON message which contains information about order cancelled.
-	 * 
-	 * @throws ApiProviderException
-	 *             Throws an exception if some error occurs.
-	 */
-	public String cancelOrder(Integer clientOrderId)
-			throws ApiProviderException {
-
-		Map<String, Object> request = new LinkedHashMap<String, Object>();
-
-		request.put("MsgType", "F");
-		request.put("ClOrdID", clientOrderId);
-		request.put("BrokerID", getBrokerId());
-
-		return sendMessage(GSON.toJson(request));
-
-	}
-
-	/*
-	 * Perform API requests.
-	 */
-	private String sendMessage(String requestMessage)
-			throws ApiProviderException {
-
-		/*
-		 * Generate unique nonce
-		 */
-		String nonce = Long.toString(System.currentTimeMillis());
-
-		/*
-		 * 'nonce' signature
-		 */
-		String signature = null;
-		try {
-			signature = hash(userConfiguration.getSecret(), nonce);
-		} catch (Exception e) {
-			throw new ApiProviderException("Message signature fail", e);
-		}
-
-		/*
-		 * API URL initialzation
-		 */
-
-		URL url = null;
-		URLConnection http = null;
-
-		try {
-
-			url = new URL(BLINKTRADE_API_PRODUCAO_URL);
-
-			http = url.openConnection();
-
-		} catch (Exception e) {
-			throw new ApiProviderException("API URL initialization fail", e);
-		}
-
-		/*
-		 * Prepare HTTP 'POST' requests.
-		 */
-		try {
-			Method setRequestMethod = http.getClass().getMethod(
-					"setRequestMethod", String.class);
-			setRequestMethod.invoke(http, "POST");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		/*
-		 * Required headers initialization
-		 */
-		http.setRequestProperty("Content-Type", "application/json");
-		http.setRequestProperty("APIKey", userConfiguration.getKey());
-		http.setRequestProperty("Nonce", nonce);
-		http.setRequestProperty("Signature", signature);
-
-		http.setDoOutput(true);
-		http.setDoInput(true);
-
-		OutputStream os = null;
-		InputStream is = null;
-
-		/*
-		 * Make request calls
-		 */
-
-		try {
-			os = http.getOutputStream();
-			os.write(requestMessage.getBytes());
-			os.flush();
-		} catch (Exception e) {
-			throw new ApiProviderException("API Request fail", e);
-		}
-
-		/*
-		 * Retrieve response
-		 */
-		String responseMessage = null;
-
-		try {
-			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is);
-		} catch (Exception e) {
-			throw new ApiProviderException("API response retrieve fail", e);
-		}
-
-		return responseMessage;
-
-	}
-
-	/*
-	 * API Message signatures using HMAC-SHA256.
-	 */
-	private static String hash(String secret, String message) {
-
-		final String ALGORITHM = "HmacSHA256";
-
-		try {
-
-			Mac sha_HMAC = Mac.getInstance(ALGORITHM);
-			SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes(),
-					ALGORITHM);
-
-			sha_HMAC.init(secret_key);
-
-			byte encoded[] = sha_HMAC.doFinal(message.getBytes());
-
-			String hash = Hex.encodeHexString(encoded);
-
-			return hash;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-
 	}
 	
 	public Order getOrder(JsonArray jsonArray) {
