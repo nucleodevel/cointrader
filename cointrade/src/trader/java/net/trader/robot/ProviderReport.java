@@ -251,7 +251,7 @@ public class ProviderReport {
 		return null;
 	}
 	
-	public BigDecimal getLastRelevantPriceByOperations(RecordSide side) throws ApiProviderException {
+	public BigDecimal getLastRelevantPriceByOperations(RecordSide side, Boolean showMessages) throws ApiProviderException {
 		BigDecimal lastRelevantPriceByOperations = new BigDecimal(0);
 		List<Operation> groupOfOperations = new ArrayList<Operation>(); 
 		BigDecimal oldCoinAmount = new BigDecimal(0);
@@ -290,12 +290,13 @@ public class ProviderReport {
 				); 
 			}
 		}
-		
-		System.out.println("  Last relevant " + side + " price: " + lastRelevantPriceByOperations);
-		System.out.println("  Considered operations: ");
-		for (Operation operation: groupOfOperations)
-			System.out.println("    " + operation.toString()); 
-		System.out.println("");
+		if (showMessages) {
+			System.out.println("  Last relevant " + side + " price: " + decFmt.format(lastRelevantPriceByOperations));
+			System.out.println("  Considered operations: ");
+			for (Operation operation: groupOfOperations)
+				System.out.println("    " + operation.toString()); 
+			System.out.println("");
+		}
 		if (groupOfOperations.size() > 0)
 			groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);
 		
@@ -303,7 +304,7 @@ public class ProviderReport {
 		return lastRelevantPriceByOperations;
 	}
 	
-	public BigDecimal getLastRelevantPriceByOrders(RecordSide side) throws ApiProviderException {
+	public BigDecimal getLastRelevantPriceByOrders(RecordSide side, Boolean showMessages) throws ApiProviderException {
 		BigDecimal lastRelevantPriceByOrders = new BigDecimal(0);
 		
 		double sumOfCoin = 0;
@@ -323,13 +324,15 @@ public class ProviderReport {
 			lastRelevantPriceByOrders = new BigDecimal(sumOfNumerators / sumOfCoin);
 		}
 		
-		System.out.println(
-			"  Last relevant " + side + " price by orders: " + decFmt.format(lastRelevantPriceByOrders)
-		);
-		System.out.println("  Considered orders: ");
-		for (Order order: groupOfOrders)
-			System.out.println("    " + order); 
-		System.out.println("");
+		if (showMessages) {
+			System.out.println(
+				"  Last relevant " + side + " price by orders: " + decFmt.format(lastRelevantPriceByOrders)
+			);
+			System.out.println("  Considered orders: ");
+			for (Order order: groupOfOrders)
+				System.out.println("    " + order); 
+			System.out.println("");
+		}
 		
 		return lastRelevantPriceByOrders;
 	}
@@ -444,24 +447,53 @@ public class ProviderReport {
 		BigDecimal lastRelevantPrice = null;
 		switch (mode) {
 			case ORDERS:
-				lastRelevantPrice = getLastRelevantPriceByOrders(side);
+				lastRelevantPrice = getLastRelevantPriceByOrders(side, true);
 				break;
 			case OTHER_ORDERS:	
-				lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther()).multiply(
-					new BigDecimal(userConfiguration.getMinimumRate(side))
+				lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther(), true).
+					multiply(new BigDecimal(userConfiguration.getMinimumRate(side))
 				);
 				break;
 			case OPERATIONS:
-				lastRelevantPrice = getLastRelevantPriceByOperations(side);
+				lastRelevantPrice = getLastRelevantPriceByOperations(side, true);
 				break;
 			case OTHER_OPERATIONS:	
-				if (!isLongTimeWithoutOperation)
-					lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther()).multiply(
-						new BigDecimal(userConfiguration.getMinimumRate(side))
+				BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrders(side, false);
+				BigDecimal lastRelevantPriceByOperations = 
+					getLastRelevantPriceByOperations(side.getOther(), false);
+				Boolean isBreakdown = false;
+				if (userConfiguration.getBreakdownRate(side) != null) {
+					BigDecimal breakdownPrice = lastRelevantPriceByOperations.multiply(
+						new BigDecimal(userConfiguration.getBreakdownRate(side))
 					);
+					
+					int compareBreakdownToOrders = 
+						breakdownPrice.compareTo(lastRelevantPriceByOrders); 
+					isBreakdown =  
+						(side == RecordSide.BUY? compareBreakdownToOrders < 0:
+						(side == RecordSide.SELL? compareBreakdownToOrders > 0: false));   
+					
+					System.out.println(
+						"  Breakdown if breakdown price " + 
+						decFmt.format(breakdownPrice) + " is " +
+						(side == RecordSide.BUY? "less":
+						(side == RecordSide.SELL? "greater": "")) +
+						" than " + side + " average price " + 
+						decFmt.format(lastRelevantPriceByOrders) 
+					);
+					
+					if (isBreakdown)
+						System.out.println("  Breakdown was activated");
+				}
+				if (isLongTimeWithoutOperation || isBreakdown) {
+					lastRelevantPrice = getLastRelevantPriceByOrders(side, true);
+					hasToWinCurrent = false;
+				}
 				else
-					lastRelevantPrice = getLastRelevantPriceByOrders(side);
-				hasToWinCurrent = !isLongTimeWithoutOperation;
+					lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther(), true).
+						multiply(new BigDecimal(userConfiguration.getMinimumRate(side))
+					);
+				
 				break;
 			default:
 				Order myOrder = getUserActiveOrders(side).size() > 0?
@@ -473,7 +505,7 @@ public class ProviderReport {
 		}
 		
 		if (mode != RecordSideMode.NONE) {
-			System.out.println("  Price to win: " + lastRelevantPrice);
+			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 			makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime, hasToWinCurrent);
 		}
 	}

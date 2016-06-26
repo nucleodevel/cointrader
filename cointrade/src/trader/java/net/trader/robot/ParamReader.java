@@ -146,6 +146,24 @@ public class ParamReader {
 								throw new ParamValueErrorException(paramLabel);
 							}
 							break;
+						case "-bbr": 
+							try {
+								userConfiguration.setBreakdownBuyRate(
+									Double.parseDouble(paramValue)
+								);
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
+						case "-bsr": 
+							try {
+								userConfiguration.setBreakdownSellRate(
+									Double.parseDouble(paramValue)
+								);
+							} catch (NumberFormatException e) {
+								throw new ParamValueErrorException(paramLabel);
+							}
+							break;
 						case "-mbi": 
 							try {
 								userConfiguration.setMaxBuyInterval(Double.parseDouble(paramValue));

@@ -18,6 +18,8 @@ public class UserConfiguration {
 	private RecordSideMode sellMode;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
+	private Double breakdownBuyRate;
+	private Double breakdownSellRate;
 	private Double maxBuyInterval;
 	private Double maxSellInterval;
 	private Double minimumCoinAmount;
@@ -27,6 +29,8 @@ public class UserConfiguration {
 		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
 		minimumBuyRate = 0.8;
 		minimumSellRate = 1.2;
+		breakdownBuyRate = null;
+		breakdownSellRate = null;
 		maxBuyInterval = null;
 		maxSellInterval = null;
 	}
@@ -145,6 +149,37 @@ public class UserConfiguration {
 		this.minimumSellRate = minimumSellRate;
 	}
 
+	public Double getBreakdownRate(RecordSide side) {
+		Double rate = 0.0;
+		switch (side) {
+			case BUY:
+				if (breakdownBuyRate != null)
+					rate = 1 - breakdownBuyRate;
+			break;
+			case SELL:
+				if (breakdownSellRate != null)
+					rate = 1 + breakdownSellRate;
+			break;
+		}
+		return rate;
+	}
+
+	public Double getBreakdownBuyRate() {
+		return breakdownBuyRate;
+	}
+
+	public void setBreakdownBuyRate(Double breakdownBuyRate) {
+		this.breakdownBuyRate = breakdownBuyRate;
+	}
+
+	public Double getBreakdownSellRate() {
+		return breakdownSellRate;
+	}
+
+	public void setBreakdownSellRate(Double breakdownSellRate) {
+		this.breakdownSellRate = breakdownSellRate;
+	}
+
 	public Double getMaxInterval(RecordSide side) {
 		Double interval = null;
 		switch (side) {
@@ -216,6 +251,10 @@ public class UserConfiguration {
 		sb.append(";\n  sellMode: " + sellMode);
 		sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
 		sb.append(";\n  minimumSellRate: " + decFmt.format(minimumSellRate));
+		if (breakdownBuyRate != null)
+			sb.append(";\n  breakdownBuyRate: " + decFmt.format(breakdownBuyRate));
+		if (breakdownSellRate != null)
+			sb.append(";\n  breakdownSellRate: " + decFmt.format(breakdownSellRate));
 		sb.append(";\n  maxBuyInterval: " + maxBuyInterval);
 		sb.append(";\n  maxSellInterval: " + maxSellInterval);
 		sb.append(";\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
