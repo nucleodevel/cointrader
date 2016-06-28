@@ -4,9 +4,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,7 +28,6 @@ import net.trader.beans.OrderBook;
 import net.trader.beans.OrderStatus;
 import net.trader.beans.OrderType;
 import net.trader.beans.RecordSide;
-import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
 import net.trader.utils.Utils;
@@ -42,27 +43,42 @@ import com.google.gson.JsonParser;
 
 public class BlinktradeApiService extends ApiService {
 	
-	// --------------------- Constants and attributes
+	// --------------------- Constructor
 	
-	private static final String DOMAIN = "https://api.blinktrade.com";
-	private static final String API_PATH = "/api/";
-	private static final String TAPI_PATH = "/tapi/";
-
-	private static final String BLINKTRADE_API_PRODUCAO_URL = DOMAIN + TAPI_PATH + "v1/message";
-	
-	private static final String BLINKTRADE_PUBLIC_API_ORDERBOOK = DOMAIN + API_PATH + "v1/BRL/orderbook";
-	//private static final String BLINKTRADE_PUBLIC_API_TRADES = "https://api.blinktrade.com/api/v1/BRL/trades";
-	
-	private static final long SATOSHI_BASE = 100000000;
-	
-	private static final Gson GSON = new Gson();
-	
-	// --------------------- Constructors
-	
-	public BlinktradeApiService(UserConfiguration userConfiguration) throws ApiProviderException {
-		
+	public BlinktradeApiService(UserConfiguration userConfiguration)
+			throws ApiProviderException {
 		super(userConfiguration);
+	}
+	
+	// --------------------- Getters and setters
 
+	@Override
+	protected String getDomain() {
+		return "https://api.blinktrade.com";
+	}
+	
+	@Override
+	protected  String getPublicApiUrl() {
+		return getDomain() + getPublicApiPath();
+	}
+	
+	@Override
+	protected  String getPrivateApiUrl() {
+		return getDomain() + getPrivateApiPath();
+	}
+	
+	@Override
+	protected  String getPublicApiPath() {
+		return "/api/v1/" + getCurrency().getValue().toUpperCase() + "/";
+	}
+	
+	@Override
+	protected  String getPrivateApiPath() {
+		return "/tapi/v1/message";
+	}
+	
+	@Override
+	protected  void makeActionInConstructor() throws ApiProviderException {
 		if (userConfiguration.getKey() == null) {
 			throw new ApiProviderException("Key cannot be null");
 		}
@@ -74,23 +90,9 @@ public class BlinktradeApiService extends ApiService {
 		if (userConfiguration.getBroker() == null) {
 			throw new ApiProviderException("Broker cannot be null");
 		}
-
-	}
-	
-	// --------------------- Getters and setters
-	
-	private String getBrokerId() {
-		if (userConfiguration.getBroker() == Broker.FOXBIT)
-			return "4";
-		return null;
 	}
 	
 	// --------------------- Overrided methods
-	
-	@Override
-	public Ticker getTicker() throws ApiProviderException {
-		return getTicker(null);
-	}
 
 	@Override
 	public Balance getBalance() throws ApiProviderException {
@@ -111,7 +113,7 @@ public class BlinktradeApiService extends ApiService {
 	@Override
 	public OrderBook getOrderBook() throws ApiProviderException {
 
-		String responseMessage = makePublicRequest(BLINKTRADE_PUBLIC_API_ORDERBOOK);
+		String responseMessage = makePublicRequest("orderbook");
 		
 		JsonParser jsonParser = new JsonParser();
         JsonObject orderBookJsonObject = (JsonObject)jsonParser.parse(responseMessage);
@@ -121,7 +123,39 @@ public class BlinktradeApiService extends ApiService {
 	
 	@Override
 	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
-		return null;
+		String responseMessage = makePublicRequest("trades");
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonElement operationListJsonObject = (JsonElement)jsonParser.parse(responseMessage);
+		JsonArray operationListJsonArray = operationListJsonObject.getAsJsonArray();
+		
+		Operation[] operationList = new Operation[operationListJsonArray.size()];
+		for (int i = 0; i < operationListJsonArray.size(); i++) {
+			JsonObject jsonObject = operationListJsonArray.get(i).getAsJsonObject();
+			
+			long created = Integer.valueOf(jsonObject.get("date").toString());
+			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").toString());
+			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("price").toString());
+			
+			String sideString = jsonObject.get("side").getAsString();
+			RecordSide side = sideString.equals("buy")? RecordSide.BUY: 
+				(sideString.equals("sell")? RecordSide.SELL: null);
+			
+			Operation operation = new Operation(
+				getCoin(), getCurrency(), side, coinAmount, currencyPrice
+			);
+
+			operation.setId(BigInteger.valueOf(jsonObject.get("tid").getAsLong()));
+			operation.setRate(null);
+			operation.setCreationDate(Calendar.getInstance());
+			operation.getCreationDate().setTimeInMillis(created * 1000);			
+
+			operationList[i] = operation;
+		}
+		
+		List<Operation> operations = Arrays.asList(operationList);
+		
+		return operations;
 	}
 
 	@Override
@@ -232,11 +266,12 @@ public class BlinktradeApiService extends ApiService {
 	// --------------------- Request methods
 	
 	private String makePublicRequest(String requestUrl)
-			throws ApiProviderException {URL url = null;
+			throws ApiProviderException {
+		URL url = null;
 		URLConnection http = null;
 
 		try {
-			url = new URL(requestUrl);
+			url = new URL(getPublicApiUrl() + requestUrl);
 			http = url.openConnection();
 		} catch (Exception e) {
 			throw new ApiProviderException("API URL initialization fail", e);
@@ -269,20 +304,14 @@ public class BlinktradeApiService extends ApiService {
 		String signature = null;
 		try {
 			final String ALGORITHM = "HmacSHA256";
-
 			try {
-
 				Mac sha_HMAC = Mac.getInstance(ALGORITHM);
 				SecretKeySpec secret_key = new SecretKeySpec(
 					userConfiguration.getSecret().getBytes(), ALGORITHM
 				);
-
 				sha_HMAC.init(secret_key);
-
 				byte encoded[] = sha_HMAC.doFinal(nonce.getBytes());
-
 				signature = Hex.encodeHexString(encoded);
-
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
@@ -295,9 +324,7 @@ public class BlinktradeApiService extends ApiService {
 		URLConnection http = null;
 
 		try {
-
-			url = new URL(BLINKTRADE_API_PRODUCAO_URL);
-
+			url = new URL(getPrivateApiUrl());
 			http = url.openConnection();
 
 		} catch (Exception e) {
@@ -306,7 +333,8 @@ public class BlinktradeApiService extends ApiService {
 
 		try {
 			Method setRequestMethod = http.getClass().getMethod(
-					"setRequestMethod", String.class);
+				"setRequestMethod", String.class
+			);
 			setRequestMethod.invoke(http, "POST");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -345,10 +373,6 @@ public class BlinktradeApiService extends ApiService {
 	}
 	
 	// --------------------- Json to object
-	
-	private Ticker getTicker(JsonObject tickerJsonObject) {
-		return null;
-	}
 	
 	private Balance getBalance(JsonObject balanceJsonObject) {
 		Coin coin = getCoin();
@@ -456,6 +480,18 @@ public class BlinktradeApiService extends ApiService {
 		operation.setCreationDate( Utils.getCalendar(jsonArray.get(12).getAsString()));
 		
 		return operation;
+	}
+	
+	// --------------------- Custom
+	
+	private static final long SATOSHI_BASE = 100000000;
+	
+	private static final Gson GSON = new Gson();
+	
+	private String getBrokerId() {
+		if (userConfiguration.getBroker() == Broker.FOXBIT)
+			return "4";
+		return null;
 	}
 
 }

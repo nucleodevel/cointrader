@@ -9,10 +9,6 @@ public class Ticker {
 	private BigDecimal low;
 	private BigDecimal vol;
 	private BigDecimal last3HourVolume;
-	private BigDecimal last;
-	private BigDecimal buy;
-	private BigDecimal sell;
-	private BigDecimal date;
 	
 	public Ticker(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
@@ -74,43 +70,9 @@ public class Ticker {
 		this.last3HourVolume = last3HourVolume;
 	}
 
-	public BigDecimal getLast() {
-		return last;
-	}
-
-	public void setLast(BigDecimal last) {
-		this.last = last;
-	}
-
-	public BigDecimal getBuy() {
-		return buy;
-	}
-
-	public void setBuy(BigDecimal buy) {
-		this.buy = buy;
-	}
-
-	public BigDecimal getSell() {
-		return sell;
-	}
-
-	public void setSell(BigDecimal sell) {
-		this.sell = sell;
-	}
-
-	public BigDecimal getDate() {
-		return date;
-	}
-
-	public void setDate(BigDecimal date) {
-		this.date = date;
-	}
-
 	@Override
 	public String toString() {
-		return "Ticker [high=" + high + ", low=" + low + ", vol=" + vol
-				+ ", last=" + last + ", buy=" + buy + ", sell=" + sell
-				+ ", date=" + date + "]";
+		return "Ticker [high=" + high + ", low=" + low + ", vol=" + vol + "]";
 	}
 
 }

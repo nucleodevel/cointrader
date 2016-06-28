@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,6 @@ import net.trader.beans.Operation;
 import net.trader.beans.Order;
 import net.trader.beans.OrderBook;
 import net.trader.beans.RecordSide;
-import net.trader.beans.Ticker;
 import net.trader.exception.ApiProviderException;
 import net.trader.utils.HostnameVerifierBag;
 import net.trader.utils.JsonHashMap;
@@ -59,61 +57,44 @@ import com.google.gson.JsonParser;
 
 public class MercadoBitcoinApiService extends ApiService {
 	
-	// --------------------- Constants and attributes
+	// --------------------- Constructor
 	
-	private enum ApiVersion {
-		V1,
-		V3;
-	}
-	
-	private enum HttpMethod {
-		GET,
-		POST
-	}
-	
-	private enum RequestMethod {
-		TICKER("ticker"),
-		ORDER_BOOK("orderbook"),
-		LIST_SYSTEM_MESSAGES("list_system_messages"),
-		GET_ACCOUNT_INFO("get_account_info"),
-		GET_ORDER("get_order"),
-		LIST_ORDERS("list_orders"),
-		LIST_ORDERBOOK("list_orderbook"),
-		PLACE_BUY_ORDER("place_buy_order"),
-		PLACE_SELL_ORDER("place_sell_order"),
-		CANCEL_ORDER("cancel_order"),
-		GET_WITHDRAWAL("get_withdrawal"),
-		WITHDRAWAL_COIN("withdrawal_coin"),
-		
-		V1_TRADE("Trade"),
-		V1_CANCEL_ORDER("CancelOrder");
-		
-		public final String value;
-		
-		private RequestMethod(String requestMethod) {
-			this.value = requestMethod;
-		}
-	}
-
-	private static final String API_PATH = "/api/";
-	private static final String TAPI_PATH = "/tapi/v3/";
-	private static final String V1_TAPI_PATH = "/tapi/";
-	private static final String ENCRYPT_ALGORITHM = "HmacSHA512";
-	private static final String METHOD_PARAM = "tapi_method";
-	private static final String V1_METHOD_PARAM = "method";
-	private static final String DOMAIN = "https://www.mercadobitcoin.net";
-
-	private byte[] mbTapiCodeBytes;
-	
-	// --------------------- Constructors
-
-	public MercadoBitcoinApiService(UserConfiguration userConfiguration) throws ApiProviderException {
+	public MercadoBitcoinApiService(UserConfiguration userConfiguration)
+			throws ApiProviderException {
 		super(userConfiguration);
-		
+	}
+	
+	// --------------------- Getters and setters
+	
+	@Override
+	protected  String getDomain() {
+		return "https://www.mercadobitcoin.net";
+	}
+	
+	@Override
+	protected  String getPublicApiUrl() {
+		return getDomain() + getPublicApiPath();
+	}
+	
+	@Override
+	protected  String getPrivateApiUrl() {
+		return getDomain() + getPrivateApiPath();
+	}
+	
+	@Override
+	protected  String getPublicApiPath() {
+		return "/api/";
+	}
+	
+	@Override
+	protected  String getPrivateApiPath() {
+		return "/tapi/v3/";
+	}
+	
+	@Override
+	protected  void makeActionInConstructor() throws ApiProviderException {
 		try {
-			if (usingHttps()) {
-				setSslContext(SslContextTrustManager.DEFAULT);
-			}
+			setSslContext(SslContextTrustManager.DEFAULT);
 		} catch (KeyManagementException e) {
 			throw new ApiProviderException("Internal error: Invalid SSL Connection.");
 		} catch (NoSuchAlgorithmException e) {
@@ -131,37 +112,17 @@ public class MercadoBitcoinApiService extends ApiService {
 		this.mbTapiCodeBytes = userConfiguration.getSecret().getBytes();
 	}
 	
-	// --------------------- Getters and setters
-	
-	private final boolean usingHttps() {
-		return DOMAIN.toUpperCase().startsWith("HTTPS");
-	}
-	
-	private String getDomain() {
-		return DOMAIN + getApiPath();
-	}
-
-	private String getApiPath() {
-		return API_PATH;
-	}
-	
 	// --------------------- Overrided methods
-
-	@Override
-	public Ticker getTicker() throws ApiProviderException {
-		JsonObject jsonObject = (JsonObject) makePublicRequest(RequestMethod.TICKER.value);
-		return getTicker(jsonObject);
-	}
 	
 	@Override
 	public Balance getBalance() throws ApiProviderException {
-		JsonObject jsonObject = makePrivateRequest(RequestMethod.GET_ACCOUNT_INFO.value, ApiVersion.V3);
+		JsonObject jsonObject = makePrivateRequest("get_account_info", ApiVersion.V3);
 		return getBalance(jsonObject);		
 	}
 	
 	@Override
 	public OrderBook getOrderBook() throws ApiProviderException {
-		JsonObject orderBookJsonObject = (JsonObject) makePublicRequest(RequestMethod.ORDER_BOOK.value);
+		JsonObject orderBookJsonObject = (JsonObject) makePublicRequest("orderbook");
 		return getOrderBook(orderBookJsonObject);
 	}
 	
@@ -212,7 +173,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid filter.");
 		}
 		JsonObject jsonResponse = makePrivateRequest(
-			getParams(filter), RequestMethod.LIST_ORDERS.value, ApiVersion.V3
+			getParams(filter), "list_orders", ApiVersion.V3
 		);
 		
 		JsonArray jsonArray = jsonResponse != null? 
@@ -260,7 +221,7 @@ public class MercadoBitcoinApiService extends ApiService {
 	@Override
 	public Order cancelOrder(Order order) throws ApiProviderException {
 		if (order == null) {
-			throw new ApiProviderException("Invalid filter.");
+			throw new ApiProviderException("Invalid order.");
 		}
 		
 		v1CancelOrder(order);
@@ -283,7 +244,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid filter.");
 		}
 		
-		makePrivateRequest(getParams(order, ApiVersion.V1), RequestMethod.V1_CANCEL_ORDER.value, ApiVersion.V1);
+		makePrivateRequest(getParams(order, ApiVersion.V1), "CancelOrder", ApiVersion.V1);
 		return null;
 	}
 	
@@ -297,7 +258,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			order.getCoinAmount(), order.getCurrencyPrice()
 		);
 		
-		makePrivateRequest(getParams(newOrder, ApiVersion.V1), RequestMethod.V1_TRADE.value, ApiVersion.V1);
+		makePrivateRequest(getParams(newOrder, ApiVersion.V1), "Trade", ApiVersion.V1);
 		return null;
 	}
 	
@@ -320,9 +281,9 @@ public class MercadoBitcoinApiService extends ApiService {
 		}
 		
 		try {
-			URL urlVar = new URL(getDomain() + url.toString());
+			URL urlVar = new URL(getPublicApiUrl() + url.toString());
 			HttpsURLConnection conn = (HttpsURLConnection) urlVar.openConnection();
-			conn.setRequestMethod(HttpMethod.GET.name());
+			conn.setRequestMethod("GET");
 			conn.setRequestProperty("Content-Type", "application/json");
 			
 			conn.getResponseCode();
@@ -377,18 +338,14 @@ public class MercadoBitcoinApiService extends ApiService {
 		
 		try {
 			String jsonParams = params.toUrlEncoded();
-			String signature = version == ApiVersion.V3? generateSignature(TAPI_PATH + "?" + jsonParams):
+			String signature = version == ApiVersion.V3? generateSignature(getPrivateApiPath() + "?" + jsonParams):
 				(version == ApiVersion.V1? generateSignature(jsonParams): null);
-			URL url = version == ApiVersion.V3? new URL(DOMAIN + TAPI_PATH):
-				(version == ApiVersion.V1? new URL(DOMAIN + V1_TAPI_PATH): null);
+			URL url = version == ApiVersion.V3? new URL(getPrivateApiUrl()):
+				(version == ApiVersion.V1? new URL(getV1PrivateApiUrl()): null);
 			HttpURLConnection conn;
-			if (usingHttps()) {
-				conn = (HttpsURLConnection) url.openConnection();
-			} else {
-				conn = (HttpURLConnection) url.openConnection();
-			}
+			conn = (HttpsURLConnection) url.openConnection();
 			
-			conn.setRequestMethod(HttpMethod.POST.name());
+			conn.setRequestMethod("POST");
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 			if (version == ApiVersion.V3) {
 				conn.setRequestProperty("TAPI-ID", userConfiguration.getKey());
@@ -529,36 +486,6 @@ public class MercadoBitcoinApiService extends ApiService {
 	}
 	
 	// --------------------- Json to object
-	
-	private Ticker getTicker(JsonObject tickerJsonObject) throws ApiProviderException {
-		Ticker ticker = new Ticker(getCoin(), getCurrency());
-		
-		JsonObject jsonObject = tickerJsonObject.get("ticker").getAsJsonObject();
-		
-		ticker.setHigh(new BigDecimal(jsonObject.getAsJsonPrimitive("high").getAsString()));
-		ticker.setLow(new BigDecimal(jsonObject.getAsJsonPrimitive("low").getAsString()));
-		ticker.setVol(new BigDecimal(jsonObject.getAsJsonPrimitive("vol").getAsString()));
-		ticker.setLast(new BigDecimal(jsonObject.getAsJsonPrimitive("last").getAsString()));
-		ticker.setBuy(new BigDecimal(jsonObject.getAsJsonPrimitive("buy").getAsString()));
-		ticker.setSell(new BigDecimal(jsonObject.getAsJsonPrimitive("sell").getAsString()));
-		ticker.setDate(new BigDecimal(jsonObject.getAsJsonPrimitive("date").getAsString()));
-		
-		Calendar from = Calendar.getInstance();
-		Calendar to = Calendar.getInstance();
-
-		from.setTime(new Date());
-		from.add(Calendar.HOUR, -3);
-		to.setTime(new Date());
-		BigDecimal last3HourVolume = new BigDecimal(0);
-		List<Operation> operations = getOperationList(from, to);
-		
-		for (Operation operation: operations)
-			last3HourVolume = last3HourVolume.add(operation.getCoinAmount());
-		
-		ticker.setLast3HourVolume(last3HourVolume);
-		
-		return ticker;
-	}
 	
 	private Balance getBalance(JsonObject balanceJsonObject) {
 		Balance balance = new Balance(getCoin(), getCurrency());
@@ -732,6 +659,23 @@ public class MercadoBitcoinApiService extends ApiService {
 	private static final long generateTonce() {
 		long unixTime = System.currentTimeMillis() / 1000L;
 		return unixTime;
+	}
+	
+	// --------------------- Constants and attributes
+	
+	private enum ApiVersion {
+		V1,
+		V3;
+	}
+
+	private static final String ENCRYPT_ALGORITHM = "HmacSHA512";
+	private static final String METHOD_PARAM = "tapi_method";
+	private static final String V1_METHOD_PARAM = "method";
+
+	private byte[] mbTapiCodeBytes;
+	
+	private String getV1PrivateApiUrl() {
+		return getDomain() + "/tapi/";
 	}
 	
 }
