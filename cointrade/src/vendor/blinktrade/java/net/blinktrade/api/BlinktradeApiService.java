@@ -98,7 +98,7 @@ public class BlinktradeApiService extends ApiService {
 	
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
-		Ticker ticker = new Ticker(getCoin(), getCurrency());
+		/*Ticker ticker = new Ticker(getCoin(), getCurrency());
 		
 		BigDecimal high = new BigDecimal(0);
 		BigDecimal low = new BigDecimal(Double.MAX_VALUE);
@@ -140,7 +140,8 @@ public class BlinktradeApiService extends ApiService {
 		
 		ticker.setLast3HourVolume(last3HourVolume);
 		
-		return ticker;
+		return ticker;*/
+		return null;
 	}
 
 	@Override
@@ -149,7 +150,7 @@ public class BlinktradeApiService extends ApiService {
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
 		request.put("MsgType", "U2");
-		request.put("BalanceReqID", new Integer((int)(System.currentTimeMillis()/1000))); // new Integer(1)
+		request.put("BalanceReqID", new Integer((int)(System.currentTimeMillis()/1000)));
 
 		String response = makePrivateRequest(GSON.toJson(request));
 		
