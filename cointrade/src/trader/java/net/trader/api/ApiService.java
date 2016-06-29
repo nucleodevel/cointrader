@@ -1,8 +1,6 @@
 package net.trader.api;
 
-import java.math.BigDecimal;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import net.trader.beans.Balance;
@@ -46,47 +44,7 @@ public abstract class ApiService {
 	
 	protected abstract void makeActionInConstructor() throws ApiProviderException;
 	
-	public Ticker getTicker() throws ApiProviderException {
-		Ticker ticker = new Ticker(getCoin(), getCurrency());
-		
-		BigDecimal high = new BigDecimal(0);
-		BigDecimal low = new BigDecimal(Double.MAX_VALUE);
-		BigDecimal vol = new BigDecimal(0);
-		
-		Calendar from = Calendar.getInstance();
-		Calendar to = Calendar.getInstance();
-		
-		from.setTime(new Date());
-		from.add(Calendar.HOUR, -24);
-		to.setTime(new Date());
-		
-		List<Operation> operations = getOperationList(from, to);
-		
-		for (Operation operation: operations) {
-			vol = vol.add(operation.getCoinAmount());
-			if (operation.getCurrencyPrice().compareTo(high) == 1)
-				high = operation.getCurrencyPrice();
-			if (operation.getCurrencyPrice().compareTo(low) == -1)
-				low = operation.getCurrencyPrice();
-		}
-		
-		ticker.setHigh(high);
-		ticker.setLow(low);
-		ticker.setVol(vol);
-
-		from.setTime(new Date());
-		from.add(Calendar.HOUR, -3);
-		to.setTime(new Date());
-		BigDecimal last3HourVolume = new BigDecimal(0);
-		List<Operation> last3HourOperations = getOperationList(from, to);
-		
-		for (Operation operation: last3HourOperations) 
-			last3HourVolume = last3HourVolume.add(operation.getCoinAmount());
-		
-		ticker.setLast3HourVolume(last3HourVolume);
-		
-		return ticker;
-	}
+	public abstract Ticker getTicker() throws ApiProviderException;
 
 	public abstract Balance getBalance() throws ApiProviderException;
 	

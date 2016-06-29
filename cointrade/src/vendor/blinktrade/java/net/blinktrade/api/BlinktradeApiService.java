@@ -10,6 +10,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import net.trader.beans.OrderBook;
 import net.trader.beans.OrderStatus;
 import net.trader.beans.OrderType;
 import net.trader.beans.RecordSide;
+import net.trader.beans.Ticker;
 import net.trader.beans.UserConfiguration;
 import net.trader.exception.ApiProviderException;
 import net.trader.utils.Utils;
@@ -93,6 +95,53 @@ public class BlinktradeApiService extends ApiService {
 	}
 	
 	// --------------------- Overrided methods
+	
+	@Override
+	public Ticker getTicker() throws ApiProviderException {
+		Ticker ticker = new Ticker(getCoin(), getCurrency());
+		
+		BigDecimal high = new BigDecimal(0);
+		BigDecimal low = new BigDecimal(Double.MAX_VALUE);
+		BigDecimal vol = new BigDecimal(0);
+		
+		Calendar from = Calendar.getInstance();
+		Calendar to = Calendar.getInstance();
+		
+		from.setTime(new Date());
+		from.add(Calendar.HOUR, -24);
+		to.setTime(new Date());
+		
+		List<Operation> operations = getOperationList(from, to);
+		
+		for (Operation operation: operations) {
+			vol = vol.add(operation.getCoinAmount());
+			if (operation.getCurrencyPrice().compareTo(high) == 1)
+				high = operation.getCurrencyPrice();
+			if (operation.getCurrencyPrice().compareTo(low) == -1)
+				low = operation.getCurrencyPrice();
+		}
+		
+		System.out.println(
+			operations.get(0).getCreationDate().getTime() + "-" + operations.get(operations.size() - 1).getCreationDate().getTime()
+		);
+		
+		ticker.setHigh(high);
+		ticker.setLow(low);
+		ticker.setVol(vol);
+
+		from.setTime(new Date());
+		from.add(Calendar.HOUR, -3);
+		to.setTime(new Date());
+		BigDecimal last3HourVolume = new BigDecimal(0);
+		List<Operation> last3HourOperations = getOperationList(from, to);
+		
+		for (Operation operation: last3HourOperations) 
+			last3HourVolume = last3HourVolume.add(operation.getCoinAmount());
+		
+		ticker.setLast3HourVolume(last3HourVolume);
+		
+		return ticker;
+	}
 
 	@Override
 	public Balance getBalance() throws ApiProviderException {

@@ -551,13 +551,13 @@ public class ProviderReport {
 		if (!isAGoodOrder && left != null)
 			isAGoodOrder = side == RecordSide.BUY? left <= right: left > right;
 			
-			if (isAGoodOrder) {
-				Order newOrder = tryToWinAnOrder(side, orderIndex);
-				if (newOrder != null)
-					return newOrder;
-			}
-			
-			return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice);
+		if (isAGoodOrder) {
+			Order newOrder = tryToWinAnOrder(side, orderIndex);
+			if (newOrder != null)
+				return newOrder;
+		}
+		
+		return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice);
 	}
 	
 	private Order winThePreviousOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice) 
@@ -610,10 +610,15 @@ public class ProviderReport {
 			myOrder == null || 
 			!decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))
 		) {
-			if (
-				bestOtherSideOrder.getCurrencyPrice() == 
-				order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getIncDecPrice(side)))
-			)
+			Boolean isNearTheBestOtherSideOrder = 
+				Math.abs(
+					order.getCurrencyPrice().add(
+						new BigDecimal(userConfiguration.getIncDecPrice(side))
+					).doubleValue() 
+					- bestOtherSideOrder.getCurrencyPrice().doubleValue()
+				)
+				<= userConfiguration.getIncDecPrice(side);
+			if (isNearTheBestOtherSideOrder)
 				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
 			Order newOrder = new Order(
 				userConfiguration.getCoin(), userConfiguration.getCurrency(),
