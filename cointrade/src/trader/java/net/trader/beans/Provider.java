@@ -3,7 +3,8 @@ package net.trader.beans;
 public enum Provider {
 
 	MERCADO_BITCOIN("MERCADO_BITCOIN"),
-	BLINKTRADE("BLINKTRADE");
+	BLINKTRADE("BLINKTRADE"),
+	POLONIEX("POLONIEX");
 	
 	private final String value;
 
