@@ -127,7 +127,7 @@ public class Balance {
 
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
-		decFmt.setMaximumFractionDigits(5);
+		decFmt.setMaximumFractionDigits(8);
 		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		symbols.setGroupingSeparator(',');
@@ -139,9 +139,11 @@ public class Balance {
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
 		sb.append("; coinAmount: " + decFmt.format(coinAmount));
-		sb.append("; coinLocked: " + decFmt.format(coinLocked));
+		if (coinLocked != null)
+			sb.append("; coinLocked: " + decFmt.format(coinLocked));
 		sb.append("; currencyAmount: " + decFmt.format(currencyAmount));
-		sb.append("; currencyLocked: " + decFmt.format(currencyLocked));
+		if (currencyLocked != null)
+			sb.append("; currencyLocked: " + decFmt.format(currencyLocked));
 		sb.append("; clientId: " + clientId);
 		sb.append(']');
 		

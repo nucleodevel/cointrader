@@ -59,7 +59,7 @@ public class Main {
 				// creating paramReader and reading APIs
 				userConfiguration = paramReader.getUserConfiguration();
 				ProviderReport report = new ProviderReport(userConfiguration);
-				report.readApiAtFirst();
+				//report.readApiAtFirst();
 				
 				System.out.println("");
 				System.out.println("\n---- Params");
@@ -89,7 +89,7 @@ public class Main {
 	            System.out.println("  Number of active orders: " + report.getUserActiveOrders().size());
 	            System.out.println("  Number of operations: " + report.getUserOperations().size());
 				
-				System.out.println("");
+	            System.out.println("");
 				System.out.println("My last operations by type");
 				if (report.getLastUserOperation(RecordSide.BUY) != null)
 					System.out.println("  " + report.getLastUserOperation(RecordSide.BUY));
