@@ -27,8 +27,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
@@ -100,32 +102,18 @@ public class PoloniexApiService extends ApiService {
 	
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
-		/*Ticker ticker = new Ticker(getCoin(), getCurrency());
+		JsonObject tickerJsonObject = (JsonObject) makePublicRequest("returnTicker", new JsonHashMap());
 		
-		BigDecimal high = new BigDecimal(0);
-		BigDecimal low = new BigDecimal(Double.MAX_VALUE);
-		BigDecimal vol = new BigDecimal(0);
+		JsonObject jsonObject = tickerJsonObject.getAsJsonObject(
+			getCurrency().getValue() + "_" + getCoin().getValue() 
+		);
+		
+		Ticker ticker = new Ticker(getCoin(), getCurrency());
+		
+		ticker.setVol(jsonObject.getAsJsonPrimitive("quoteVolume").getAsBigDecimal());
 		
 		Calendar from = Calendar.getInstance();
 		Calendar to = Calendar.getInstance();
-		
-		from.setTime(new Date());
-		from.add(Calendar.HOUR, -24);
-		to.setTime(new Date());
-		
-		List<Operation> operations = getOperationList(from, to);
-		
-		for (Operation operation: operations) {
-			vol = vol.add(operation.getCoinAmount());
-			if (operation.getCurrencyPrice().compareTo(high) == 1)
-				high = operation.getCurrencyPrice();
-			if (operation.getCurrencyPrice().compareTo(low) == -1)
-				low = operation.getCurrencyPrice();
-		}
-		
-		ticker.setHigh(high);
-		ticker.setLow(low);
-		ticker.setVol(vol);
 
 		from.setTime(new Date());
 		from.add(Calendar.HOUR, -3);
@@ -138,8 +126,7 @@ public class PoloniexApiService extends ApiService {
 		
 		ticker.setLast3HourVolume(last3HourVolume);
 		
-		return ticker;*/
-		return null;
+		return ticker;
 	}
 	
 	@Override
@@ -153,21 +140,17 @@ public class PoloniexApiService extends ApiService {
 	
 	@Override
 	public OrderBook getOrderBook() throws ApiProviderException {
-		JsonObject orderBookJsonObject = (JsonObject) makePublicRequest("returnOrderBook"); 
+		JsonObject orderBookJsonObject = (JsonObject) makePublicRequest("returnOrderBook", new JsonHashMap()); 
 		return getOrderBook(orderBookJsonObject);
 	}
 	
 	@Override
 	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
-		/*List<String> paths = new ArrayList<String>();
-		paths.add(from.getTimeInMillis() / 1000 + "/");
+		JsonHashMap args = new JsonHashMap();
+		args.put("start", (Long) (from.getTimeInMillis() / 1000));
+		args.put("end", (Long) (to.getTimeInMillis() / 1000));
 		
-		if (to != null)
-			paths.add(to.getTimeInMillis() / 1000 + "/");
-		
-		String[] complements = paths.toArray(new String[0]);*/
-		
-		JsonArray jsonArray = makePublicRequest("returnTradeHistory").getAsJsonArray();
+		JsonArray jsonArray = makePublicRequest("returnTradeHistory", args).getAsJsonArray();
 		
 		//Convert Json response to object
 		Operation[] operationList = new Operation[jsonArray.size()];
@@ -224,8 +207,17 @@ public class PoloniexApiService extends ApiService {
 	@Override
 	public List<Operation> getUserOperations() throws ApiProviderException {
 		JsonHashMap args = new JsonHashMap();
+		
+		Calendar from = Calendar.getInstance();
+		Calendar to = Calendar.getInstance();
+		from.setTime(new Date());
+		from.add(Calendar.HOUR, -24);
+		to.setTime(new Date());
+		
 		args.put("command", "returnTradeHistory");
 		args.put("currencyPair", getCurrency() + "_" + getCoin());
+		args.put("start", ((Long) (from.getTimeInMillis() / 1000)).toString());
+		args.put("end", ((Long) (to.getTimeInMillis() / 1000)).toString());
 		
 		JsonArray jsonArray = (JsonArray) makePrivateRequest("returnTradeHistory", args);
 		
@@ -310,19 +302,26 @@ public class PoloniexApiService extends ApiService {
 	
 	// --------------------- Request methods
 	
-	private JsonElement makePublicRequest(String method, String ... pathParams) throws ApiProviderException {
+	private JsonElement makePublicRequest(String method, JsonHashMap args) throws ApiProviderException {
 		if (getCoin() == null || getCurrency() == null) {
 			throw new ApiProviderException("Invalid coin pair.");
 		}
 
-		StringBuffer url = new StringBuffer(method);
-		
-		for (String pathParam : pathParams) {
-			url.append(pathParam);
-		}
-		
 		try {
-			URL urlVar = new URL(getPublicApiUrl() + "?command=" + method + "&currencyPair=" + getCurrency() + "_" + getCoin());
+			// add method and nonce to args
+			if (args == null) {
+				args = new JsonHashMap();
+			}
+			
+			String argsVar = "";
+			for (Map.Entry<String, Object> arg: args.entrySet())
+				argsVar += "&" + arg.getKey() + "=" + arg.getValue();
+			
+			URL urlVar = new URL(
+				getPublicApiUrl() + "?command=" + method + "&currencyPair=" 
+				+ getCurrency() + "_" + getCoin() + argsVar
+			);
+			
 			HttpsURLConnection conn = (HttpsURLConnection) urlVar.openConnection();
 			conn.setRequestMethod("GET");
 			conn.setRequestProperty("Content-Type", "application/json");
@@ -349,6 +348,13 @@ public class PoloniexApiService extends ApiService {
 			String response = sb.toString();
 			JsonParser jsonParser = new JsonParser();
 			JsonElement jsonElement = jsonParser.parse(response);
+			
+			// putting delay time
+			try {
+				TimeUnit.MILLISECONDS.sleep(1010);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			
 			return jsonElement;
 		} catch (MalformedURLException e) {

@@ -1,6 +1,8 @@
 package net.trader.robot;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +18,14 @@ import net.trader.robot.ParamReader;
 public class Main {
 	
 	public static void main(String[] args) {
+		
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(8);
+		
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
 		
 		ParamReader paramReader = new ParamReader();
 		
@@ -72,13 +82,13 @@ public class Main {
 					System.out.println("");
 					System.out.println(report.getTicker());
 					
-					System.out.println("  My 24 hour coin volume: " + report.getMy24hCoinVolume());
-					System.out.println("  Global 24 hour volume: " + report.getTicker().getVol());
+					System.out.println("  My 24 hour coin volume: " + decFmt.format(report.getMy24hCoinVolume()));
+					System.out.println("  Global 24 hour volume: " + decFmt.format(report.getTicker().getVol()));
 					System.out.println(
 						"  My participation: " + 
-						(report.getMy24hCoinVolume().doubleValue() / report.getTicker().getVol().doubleValue())
+							decFmt.format(report.getMy24hCoinVolume().doubleValue() / report.getTicker().getVol().doubleValue())
 					);
-					System.out.println("  Last 3 hour volume: " + report.getTicker().getLast3HourVolume());
+					System.out.println("  Last 3 hour volume: " + decFmt.format(report.getTicker().getLast3HourVolume()));
 				}
 				
 				System.out.println("");
