@@ -2,7 +2,8 @@ package net.trader.beans;
 
 public enum Currency {
 	BRL("BRL"),
-	USDT("USDT");
+	USDT("USDT"),
+	BTC("BTC");
 	private final String value;
 
 	private Currency(String value) {

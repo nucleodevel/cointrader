@@ -86,7 +86,7 @@ public class Main {
 					System.out.println("  Global 24 hour volume: " + decFmt.format(report.getTicker().getVol()));
 					System.out.println(
 						"  My participation: " + 
-							decFmt.format(report.getMy24hCoinVolume().doubleValue() / report.getTicker().getVol().doubleValue())
+						decFmt.format(report.getMy24hCoinVolume().doubleValue() / report.getTicker().getVol().doubleValue())
 					);
 					System.out.println("  Last 3 hour volume: " + decFmt.format(report.getTicker().getLast3HourVolume()));
 				}

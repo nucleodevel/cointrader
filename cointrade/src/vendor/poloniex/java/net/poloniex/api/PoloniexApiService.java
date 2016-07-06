@@ -111,6 +111,8 @@ public class PoloniexApiService extends ApiService {
 		Ticker ticker = new Ticker(getCoin(), getCurrency());
 		
 		ticker.setVol(jsonObject.getAsJsonPrimitive("quoteVolume").getAsBigDecimal());
+		ticker.setHigh(jsonObject.getAsJsonPrimitive("highestBid").getAsBigDecimal());
+		ticker.setLow(jsonObject.getAsJsonPrimitive("lowestAsk").getAsBigDecimal());
 		
 		Calendar from = Calendar.getInstance();
 		Calendar to = Calendar.getInstance();
@@ -517,12 +519,6 @@ public class PoloniexApiService extends ApiService {
 		
 		Order order = new Order(coin, currency, side, coinAmount, currencyPrice);
 		order.setId(BigInteger.valueOf(jsonObject.get("orderNumber").getAsLong()));
-		/*Integer statusInt = jsonObject.get("status").getAsInt();
-		OrderStatus status = 
-			statusInt == 2? OrderStatus.ACTIVE: 
-			(statusInt == 3? OrderStatus.CANCELED:
-			(statusInt == 4? OrderStatus.COMPLETED: null));
-		order.setStatus(status);*/
 		
 		order.setCreationDate(Calendar.getInstance());
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
