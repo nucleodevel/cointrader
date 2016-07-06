@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
@@ -91,6 +92,11 @@ public class MercadoBitcoinApiService extends ApiService {
 	@Override
 	protected  String getPrivateApiPath() {
 		return "/tapi/v3/";
+	}
+	
+	@Override
+	public TimeZone getTimeZone() {
+		return TimeZone.getTimeZone("GMT-03:00");
 	}
 	
 	@Override

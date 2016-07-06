@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -52,7 +53,7 @@ public class BlinktradeApiService extends ApiService {
 	}
 	
 	// --------------------- Getters and setters
-
+	
 	@Override
 	protected String getDomain() {
 		return "https://api.blinktrade.com";
@@ -78,6 +79,11 @@ public class BlinktradeApiService extends ApiService {
 		return "/tapi/v1/message";
 	}
 	
+	@Override
+	public TimeZone getTimeZone() {
+		return TimeZone.getTimeZone("GMT-03:00");
+	}
+
 	@Override
 	protected  void makeActionInConstructor() throws ApiProviderException {
 		if (userConfiguration.getKey() == null) {

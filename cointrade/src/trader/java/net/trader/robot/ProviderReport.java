@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import net.blinktrade.api.BlinktradeApiService;
 import net.mercadobitcoin.api.MercadoBitcoinApiService;
@@ -351,6 +352,9 @@ public class ProviderReport {
 		
 		Calendar now = Calendar.getInstance();
 		now.setTime(new Date());
+		if (getApiService().getTimeZone().getDisplayName().equals(TimeZone.getTimeZone("UTC").getDisplayName()))
+			now.add(Calendar.HOUR, 3);
+		
 		Long nowTime = now.getTimeInMillis();
 		
 		for (Operation operation: getUserOperations()) {

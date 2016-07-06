@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
@@ -91,6 +92,11 @@ public class PoloniexApiService extends ApiService {
 	@Override
 	protected  String getPrivateApiPath() {
 		return "/tradingApi";
+	}
+	
+	@Override
+	public TimeZone getTimeZone() {
+		return TimeZone.getTimeZone("UTC");
 	}
 	
 	@Override
@@ -213,7 +219,7 @@ public class PoloniexApiService extends ApiService {
 		Calendar from = Calendar.getInstance();
 		Calendar to = Calendar.getInstance();
 		from.setTime(new Date());
-		from.add(Calendar.HOUR, -24);
+		from.add(Calendar.HOUR, -48);
 		to.setTime(new Date());
 		
 		args.put("command", "returnTradeHistory");

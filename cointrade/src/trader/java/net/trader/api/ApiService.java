@@ -2,6 +2,7 @@ package net.trader.api;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import net.trader.beans.Balance;
 import net.trader.beans.Coin;
@@ -59,5 +60,7 @@ public abstract class ApiService {
 	public abstract Order cancelOrder(Order order) throws ApiProviderException;
 	
 	public abstract Order createOrder(Order order) throws ApiProviderException;
+	
+	public abstract TimeZone getTimeZone();
 	
 }
