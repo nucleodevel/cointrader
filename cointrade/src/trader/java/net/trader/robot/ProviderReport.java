@@ -352,8 +352,12 @@ public class ProviderReport {
 		
 		Calendar now = Calendar.getInstance();
 		now.setTime(new Date());
-		if (getApiService().getTimeZone().getDisplayName().equals(TimeZone.getTimeZone("UTC").getDisplayName()))
-			now.add(Calendar.HOUR, 3);
+		if (getApiService().getTimeZone().getDisplayName().equals(TimeZone.getTimeZone("GMT").getDisplayName())) {
+			TimeZone tz1 = getApiService().getTimeZone();
+		    TimeZone tz2 = TimeZone.getTimeZone("GMT-03:00");
+		    int timeDifference = tz1.getRawOffset() - tz2.getRawOffset();
+			now.add(Calendar.HOUR, timeDifference / 60 / 60 / 1000);
+		}
 		
 		Long nowTime = now.getTimeInMillis();
 		

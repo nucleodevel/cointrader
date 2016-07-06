@@ -96,7 +96,7 @@ public class PoloniexApiService extends ApiService {
 	
 	@Override
 	public TimeZone getTimeZone() {
-		return TimeZone.getTimeZone("UTC");
+		return TimeZone.getTimeZone("GMT");
 	}
 	
 	@Override
