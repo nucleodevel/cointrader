@@ -552,6 +552,17 @@ public class ProviderReport {
 	private Order winTheCurrentOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice) 
 		throws ApiProviderException, NotAvailableMoneyException {
 		List<Order> activeOrders = getActiveOrders(side);
+		if (orderIndex >= activeOrders.size()) {
+			Order myOrder = getUserActiveOrders(side).size() > 0?
+				getUserActiveOrders(side).get(0): null;
+			if (myOrder != null)
+				cancelOrder(myOrder);
+			System.out.println(
+				"It's not possible to calculate a good order. The order index is greater "+
+				"than the active order array size!"
+			);
+			return null;
+		}
 		
 		Order order = activeOrders.get(orderIndex);
 		
@@ -574,6 +585,17 @@ public class ProviderReport {
 	private Order winThePreviousOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice) 
 		throws ApiProviderException, NotAvailableMoneyException {
 		List<Order> activeOrders = getActiveOrders(side);
+		if (orderIndex >= activeOrders.size()) {
+			Order myOrder = getUserActiveOrders(side).size() > 0?
+				getUserActiveOrders(side).get(0): null;
+			if (myOrder != null)
+				cancelOrder(myOrder);
+			System.out.println(
+				"It's not possible to calculate a good order. The order index is greater "+
+				"than the active order array size!"
+			);
+			return null;
+		}
 		
 		Order order = activeOrders.get(orderIndex);
 		
