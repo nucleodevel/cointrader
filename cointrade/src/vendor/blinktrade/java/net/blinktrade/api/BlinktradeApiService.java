@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -347,6 +348,13 @@ public class BlinktradeApiService extends ApiService {
 			throw new ApiProviderException("API response retrieve fail", e);
 		}
 		
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		return responseMessage;
 	
 	}
@@ -421,6 +429,14 @@ public class BlinktradeApiService extends ApiService {
 			responseMessage = IOUtils.toString(is);
 		} catch (Exception e) {
 			throw new ApiProviderException("API response retrieve fail", e);
+		}
+		
+
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		return responseMessage;
