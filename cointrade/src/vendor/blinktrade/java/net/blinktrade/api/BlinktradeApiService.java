@@ -350,7 +350,7 @@ public class BlinktradeApiService extends ApiService {
 		
 		// putting delay time
 		try {
-			TimeUnit.MILLISECONDS.sleep(10);
+			TimeUnit.MILLISECONDS.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -434,7 +434,7 @@ public class BlinktradeApiService extends ApiService {
 
 		// putting delay time
 		try {
-			TimeUnit.MILLISECONDS.sleep(10);
+			TimeUnit.MILLISECONDS.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
