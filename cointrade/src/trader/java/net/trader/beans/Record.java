@@ -110,7 +110,7 @@ public class Record implements Comparable<Record> {
 	@Override
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
-		decFmt.setMaximumFractionDigits(5);
+		decFmt.setMaximumFractionDigits(8);
 		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		symbols.setGroupingSeparator(',');

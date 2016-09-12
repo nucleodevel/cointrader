@@ -6,7 +6,7 @@ import java.text.DecimalFormatSymbols;
 
 public class Balance {
 	
-	private static final BigDecimal CURRENCY_MARGIN = new BigDecimal(0.01);
+	private static final BigDecimal CURRENCY_MARGIN = new BigDecimal(0.00001);
 
 	private CoinCurrencyPair coinCurrencyPair;
 	private BigDecimal coinAmount;

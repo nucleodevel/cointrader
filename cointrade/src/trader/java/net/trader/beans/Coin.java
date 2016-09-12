@@ -1,9 +1,28 @@
 package net.trader.beans;
 
 public enum Coin {
+	AMP("AMP"),
 	BTC("BTC"),
+	CLAM("CLAM"),
+	CURE("CURE"),
+	DASH("DASH"),
+	EMC2("EMC2"),
+	ETC("ETC"),
+	ETH("ETH"),
+	FCT("FCT"),
+	FLDC("FLDC"),
+	GRC("GRC"),
+	LBC("LBC"),
+	LTBC("LTBC"),
 	LTC("LTC"),
-	ETH("ETH");
+	MAID("MAID"),
+	NAV("NAV"),
+	NEOS("NEOS"),
+	NOBL("NOBL"),
+	NSR("NSR"),
+	SC("SC"),
+	SDC("SDC"),
+	XMR("XMR");
 	private final String value;
 
 	private Coin(String value) {
