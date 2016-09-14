@@ -3,6 +3,7 @@ package net.trader.beans;
 public enum Coin {
 	AMP("AMP"),
 	BTC("BTC"),
+	BURST("BURST"),
 	CLAM("CLAM"),
 	CURE("CURE"),
 	DASH("DASH"),

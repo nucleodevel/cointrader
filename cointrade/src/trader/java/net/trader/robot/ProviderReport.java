@@ -557,11 +557,18 @@ public class ProviderReport {
 				getUserActiveOrders(side).get(0): null;
 			if (myOrder != null)
 				cancelOrder(myOrder);
-			System.out.println(
-				"It's not possible to calculate a good order. The order index is greater "+
-				"than the active order array size!"
+			BigDecimal coinAmount = getBalance().getEstimatedCoinAmount(side, lastRelevantPrice);
+			
+			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+				throw new NotAvailableMoneyException();
+			}
+			
+			Order newOrder = new Order(
+				userConfiguration.getCoin(), userConfiguration.getCurrency(),
+				side, coinAmount, lastRelevantPrice
 			);
-			return null;
+			newOrder.setType(OrderType.LIMITED);
+			return newOrder;
 		}
 		
 		Order order = activeOrders.get(orderIndex);
@@ -590,11 +597,18 @@ public class ProviderReport {
 				getUserActiveOrders(side).get(0): null;
 			if (myOrder != null)
 				cancelOrder(myOrder);
-			System.out.println(
-				"It's not possible to calculate a good order. The order index is greater "+
-				"than the active order array size!"
+			BigDecimal coinAmount = getBalance().getEstimatedCoinAmount(side, lastRelevantPrice);
+			
+			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+				throw new NotAvailableMoneyException();
+			}
+			
+			Order newOrder = new Order(
+				userConfiguration.getCoin(), userConfiguration.getCurrency(),
+				side, coinAmount, lastRelevantPrice
 			);
-			return null;
+			newOrder.setType(OrderType.LIMITED);
+			return newOrder;
 		}
 		
 		Order order = activeOrders.get(orderIndex);
