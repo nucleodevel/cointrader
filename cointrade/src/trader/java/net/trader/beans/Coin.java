@@ -23,7 +23,8 @@ public enum Coin {
 	NSR("NSR"),
 	SC("SC"),
 	SDC("SDC"),
-	XMR("XMR");
+	XMR("XMR"),
+	XRP("XRP");
 	private final String value;
 
 	private Coin(String value) {
