@@ -343,7 +343,7 @@ public class BlinktradeApiService extends ApiService {
 
 		try {
 			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is);
+			responseMessage = IOUtils.toString(is, "UTF-8");
 		} catch (Exception e) {
 			throw new ApiProviderException("API response retrieve fail", e);
 		}
@@ -426,7 +426,7 @@ public class BlinktradeApiService extends ApiService {
 
 		try {
 			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is);
+			responseMessage = IOUtils.toString(is, "UTF-8");
 		} catch (Exception e) {
 			throw new ApiProviderException("API response retrieve fail", e);
 		}
