@@ -3,7 +3,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>net.trader</groupId>
+	<groupId>br.net.dallan</groupId>
 	<artifactId>cointrader</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 
