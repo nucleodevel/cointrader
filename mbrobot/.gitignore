@@ -1,8 +1,0 @@
-# Eclipse Project Files
-.classpath
-.project
-.checkstyle
-.pmd
-.settings/
-bin/
-**/*.class
