@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -76,7 +77,7 @@ public class MercadoBitcoinApiService extends ApiService {
 	
 	@Override
 	protected  String getPublicApiUrl() {
-		return getDomain() + getPublicApiPath();
+		return getDomain() + getPublicApiPath() + getCoin().getValue() + "/";
 	}
 	
 	@Override
@@ -275,7 +276,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid order.");
 		}
 		
-		v1CancelOrder(order);
+		makePrivateRequest(getParams(order, ApiVersion.V3), "cancel_order", ApiVersion.V3);
 		order.setStatus(OrderStatus.CANCELED);
 		return order;
 	}
@@ -286,10 +287,15 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid order.");
 		}
 		
-		v1CreateOrder(order);
+		if (order.getSide() == RecordSide.BUY)
+			makePrivateRequest(getParams(order, ApiVersion.V3), "place_buy_order", ApiVersion.V3);
+		else if (order.getSide() == RecordSide.SELL)
+			makePrivateRequest(getParams(order, ApiVersion.V3), "place_sell_order", ApiVersion.V3);
+		
 		return order;
 	}
 	
+	@SuppressWarnings("unused")
 	private Order v1CancelOrder(Order order) throws ApiProviderException {
 		if (order == null) {
 			throw new ApiProviderException("Invalid filter.");
@@ -299,6 +305,7 @@ public class MercadoBitcoinApiService extends ApiService {
 		return null;
 	}
 	
+	@SuppressWarnings("unused")
 	private Order v1CreateOrder(Order order) throws ApiProviderException {
 		if (order == null) {
 			throw new ApiProviderException("Invalid order.");
@@ -321,10 +328,6 @@ public class MercadoBitcoinApiService extends ApiService {
 		}
 
 		StringBuffer url = new StringBuffer(method);
-		
-		if (getCoin() == Coin.LTC) {
-			url.append("_litecoin");
-		}
 		url.append("/");
 		
 		for (String pathParam : pathParams) {
@@ -462,9 +465,11 @@ public class MercadoBitcoinApiService extends ApiService {
 				if (getCoin() != null && getCurrency() != null)
 					params.put("coin_pair", getCurrency().getValue().toUpperCase() + getCoin().getValue().toUpperCase());
 				if (order.getCoinAmount() != null)
-					params.put("quantity", order.getCoinAmount());
+					params.put("quantity", order.getCoinAmount().setScale(5, RoundingMode.DOWN));
 				if (order.getCurrencyPrice() != null)
-					params.put("limit_price", order.getCurrencyPrice());
+					params.put("limit_price", order.getCurrencyPrice().setScale(5, RoundingMode.DOWN));
+				if (order.getId() != null)
+					params.put("order_id", order.getId());
 			}
 			else if (version == ApiVersion.V1) {
 				if (getCoin() != null && getCurrency() != null)
