@@ -169,6 +169,8 @@ public class MercadoBitcoinApiService extends ApiService {
 	@Override
 	public Balance getBalance() throws ApiProviderException {
 		JsonObject jsonObject = makePrivateRequest("get_account_info", ApiVersion.V3);
+		if (jsonObject == null)
+			throw new ApiProviderException("Balance is not available!");
 		return getBalance(jsonObject);		
 	}
 	
