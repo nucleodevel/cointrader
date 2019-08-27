@@ -2,6 +2,7 @@ package org.nucleodevel.cointrader.beans;
 
 public enum Coin {
 	AMP("AMP"),
+	BCH("BCH"),
 	BTC("BTC"),
 	BURST("BURST"),
 	CLAM("CLAM"),

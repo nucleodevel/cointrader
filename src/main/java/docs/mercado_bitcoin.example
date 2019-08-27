@@ -5,11 +5,12 @@
 -curr BRL
 -mbr 0.01
 -msr 0.008
+-idp 0.00001
+-mca 0.00001
 -bbr ----
 -bsr ----
 -mbi ----
 -msi ----
--ica 0.00001
 -uk key
 -us secret
 -up MERCADO_BITCOIN
