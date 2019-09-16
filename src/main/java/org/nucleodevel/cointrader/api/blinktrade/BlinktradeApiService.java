@@ -25,15 +25,16 @@ import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.OrderBook;
 import org.nucleodevel.cointrader.beans.OrderStatus;
 import org.nucleodevel.cointrader.beans.OrderType;
+import org.nucleodevel.cointrader.beans.Provider;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.Ticker;
-import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.utils.Utils;
 
@@ -47,9 +48,10 @@ public class BlinktradeApiService extends ApiService {
 	
 	// --------------------- Constructor
 	
-	public BlinktradeApiService(UserConfiguration userConfiguration)
-			throws ApiProviderException {
-		super(userConfiguration);
+	public BlinktradeApiService(CoinCurrencyPair coinCurrencyPair, String key, String secret) 
+		throws ApiProviderException {
+		
+		super(coinCurrencyPair, Provider.BLINKTRADE, Broker.FOXBIT, key, secret);
 	}
 	
 	// --------------------- Getters and setters
@@ -86,15 +88,15 @@ public class BlinktradeApiService extends ApiService {
 
 	@Override
 	protected  void makeActionInConstructor() throws ApiProviderException {
-		if (userConfiguration.getKey() == null) {
+		if (key == null) {
 			throw new ApiProviderException("Key cannot be null");
 		}
 
-		if (userConfiguration.getSecret() == null) {
+		if (secret == null) {
 			throw new ApiProviderException("Secret cannot be null");
 		}
 
-		if (userConfiguration.getBroker() == null) {
+		if (broker == null) {
 			throw new ApiProviderException("Broker cannot be null");
 		}
 	}
@@ -369,7 +371,7 @@ public class BlinktradeApiService extends ApiService {
 			try {
 				Mac sha_HMAC = Mac.getInstance(ALGORITHM);
 				SecretKeySpec secret_key = new SecretKeySpec(
-					userConfiguration.getSecret().getBytes(), ALGORITHM
+					secret.getBytes(), ALGORITHM
 				);
 				sha_HMAC.init(secret_key);
 				byte encoded[] = sha_HMAC.doFinal(nonce.getBytes());
@@ -403,7 +405,7 @@ public class BlinktradeApiService extends ApiService {
 		}
 
 		http.setRequestProperty("Content-Type", "application/json");
-		http.setRequestProperty("APIKey", userConfiguration.getKey());
+		http.setRequestProperty("APIKey", key);
 		http.setRequestProperty("Nonce", nonce);
 		http.setRequestProperty("Signature", signature);
 
@@ -478,7 +480,7 @@ public class BlinktradeApiService extends ApiService {
         for (JsonElement row: bidArray) {
         	JsonArray rowArray = row.getAsJsonArray();
         	Order bidOrder = new Order(
-        		userConfiguration.getCoin(), userConfiguration.getCurrency(), 
+        		coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), 
         		RecordSide.BUY, rowArray.get(1).getAsBigDecimal(), 
         		rowArray.get(0).getAsBigDecimal()
         	);
@@ -491,7 +493,7 @@ public class BlinktradeApiService extends ApiService {
         for (JsonElement row: askArray) {
         	JsonArray rowArray = row.getAsJsonArray();
         	Order askOrder = new Order(
-        		userConfiguration.getCoin(), userConfiguration.getCurrency(), 
+        		coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), 
         		RecordSide.SELL, rowArray.get(1).getAsBigDecimal(), 
         		rowArray.get(0).getAsBigDecimal()
         	);
@@ -501,7 +503,7 @@ public class BlinktradeApiService extends ApiService {
         }
         
         OrderBook orderBook = new OrderBook(
-        	userConfiguration.getCoin(), userConfiguration.getCurrency()
+        	coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency()
         );
         orderBook.setBidOrders(bidOrders);
         orderBook.setAskOrders(askOrders);
@@ -517,7 +519,7 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
 		BigDecimal coinAmount = cumQty.add(leavesQty);
 		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal().divide(
-			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1));
+			new BigDecimal(coinCurrencyPair.getCurrency() == Currency.BRL? SATOSHI_BASE: 1));
 		
 		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 		
@@ -538,7 +540,7 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
 		BigDecimal coinAmount = cumQty.add(leavesQty);
 		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal().divide(
-			new BigDecimal(userConfiguration.getCurrency() == Currency.BRL? SATOSHI_BASE: 1)
+			new BigDecimal(coinCurrencyPair.getCurrency() == Currency.BRL? SATOSHI_BASE: 1)
 		);
 		
 		Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
@@ -559,7 +561,7 @@ public class BlinktradeApiService extends ApiService {
 	private static final Gson GSON = new Gson();
 	
 	private String getBrokerId() {
-		if (userConfiguration.getBroker() == Broker.FOXBIT)
+		if (broker == Broker.FOXBIT)
 			return "4";
 		return null;
 	}

@@ -5,34 +5,80 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.nucleodevel.cointrader.beans.Balance;
+import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.OrderBook;
+import org.nucleodevel.cointrader.beans.Provider;
 import org.nucleodevel.cointrader.beans.Ticker;
-import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 
 public abstract class ApiService {
 	
-	protected UserConfiguration userConfiguration;
+	protected CoinCurrencyPair coinCurrencyPair;
+
+	protected Provider provider;
+	protected Broker broker;
+	protected String key;
+	protected String secret;
 	
 	// --------------------- Constructors
 	
-	public ApiService(UserConfiguration userConfiguration) throws ApiProviderException {
-		this.userConfiguration = userConfiguration;
+	public ApiService(CoinCurrencyPair coinCurrencyPair, Provider provider, Broker broker, String key, String secret) 
+		throws ApiProviderException {
+		
+		this.coinCurrencyPair = coinCurrencyPair;
+		this.provider = provider;
+		this.broker = broker;
+		this.key = key;
+		this.secret = secret;
+		
 		makeActionInConstructor();
 	}
 	
 	protected Coin getCoin() {
-		return userConfiguration.getCoin();
+		return coinCurrencyPair.getCoin();
 	}
 	
 	protected Currency getCurrency() {
-		return userConfiguration.getCurrency();
+		return coinCurrencyPair.getCurrency();
 	}
 	
+	public Provider getProvider() {
+		return provider;
+	}
+
+	public void setProvider(Provider provider) {
+		this.provider = provider;
+	}
+
+	public Broker getBroker() {
+		return broker;
+	}
+
+	public void setBroker(Broker broker) {
+		this.broker = broker;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public String getSecret() {
+		return secret;
+	}
+
+	public void setSecret(String secret) {
+		this.secret = secret;
+	}
+
 	protected abstract String getDomain();
 	
 	protected abstract String getPublicApiUrl();

@@ -17,6 +17,8 @@ public class Balance {
 
 	public Balance(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
+		this.currencyAmount = new BigDecimal(0);
+		this.coinAmount = new BigDecimal(0);
 	}
 
 	public CoinCurrencyPair getCoinCurrencyPair() {
@@ -48,7 +50,7 @@ public class Balance {
 	}
 
 	public void setCoinAmount(BigDecimal coinAmount) {
-		this.coinAmount = coinAmount;
+		this.coinAmount = coinAmount == null? new BigDecimal(0): coinAmount;
 	}
 
 	public BigDecimal getCoinLocked() {

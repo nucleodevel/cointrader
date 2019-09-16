@@ -40,15 +40,17 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
+import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.OrderBook;
 import org.nucleodevel.cointrader.beans.OrderStatus;
+import org.nucleodevel.cointrader.beans.Provider;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.Ticker;
-import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.utils.JsonHashMap;
 
@@ -61,9 +63,9 @@ public class PoloniexApiService extends ApiService {
 	
 	// --------------------- Constructor
 	
-	public PoloniexApiService(UserConfiguration userConfiguration)
+	public PoloniexApiService(CoinCurrencyPair coinCurrencyPair, String key, String secret)
 			throws ApiProviderException {
-		super(userConfiguration);
+		super(coinCurrencyPair, Provider.POLONIEX, Broker.POLONIEX, key, secret);
 		makeActionInConstructor();
 	}
 	
@@ -101,7 +103,7 @@ public class PoloniexApiService extends ApiService {
 	
 	@Override
 	protected  void makeActionInConstructor() throws ApiProviderException {
-		this.mbTapiCodeBytes = userConfiguration.getSecret().getBytes();
+		this.mbTapiCodeBytes = secret.getBytes();
 	}
 	
 	// --------------------- Overrided methods
@@ -417,7 +419,7 @@ public class PoloniexApiService extends ApiService {
 			conn.setUseCaches(false) ;
 			conn.setDoOutput(true) ;
 			
-			conn.setRequestProperty("Key", userConfiguration.getKey()) ;
+			conn.setRequestProperty("Key", key) ;
 			conn.setRequestProperty("Sign",toHex(mac.doFinal(postData.getBytes("UTF-8")))) ;
 			conn.setRequestProperty("Content-Type","application/x-www-form-urlencoded") ;
 			conn.setRequestProperty("User-Agent",USER_AGENT) ;
@@ -542,7 +544,7 @@ public class PoloniexApiService extends ApiService {
 	public void setAuthKeys() throws Exception {
 		SecretKeySpec keyspec = null ;
 		try {
-			keyspec = new SecretKeySpec(userConfiguration.getSecret().getBytes("UTF-8"), "HmacSHA512") ;
+			keyspec = new SecretKeySpec(secret.getBytes("UTF-8"), "HmacSHA512") ;
 		} catch (UnsupportedEncodingException uee) {
 			throw new Exception("HMAC-SHA512 doesn't seem to be installed",uee) ;
 		}

@@ -38,16 +38,18 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
+import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.OrderBook;
 import org.nucleodevel.cointrader.beans.OrderStatus;
+import org.nucleodevel.cointrader.beans.Provider;
 import org.nucleodevel.cointrader.beans.RecordFilter;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.Ticker;
-import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.utils.HostnameVerifierBag;
 import org.nucleodevel.cointrader.utils.JsonHashMap;
@@ -63,9 +65,9 @@ public class MercadoBitcoinApiService extends ApiService {
 	
 	// --------------------- Constructor
 	
-	public MercadoBitcoinApiService(UserConfiguration userConfiguration)
+	public MercadoBitcoinApiService(CoinCurrencyPair coinCurrencyPair, String key, String secret)
 			throws ApiProviderException {
-		super(userConfiguration);
+		super(coinCurrencyPair, Provider.MERCADO_BITCOIN, Broker.MERCADO_BITCOIN, key, secret);
 	}
 	
 	// --------------------- Getters and setters
@@ -110,15 +112,15 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Internal error: Invalid SSL Algorithm.");
 		}
 		
-		if (userConfiguration.getSecret() == null) {
+		if (secret == null) {
 			throw new ApiProviderException("Null code.");
 		}
 		
-		if (userConfiguration.getKey() == null) {
+		if (key == null) {
 			throw new ApiProviderException("Null key.");
 		}
 		
-		this.mbTapiCodeBytes = userConfiguration.getSecret().getBytes();
+		this.mbTapiCodeBytes = secret.getBytes();
 	}
 	
 	// --------------------- Overrided methods
@@ -404,11 +406,11 @@ public class MercadoBitcoinApiService extends ApiService {
 			conn.setRequestMethod("POST");
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 			if (version == ApiVersion.V3) {
-				conn.setRequestProperty("TAPI-ID", userConfiguration.getKey());
+				conn.setRequestProperty("TAPI-ID", key);
 				conn.setRequestProperty("TAPI-MAC", signature);
 			}
 			else if (version == ApiVersion.V1) {
-				conn.setRequestProperty("Key", userConfiguration.getKey());
+				conn.setRequestProperty("Key", key);
 				conn.setRequestProperty("Sign", signature);
 			}
 			conn.setDoOutput(true);

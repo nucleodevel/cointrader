@@ -26,4 +26,9 @@ public class CoinCurrencyPair {
 		this.currency = currency;
 	}
 
+	@Override
+	public String toString() {
+		return "[coin=" + coin + "; currency=" + currency + "]";
+	}
+
 }

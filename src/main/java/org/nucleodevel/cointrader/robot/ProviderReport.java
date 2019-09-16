@@ -17,6 +17,7 @@ import org.nucleodevel.cointrader.api.mercadobitcoin.MercadoBitcoinApiService;
 import org.nucleodevel.cointrader.api.poloniex.PoloniexApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
@@ -35,6 +36,7 @@ public class ProviderReport {
 	
 	private static long numOfConsideredOrdersForLastRelevantPriceByOrders = 5;
 	
+	private CoinCurrencyPair coinCurrencyPair;
 	private UserConfiguration userConfiguration;
 
 	private ApiService apiService;
@@ -58,7 +60,8 @@ public class ProviderReport {
 	
 	private static DecimalFormat decFmt;
 	
-	public ProviderReport(UserConfiguration userConfiguration) {
+	public ProviderReport(CoinCurrencyPair coinCurrencyPair, UserConfiguration userConfiguration) {
+		this.coinCurrencyPair = coinCurrencyPair;
 		this.userConfiguration = userConfiguration;
 		makeDecimalFormat();
 	}
@@ -83,6 +86,14 @@ public class ProviderReport {
 		getUserOperations();*/
 	}
 	
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
+	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
+		this.coinCurrencyPair = coinCurrencyPair;
+	}
+
 	public UserConfiguration getUserConfiguration() {
 		return userConfiguration;
 	}
@@ -92,21 +103,27 @@ public class ProviderReport {
 	}
 
 	public Coin getCoin() {
-		return userConfiguration.getCoin();
+		return coinCurrencyPair.getCoin();
 	}
 
 	public Currency getCurrency() {
-		return userConfiguration.getCurrency();
+		return coinCurrencyPair.getCurrency();
 	}
 	
 	private ApiService getApiService() throws ApiProviderException {
 		if (apiService == null) {
 			if (userConfiguration.getProvider() == Provider.MERCADO_BITCOIN)
-				apiService = new MercadoBitcoinApiService(getUserConfiguration());
+				apiService = new MercadoBitcoinApiService(
+					coinCurrencyPair, getUserConfiguration().getKey(), getUserConfiguration().getSecret()
+				);
 			else if (userConfiguration.getProvider() == Provider.BLINKTRADE)
-				apiService = new BlinktradeApiService(getUserConfiguration());
+				apiService = new BlinktradeApiService(
+					coinCurrencyPair, getUserConfiguration().getKey(), getUserConfiguration().getSecret()
+				);
 			else if (userConfiguration.getProvider() == Provider.POLONIEX)
-				apiService = new PoloniexApiService(getUserConfiguration());
+				apiService = new PoloniexApiService(
+					coinCurrencyPair, getUserConfiguration().getKey(), getUserConfiguration().getSecret()
+				);
 		}
 		return apiService;
 	}
@@ -253,6 +270,15 @@ public class ProviderReport {
 		if (getUserOperations().size() > 0)
 			return getUserOperations().get(0);
 		return null;
+	}
+	
+	public BigDecimal getLastSpread() throws ApiProviderException {
+		Order buySideFirstOrder = getActiveOrders(RecordSide.BUY).get(0);
+		Order sellSideFirstOrder = getActiveOrders(RecordSide.SELL).get(0);
+		return new BigDecimal(
+			sellSideFirstOrder.getCurrencyPrice().doubleValue()
+			/ buySideFirstOrder.getCurrencyPrice().doubleValue()
+		);
 	}
 	
 	public BigDecimal getLastRelevantPriceByOperations(RecordSide side, Boolean showMessages) throws ApiProviderException {
@@ -428,7 +454,7 @@ public class ProviderReport {
 	public void makeOrdersByLastRelevantPrice(RecordSide side, RecordSideMode mode) 
 		throws ApiProviderException {
 		System.out.println("");
-		System.out.println("Analising " + side + " order");
+		System.out.println("Analising " + side + " order for " + coinCurrencyPair);
 		System.out.println("");
 		
 		BigDecimal lastRelevantInactivityTime =
@@ -521,7 +547,7 @@ public class ProviderReport {
 		}
 	}
 	
-	private void makeOrdersByLastRelevantPrice(
+	public void makeOrdersByLastRelevantPrice(
 		RecordSide side, BigDecimal lastRelevantPrice, BigDecimal lastRelevantInactivityTime,
 		Boolean hasToWinCurrent
 	) throws ApiProviderException {
@@ -564,7 +590,7 @@ public class ProviderReport {
 			}
 			
 			Order newOrder = new Order(
-				userConfiguration.getCoin(), userConfiguration.getCurrency(),
+				coinCurrencyPair.getCoin(), userConfiguration.getCurrency(),
 				side, coinAmount, lastRelevantPrice
 			);
 			newOrder.setType(OrderType.LIMITED);
@@ -604,7 +630,7 @@ public class ProviderReport {
 			}
 			
 			Order newOrder = new Order(
-				userConfiguration.getCoin(), userConfiguration.getCurrency(),
+				coinCurrencyPair.getCoin(), userConfiguration.getCurrency(),
 				side, coinAmount, lastRelevantPrice
 			);
 			newOrder.setType(OrderType.LIMITED);
@@ -668,7 +694,7 @@ public class ProviderReport {
 			if (isNearTheBestOtherSideOrder)
 				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
 			Order newOrder = new Order(
-				userConfiguration.getCoin(), userConfiguration.getCurrency(),
+				coinCurrencyPair.getCoin(), userConfiguration.getCurrency(),
 				side, coinAmount, currencyPrice
 			);
 			newOrder.setType(OrderType.LIMITED);

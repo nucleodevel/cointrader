@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -57,6 +58,30 @@ public class Utils {
 		
 		return null;
 		
+	}
+	
+	public static String getArrayString(Object[] objArray) {
+		String arrayStr = "[";
+		for (int i = 0; i < objArray.length; i++) {
+			arrayStr += objArray[i].toString();
+			if (i < objArray.length - 1)
+				arrayStr += ";";
+		}
+		arrayStr += "]";
+		
+		return arrayStr;
+	}
+	
+	public static String getListString(List<Object> objList) {
+		String listStr = "[";
+		for (int i = 0; i < objList.size(); i++) {
+			listStr += objList.get(0).toString();
+			if (i < objList.size() - 1)
+				listStr += ";";
+		}
+		listStr += "]";
+		
+		return listStr;
 	}
 
 }

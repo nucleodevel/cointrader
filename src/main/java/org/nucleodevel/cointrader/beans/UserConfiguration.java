@@ -2,6 +2,9 @@ package org.nucleodevel.cointrader.beans;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.List;
+
+import org.nucleodevel.cointrader.utils.Utils;
 
 public class UserConfiguration {
 	
@@ -12,7 +15,8 @@ public class UserConfiguration {
 	private Provider provider;
 	private Broker broker;
 	
-	private CoinCurrencyPair coinCurrencyPair;
+	private List<Coin> coinList;
+	private Currency currency;
 	private Integer delayTime;
 	private RecordSideMode buyMode;
 	private RecordSideMode sellMode;
@@ -26,7 +30,6 @@ public class UserConfiguration {
 	private Double incDecPrice;
 	
 	public UserConfiguration() {
-		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
 		minimumBuyRate = 0.8;
 		minimumSellRate = 1.2;
 		breakdownBuyRate = null;
@@ -66,29 +69,21 @@ public class UserConfiguration {
 	public void setBroker(Broker broker) {
 		this.broker = broker;
 	}
-
-	public CoinCurrencyPair getCoinCurrencyPair() {
-		return coinCurrencyPair;
-	}
-
-	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
-		this.coinCurrencyPair = coinCurrencyPair;
-	}
 	
-	public Coin getCoin() {
-		return coinCurrencyPair.getCoin();
+	public List<Coin> getCoinList() {
+		return coinList;
 	}
 
-	public void setCoin(Coin coin) {
-		coinCurrencyPair.setCoin(coin);
+	public void setCoinList(List<Coin> coinList) {
+		this.coinList = coinList;
 	}
 
 	public Currency getCurrency() {
-		return coinCurrencyPair.getCurrency();
+		return currency;
 	}
 
 	public void setCurrency(Currency currency) {
-		coinCurrencyPair.setCurrency(currency);
+		this.currency = currency;
 	}
 
 	public Integer getDelayTime() {
@@ -244,8 +239,8 @@ public class UserConfiguration {
 		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
 		sb.append(";\n  provider: " + provider);
 		sb.append(";\n  broker: " + broker);
-		sb.append(";\n  coin: " + coinCurrencyPair.getCoin());
-		sb.append(";\n  currency: " + coinCurrencyPair.getCurrency());
+		sb.append(";\n  coin: " + getCoinListString());
+		sb.append(";\n  currency: " + currency);
 		sb.append(";\n  delayTime: " + delayTime);
 		sb.append(";\n  buyMode: " + buyMode);
 		sb.append(";\n  sellMode: " + sellMode);
@@ -266,6 +261,13 @@ public class UserConfiguration {
 		sb.append("\n]");
 		
 		return sb.toString();
+	}
+	
+	public String getCoinListString() {
+		@SuppressWarnings("unchecked")
+		List<Object> objList = (List<Object>) (Object) coinList;
+		
+		return Utils.getListString(objList);
 	}
 	
 }
