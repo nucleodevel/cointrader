@@ -548,31 +548,27 @@ public class MercadoBitcoinApiService extends ApiService {
 	// --------------------- Json to object
 	
 	private Balance getBalance(JsonObject balanceJsonObject) {
+		Currency currency = getCurrency();
+		String currencyStr = currency.getValue().toLowerCase();
+		
+		Coin coin = getCoin();
+		String coinStr = coin.getValue().toLowerCase();
+		
 		Balance balance = new Balance(getCoin(), getCurrency());
 		
 		JsonObject jsonObject = balanceJsonObject.getAsJsonObject("balance");
 		
-		JsonObject brlJsonObject = jsonObject.getAsJsonObject("brl");
-		BigDecimal brlAvailable = new BigDecimal(brlJsonObject.getAsJsonPrimitive("available").getAsString());
-		BigDecimal brlTotal = new BigDecimal(brlJsonObject.getAsJsonPrimitive("total").getAsString());
+		JsonObject currencyJsonObject = jsonObject.getAsJsonObject(currencyStr);
+		BigDecimal currencyAvailable = new BigDecimal(currencyJsonObject.getAsJsonPrimitive("available").getAsString());
+		BigDecimal currencyAmount = new BigDecimal(currencyJsonObject.getAsJsonPrimitive("total").getAsString());
 		
-		JsonObject btcJsonObject = jsonObject.getAsJsonObject("btc");
-		BigDecimal btcAvailable = new BigDecimal(btcJsonObject.getAsJsonPrimitive("available").getAsString());
-		BigDecimal btcTotal = new BigDecimal(btcJsonObject.getAsJsonPrimitive("total").getAsString());
-		//BigDecimal btcAmountOpenOrders = new BigDecimal(btcJsonObject.get("amount_open_orders").asDouble());
+		JsonObject coinJsonObject = jsonObject.getAsJsonObject(coinStr);
+		BigDecimal coinAvailable = new BigDecimal(coinJsonObject.getAsJsonPrimitive("available").getAsString());
+		BigDecimal coinAmount = new BigDecimal(coinJsonObject.getAsJsonPrimitive("total").getAsString());
+		//BigDecimal coinAmountOpenOrders = new BigDecimal(coinJsonObject.get("amount_open_orders").asDouble());
 		
-		JsonObject ltcJsonObject = jsonObject.getAsJsonObject("ltc");
-		BigDecimal ltcAvailable = new BigDecimal(ltcJsonObject.getAsJsonPrimitive("available").getAsString());
-		BigDecimal ltcTotal = new BigDecimal(ltcJsonObject.getAsJsonPrimitive("total").getAsString());
-		//BigDecimal ltcAmountOpenOrders = new BigDecimal(ltcJsonObject.get("amount_open_orders").asDouble());
-		
-		BigDecimal coinAmount = getCoin() == Coin.BTC? btcTotal: (getCoin() == Coin.LTC? ltcTotal: null);
-		BigDecimal currencyAmount = getCurrency() == Currency.BRL? brlTotal: null;
-		
-		BigDecimal coinLocked = getCoin() == Coin.BTC? btcTotal.subtract(btcAvailable):
-			(getCoin() == Coin.LTC? ltcTotal.subtract(ltcAvailable): null);
-		BigDecimal currencyLocked =
-			getCurrency() == Currency.BRL? brlTotal.subtract(brlAvailable): null;
+		BigDecimal coinLocked = coinAmount.subtract(coinAvailable);
+		BigDecimal currencyLocked = currencyAmount.subtract(currencyAvailable);
 		
 		balance.setCoinAmount(coinAmount);
 		balance.setCurrencyAmount(currencyAmount);

@@ -75,7 +75,7 @@ public class Utils {
 	public static String getListString(List<Object> objList) {
 		String listStr = "[";
 		for (int i = 0; i < objList.size(); i++) {
-			listStr += objList.get(0).toString();
+			listStr += objList.get(i).toString();
 			if (i < objList.size() - 1)
 				listStr += ";";
 		}
