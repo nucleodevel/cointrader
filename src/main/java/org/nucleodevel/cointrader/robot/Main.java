@@ -138,10 +138,8 @@ public class Main {
 					System.out.println("Current top orders by type");
 					System.out.println("  " + report.getActiveOrders(RecordSide.BUY).get(0));
 					System.out.println("  " + report.getActiveOrders(RecordSide.SELL).get(0));
-					System.out.println("\n\n");
-					
-					System.out.println("Current spread: " + report.getLastSpread());
-					System.out.println("\n\n");
+					System.out.println("\nCurrent spread: " + report.getLastSpread());
+					System.out.println("");
 				}
 				
 				//report.readApiAtFirst();
