@@ -554,21 +554,14 @@ public class MercadoBitcoinApiService extends ApiService {
 		BigDecimal brlAvailable = new BigDecimal(brlJsonObject.getAsJsonPrimitive("available").getAsString());
 		BigDecimal brlTotal = new BigDecimal(brlJsonObject.getAsJsonPrimitive("total").getAsString());
 		
-		JsonObject btcJsonObject = jsonObject.getAsJsonObject("btc");
-		BigDecimal btcAvailable = new BigDecimal(btcJsonObject.getAsJsonPrimitive("available").getAsString());
-		BigDecimal btcTotal = new BigDecimal(btcJsonObject.getAsJsonPrimitive("total").getAsString());
-		//BigDecimal btcAmountOpenOrders = new BigDecimal(btcJsonObject.get("amount_open_orders").asDouble());
+		JsonObject coinJsonObject = jsonObject.getAsJsonObject(getCoin().getValue().toLowerCase());
+		BigDecimal coinAvailable = new BigDecimal(coinJsonObject.getAsJsonPrimitive("available").getAsString());
+		BigDecimal coinTotal = new BigDecimal(coinJsonObject.getAsJsonPrimitive("total").getAsString());
 		
-		JsonObject ltcJsonObject = jsonObject.getAsJsonObject("ltc");
-		BigDecimal ltcAvailable = new BigDecimal(ltcJsonObject.getAsJsonPrimitive("available").getAsString());
-		BigDecimal ltcTotal = new BigDecimal(ltcJsonObject.getAsJsonPrimitive("total").getAsString());
-		//BigDecimal ltcAmountOpenOrders = new BigDecimal(ltcJsonObject.get("amount_open_orders").asDouble());
-		
-		BigDecimal coinAmount = getCoin() == Coin.BTC? btcTotal: (getCoin() == Coin.LTC? ltcTotal: null);
+		BigDecimal coinAmount = coinTotal;
 		BigDecimal currencyAmount = getCurrency() == Currency.BRL? brlTotal: null;
 		
-		BigDecimal coinLocked = getCoin() == Coin.BTC? btcTotal.subtract(btcAvailable):
-			(getCoin() == Coin.LTC? ltcTotal.subtract(ltcAvailable): null);
+		BigDecimal coinLocked = coinTotal.subtract(coinAvailable);
 		BigDecimal currencyLocked =
 			getCurrency() == Currency.BRL? brlTotal.subtract(brlAvailable): null;
 		
@@ -618,7 +611,9 @@ public class MercadoBitcoinApiService extends ApiService {
 	
 	private Order getOrder(JsonObject jsonObject) {
 		String coinPair = jsonObject.get("coin_pair").getAsString().toUpperCase();
-		Coin coin = Coin.valueOf(coinPair.substring(3, 6).toUpperCase());
+		
+		Coin coin = Coin.valueOf(coinPair.substring(3).toUpperCase());
+		
 		Currency currency = Currency.valueOf(coinPair.substring(0, 3).toUpperCase());
 		Integer sideInt = jsonObject.get("order_type").getAsInt();
 		RecordSide side = sideInt == 1? RecordSide.BUY: (sideInt == 2? RecordSide.SELL: null);
