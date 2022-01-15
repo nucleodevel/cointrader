@@ -138,7 +138,7 @@ public class Balance {
 		sb.append(this.getClass().getSimpleName() + ": ["); 
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
-		sb.append("; coinAmount: " + decFmt.format(coinAmount));
+		sb.append("; coinAmount: " + (coinAmount == null? "0.0": decFmt.format(coinAmount)));
 		if (coinLocked != null)
 			sb.append("; coinLocked: " + decFmt.format(coinLocked));
 		sb.append("; currencyAmount: " + decFmt.format(currencyAmount));
