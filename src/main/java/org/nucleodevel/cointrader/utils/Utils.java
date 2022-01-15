@@ -17,7 +17,7 @@ public class Utils {
 	public static BigInteger getBigInteger(Object o) {
 
 		if (o instanceof Number) {
-			return new BigInteger(new Integer(((Number) o).intValue()).toString());
+			return new BigInteger(Integer.valueOf(((Number) o).intValue()).toString());
 		}
 
 		return new BigDecimal(o.toString()).toBigInteger();

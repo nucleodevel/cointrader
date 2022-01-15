@@ -17,7 +17,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
@@ -49,10 +46,7 @@ import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
-import org.nucleodevel.cointrader.utils.HostnameVerifierBag;
 import org.nucleodevel.cointrader.utils.JsonHashMap;
-import org.nucleodevel.cointrader.utils.TrustManagerBag;
-import org.nucleodevel.cointrader.utils.TrustManagerBag.SslContextTrustManager;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -101,13 +95,6 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	@Override
 	protected void makeActionInConstructor() throws ApiProviderException {
-		try {
-			setSslContext(SslContextTrustManager.DEFAULT);
-		} catch (KeyManagementException e) {
-			throw new ApiProviderException("Internal error: Invalid SSL Connection.");
-		} catch (NoSuchAlgorithmException e) {
-			throw new ApiProviderException("Internal error: Invalid SSL Algorithm.");
-		}
 
 		if (userConfiguration.getSecret() == null) {
 			throw new ApiProviderException("Null code.");
@@ -354,9 +341,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			}
 
 			String response = sb.toString();
-
-			JsonParser jsonParser = new JsonParser();
-			JsonElement jsonElement = jsonParser.parse(response);
+			JsonElement jsonElement = JsonParser.parseString(response);
 
 			return jsonElement;
 		} catch (MalformedURLException e) {
@@ -430,8 +415,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Internal error: null response from the server.");
 		}
 
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jsonObject = (JsonObject) jsonParser.parse(jsonResponse);
+		JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
 
 		JsonObject returnData = jsonObject.getAsJsonObject(
 				version == ApiVersion.V3 ? "response_data" : (version == ApiVersion.V1 ? "return" : null));
@@ -646,24 +630,6 @@ public class MercadoBitcoinApiService extends ApiService {
 		mac.init(key);
 		String sign = encodeHexString(mac.doFinal(parameters.getBytes()));
 		return sign;
-	}
-
-	@SuppressWarnings("incomplete-switch")
-	private final void setSslContext(SslContextTrustManager sctm)
-			throws NoSuchAlgorithmException, KeyManagementException {
-		// Enables protocols "TLSv1", "TLSv1.1" and "TLSv1.2"
-		SSLContext sc = SSLContext.getInstance("TLS");
-
-		switch (sctm) {
-		case BYPASS:
-			sc.init(null, TrustManagerBag.BYPASS_TRUST_MANAGER_LIST, TrustManagerBag.SECURE_RANDOM);
-			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-			HttpsURLConnection.setDefaultHostnameVerifier(HostnameVerifierBag.BYPASS_HOSTNAME_VERIFIER);
-			break;
-		case DEFAULT:
-			HttpsURLConnection.setDefaultSSLSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault());
-			break;
-		}
 	}
 
 	private static final String encodeHexString(byte[] bytes) {

@@ -146,12 +146,10 @@ public class BlinktradeApiService extends ApiService {
 		Map<String, Object> request = new LinkedHashMap<String, Object>();
 
 		request.put("MsgType", "U2");
-		request.put("BalanceReqID", new Integer((int) (System.currentTimeMillis() / 1000)));
+		request.put("BalanceReqID", Integer.valueOf((int) (System.currentTimeMillis() / 1000)));
 
 		String response = makePrivateRequest(GSON.toJson(request));
-
-		JsonParser jsonParser = new JsonParser();
-		JsonObject balanceJsonObject = (JsonObject) jsonParser.parse(response);
+		JsonObject balanceJsonObject = JsonParser.parseString(response).getAsJsonObject();
 
 		return getBalance(balanceJsonObject);
 	}
@@ -160,9 +158,7 @@ public class BlinktradeApiService extends ApiService {
 	public OrderBook getOrderBook() throws ApiProviderException {
 
 		String responseMessage = makePublicRequest("orderbook");
-
-		JsonParser jsonParser = new JsonParser();
-		JsonObject orderBookJsonObject = (JsonObject) jsonParser.parse(responseMessage);
+		JsonObject orderBookJsonObject = JsonParser.parseString(responseMessage).getAsJsonObject();
 
 		return getOrderBook(orderBookJsonObject);
 	}
@@ -171,9 +167,8 @@ public class BlinktradeApiService extends ApiService {
 	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
 		String responseMessage = makePublicRequest("trades");
 
-		JsonParser jsonParser = new JsonParser();
-		JsonElement operationListJsonObject = (JsonElement) jsonParser.parse(responseMessage);
-		JsonArray operationListJsonArray = operationListJsonObject.getAsJsonArray();
+		JsonElement operationListJsonElement = JsonParser.parseString(responseMessage);
+		JsonArray operationListJsonArray = operationListJsonElement.getAsJsonArray();
 
 		Operation[] operationList = new Operation[operationListJsonArray.size()];
 		for (int i = 0; i < operationListJsonArray.size(); i++) {
@@ -211,15 +206,14 @@ public class BlinktradeApiService extends ApiService {
 		filters.add("has_leaves_qty eq 1");
 
 		request.put("MsgType", "U4");
-		request.put("OrdersReqID", new Integer((int) (System.currentTimeMillis() / 1000)));
-		request.put("Page", new Integer(0));
-		request.put("PageSize", new Integer(100));
+		request.put("OrdersReqID", Integer.valueOf((int) (System.currentTimeMillis() / 1000)));
+		request.put("Page", Integer.valueOf(0));
+		request.put("PageSize", Integer.valueOf(100));
 		request.put("Filter", filters);
 
 		String response = makePrivateRequest(GSON.toJson(request));
+		JsonObject jo = JsonParser.parseString(response).getAsJsonObject();
 
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jo = (JsonObject) jsonParser.parse(response);
 		JsonArray activeOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject()
 				.getAsJsonArray("OrdListGrp");
 		List<Order> activeOrders = new ArrayList<Order>();
@@ -242,15 +236,14 @@ public class BlinktradeApiService extends ApiService {
 		filters.add("has_cum_qty eq 1");
 
 		request.put("MsgType", "U4");
-		request.put("OrdersReqID", new Integer((int) (System.currentTimeMillis() / 1000)));
-		request.put("Page", new Integer(0));
-		request.put("PageSize", new Integer(100));
+		request.put("OrdersReqID", Integer.valueOf((int) (System.currentTimeMillis() / 1000)));
+		request.put("Page", Integer.valueOf(0));
+		request.put("PageSize", Integer.valueOf(100));
 		request.put("Filter", filters);
 
 		String response = makePrivateRequest(GSON.toJson(request));
+		JsonObject jo = JsonParser.parseString(response).getAsJsonObject();
 
-		JsonParser jsonParser = new JsonParser();
-		JsonObject jo = (JsonObject) jsonParser.parse(response);
 		JsonArray completedOrdListGrp = jo.getAsJsonArray("Responses").get(0).getAsJsonObject()
 				.getAsJsonArray("OrdListGrp");
 		List<Operation> clientOperations = new ArrayList<Operation>();
@@ -282,7 +275,7 @@ public class BlinktradeApiService extends ApiService {
 	@Override
 	public Order createOrder(Order order) throws ApiProviderException {
 
-		Integer clientOrderId = new Integer((int) (System.currentTimeMillis() / 1000));
+		Integer clientOrderId = Integer.valueOf((int) (System.currentTimeMillis() / 1000));
 		Coin coin = order.getCoin();
 		Currency currency = order.getCurrency();
 		RecordSide side = order.getSide();

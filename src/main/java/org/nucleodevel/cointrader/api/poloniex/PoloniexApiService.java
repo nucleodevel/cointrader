@@ -344,8 +344,7 @@ public class PoloniexApiService extends ApiService {
 			}
 
 			String response = sb.toString();
-			JsonParser jsonParser = new JsonParser();
-			JsonElement jsonElement = jsonParser.parse(response);
+			JsonElement jsonElement = JsonParser.parseString(response);
 
 			// putting delay time
 			try {
@@ -427,8 +426,7 @@ public class PoloniexApiService extends ApiService {
 			throw new ApiProviderException("Error connecting to BTC-E.", e);
 		}
 
-		JsonParser jsonParser = new JsonParser();
-		JsonElement jsonElement = jsonParser.parse(response.toString());
+		JsonElement jsonElement = JsonParser.parseString(response.toString());
 
 		// putting delay time
 		try {
