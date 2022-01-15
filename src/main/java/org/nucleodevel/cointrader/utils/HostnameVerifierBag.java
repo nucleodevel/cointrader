@@ -20,12 +20,11 @@ public class HostnameVerifierBag {
 			HostnameChecker checker = HostnameChecker.getInstance(HostnameChecker.TYPE_TLS);
 
 			boolean validCertificate = false;
-			
+
 			try {
 				Certificate[] peerCertificates = session.getPeerCertificates();
 
-				if ((peerCertificates.length > 0)
-								&& (peerCertificates[0] instanceof X509Certificate)) {
+				if ((peerCertificates.length > 0) && (peerCertificates[0] instanceof X509Certificate)) {
 					X509Certificate peerCertificate = (X509Certificate) peerCertificates[0];
 
 					checker.match(hostname, peerCertificate);
@@ -36,7 +35,7 @@ public class HostnameVerifierBag {
 			} catch (SSLPeerUnverifiedException e) {
 				validCertificate = false;
 			}
-			
+
 			return validCertificate;
 		}
 
@@ -51,7 +50,7 @@ public class HostnameVerifierBag {
 			}
 		}
 	};
-	
+
 	public static final HostnameVerifier BYPASS_HOSTNAME_VERIFIER = new HostnameVerifier() {
 		public boolean verify(String hostname, SSLSession session) {
 			return true;

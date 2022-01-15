@@ -12,18 +12,19 @@ import java.util.Date;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 
 public class TimestampInterval implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
-	 
+
 	private Long fromTimestamp;
 	private Long toTimestamp;
-	
+
 	public TimestampInterval(long fromTimestamp) {
 		this.fromTimestamp = fromTimestamp;
 	}
-	
+
 	/**
 	 * Creates an interval with only initial date.
+	 * 
 	 * @param fromDate Initial date
 	 */
 	public TimestampInterval(Date fromDate) throws ApiProviderException {
@@ -32,17 +33,18 @@ public class TimestampInterval implements Serializable {
 		}
 		this.fromTimestamp = fromDate.getTime();
 	}
-	
+
 	/**
 	 * Creates an interval with timestamps.
+	 * 
 	 * @param fromTimestamp Initial date
-	 * @param toTimestamp Final date
+	 * @param toTimestamp   Final date
 	 */
 	public TimestampInterval(long fromTimestamp, long toTimestamp) throws ApiProviderException {
 		if ((fromTimestamp < 0L) || (toTimestamp < 0L)) {
 			throw new ApiProviderException("Values must be greater than zero.");
 		}
-		
+
 		if (fromTimestamp > toTimestamp) {
 			throw new ApiProviderException("Initial timestamp must be before final timestamp");
 		}
@@ -53,8 +55,9 @@ public class TimestampInterval implements Serializable {
 
 	/**
 	 * Creates an interval with dates.
+	 * 
 	 * @param fromDate Initial date
-	 * @param toDate Final date
+	 * @param toDate   Final date
 	 */
 	public TimestampInterval(Date fromDate, Date toDate) throws ApiProviderException {
 		if (fromDate == null || toDate == null) {
@@ -72,9 +75,9 @@ public class TimestampInterval implements Serializable {
 	public Long getFromTimestamp() {
 		return fromTimestamp;
 	}
-	
+
 	public Long getToTimestamp() {
 		return toTimestamp;
 	}
-	
+
 }

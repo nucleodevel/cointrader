@@ -1,7 +1,7 @@
 package org.nucleodevel.cointrader.beans;
 
 public class CoinCurrencyPair {
-	
+
 	private Coin coin;
 	private Currency currency;
 
@@ -9,7 +9,7 @@ public class CoinCurrencyPair {
 		this.coin = coin;
 		this.currency = currency;
 	}
-	
+
 	public Coin getCoin() {
 		return coin;
 	}

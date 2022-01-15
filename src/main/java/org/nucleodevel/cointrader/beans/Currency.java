@@ -1,9 +1,8 @@
 package org.nucleodevel.cointrader.beans;
 
 public enum Currency {
-	BRL("BRL"),
-	USDT("USDT"),
-	BTC("BTC");
+	BRL("BRL"), USDT("USDT"), BTC("BTC");
+
 	private final String value;
 
 	private Currency(String value) {

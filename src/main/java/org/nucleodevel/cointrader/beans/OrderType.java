@@ -1,10 +1,9 @@
 package org.nucleodevel.cointrader.beans;
 
 public enum OrderType {
-	
-	MARKET("MARKET"),
-	LIMITED("LIMITED");
-	
+
+	MARKET("MARKET"), LIMITED("LIMITED");
+
 	private final String value;
 
 	private OrderType(String value) {

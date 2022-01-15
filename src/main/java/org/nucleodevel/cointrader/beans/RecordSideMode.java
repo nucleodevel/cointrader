@@ -1,11 +1,9 @@
 package org.nucleodevel.cointrader.beans;
 
 public enum RecordSideMode {
-	NONE("NONE"),
-	ORDERS("ORDERS"),
-	OPERATIONS("OPERATIONS"),
-	OTHER_ORDERS("OTHER_ORDERS"),
+	NONE("NONE"), ORDERS("ORDERS"), OPERATIONS("OPERATIONS"), OTHER_ORDERS("OTHER_ORDERS"),
 	OTHER_OPERATIONS("OTHER_OPERATIONS");
+
 	private final String value;
 
 	private RecordSideMode(String value) {

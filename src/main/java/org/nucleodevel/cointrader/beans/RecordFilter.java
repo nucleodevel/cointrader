@@ -38,7 +38,7 @@ public class RecordFilter implements Serializable {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}
@@ -54,12 +54,12 @@ public class RecordFilter implements Serializable {
 	public void setCurrency(Currency currency) {
 		coinCurrencyPair.setCurrency(currency);
 	}
-	
+
 	public RecordSide getSide() {
 		return side;
 	}
-	
-	public void setSide(RecordSide side) { 
+
+	public void setSide(RecordSide side) {
 		this.side = side;
 	}
 
@@ -67,7 +67,7 @@ public class RecordFilter implements Serializable {
 		return status;
 	}
 
-	public void setStatus(OrderStatus status) { 
+	public void setStatus(OrderStatus status) {
 		this.status = status;
 	}
 
@@ -83,7 +83,7 @@ public class RecordFilter implements Serializable {
 		return fromId;
 	}
 
-	public void setFromId(Long fromId) { 
+	public void setFromId(Long fromId) {
 		this.fromId = fromId;
 	}
 
@@ -99,7 +99,7 @@ public class RecordFilter implements Serializable {
 		return endId;
 	}
 
-	public void setEndId(Long endId) { 
+	public void setEndId(Long endId) {
 		this.endId = endId;
 	}
 
@@ -123,7 +123,7 @@ public class RecordFilter implements Serializable {
 		this.toTimestamp = toTimestamp;
 	}
 
-	public void setSince(Long since) { 
+	public void setSince(Long since) {
 		this.since = since;
 	}
 
@@ -131,16 +131,14 @@ public class RecordFilter implements Serializable {
 		return end;
 	}
 
-	public void setEnd(Long end) { 
+	public void setEnd(Long end) {
 		this.end = end;
-	}	
+	}
 
 	@Override
 	public String toString() {
-		return "OrderFilter [coin=" + getCoin() + ", currency=" + getCurrency() 
-				+ ", side=" + side + ", status="
-				+ status + ", fromId=" + fromId + ", endId=" + endId
-				+ ", since=" + since + ", end=" + end + "]";
+		return "OrderFilter [coin=" + getCoin() + ", currency=" + getCurrency() + ", side=" + side + ", status="
+				+ status + ", fromId=" + fromId + ", endId=" + endId + ", since=" + since + ", end=" + end + "]";
 	}
-	
+
 }

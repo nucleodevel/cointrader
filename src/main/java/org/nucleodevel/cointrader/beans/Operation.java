@@ -6,10 +6,7 @@ public class Operation extends Record {
 
 	private BigDecimal rate;
 
-	public Operation(
-		Coin coin, Currency currency, RecordSide side,
-		BigDecimal coinAmount, BigDecimal currencyPrice
-	) {
+	public Operation(Coin coin, Currency currency, RecordSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
 		super(coin, currency, side, coinAmount, currencyPrice);
 	}
 
@@ -20,5 +17,5 @@ public class Operation extends Record {
 	public void setRate(BigDecimal rate) {
 		this.rate = rate;
 	}
-	
+
 }

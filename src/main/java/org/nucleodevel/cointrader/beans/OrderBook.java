@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderBook {
-	
+
 	private CoinCurrencyPair coinCurrencyPair;
 	private List<Order> bidOrders;
 	private List<Order> askOrders;
-	
+
 	public OrderBook(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 		this.bidOrders = new ArrayList<Order>();
@@ -22,7 +22,7 @@ public class OrderBook {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}

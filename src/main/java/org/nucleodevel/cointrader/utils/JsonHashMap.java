@@ -15,13 +15,14 @@ public class JsonHashMap extends HashMap<String, Object> {
 	/**
 	 * Method to convert the Parameters of the Object to a String in json format.
 	 * 
-	 * @return String, in Json format, of the JsonHashMap containing the request's parameters.
+	 * @return String, in Json format, of the JsonHashMap containing the request's
+	 *         parameters.
 	 */
 	public String toJson() {
 		StringBuffer json = new StringBuffer("{");
-		
+
 		int count = 0;
-		
+
 		for (String key : this.keySet()) {
 			Object value = this.get(key);
 			if (value instanceof String) {
@@ -30,7 +31,7 @@ public class JsonHashMap extends HashMap<String, Object> {
 			json.append(" \"" + key + "\"");
 			json.append(": ");
 			json.append(value);
-			
+
 			count++;
 			if (count != this.keySet().size()) {
 				json.append(",");
@@ -40,27 +41,29 @@ public class JsonHashMap extends HashMap<String, Object> {
 		json.deleteCharAt(1);
 		return json.toString();
 	}
-	
+
 	/**
-	 * Method to convert the Parameters of the Object to a String in URL encoded format.
+	 * Method to convert the Parameters of the Object to a String in URL encoded
+	 * format.
 	 * 
-	 * @return String, in urlEncoded format, of the JsonHashMap containing the request's parameters.
+	 * @return String, in urlEncoded format, of the JsonHashMap containing the
+	 *         request's parameters.
 	 */
 	public String toUrlEncoded() {
 		StringBuffer newUrlEncoded = new StringBuffer();
 		int count = 0;
-		
+
 		for (String key : this.keySet()) {
 			Object value = this.get(key);
-			newUrlEncoded.append(key + "=" + value);			
-			
-			count++;			
+			newUrlEncoded.append(key + "=" + value);
+
+			count++;
 			if (count != this.keySet().size()) {
 				newUrlEncoded.append("&");
 			}
 		}
-		
+
 		return newUrlEncoded.toString();
 	}
-	
+
 }
