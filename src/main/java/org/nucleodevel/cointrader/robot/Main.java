@@ -13,7 +13,6 @@ import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.exception.ParamLabelErrorException;
 import org.nucleodevel.cointrader.exception.ParamSyntaxErrorException;
 import org.nucleodevel.cointrader.exception.ParamValueErrorException;
-import org.nucleodevel.cointrader.robot.ParamReader;
 
 public class Main {
 	
