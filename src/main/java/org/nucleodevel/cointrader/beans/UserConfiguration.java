@@ -4,14 +4,14 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 public class UserConfiguration {
-	
+
 	private static long MILISSECONDS_PER_3H = 10800000;
 
 	private String key;
 	private String secret;
 	private Provider provider;
 	private Broker broker;
-	
+
 	private CoinCurrencyPair coinCurrencyPair;
 	private Integer delayTime;
 	private RecordSideMode buyMode;
@@ -24,7 +24,7 @@ public class UserConfiguration {
 	private Double maxSellInterval;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
-	
+
 	public UserConfiguration() {
 		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
 		minimumBuyRate = 0.8;
@@ -74,7 +74,7 @@ public class UserConfiguration {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}
@@ -102,11 +102,11 @@ public class UserConfiguration {
 	public RecordSideMode getMode(RecordSide side) {
 		RecordSideMode mode = RecordSideMode.NONE;
 		switch (side) {
-			case BUY:
-				mode = buyMode;
+		case BUY:
+			mode = buyMode;
 			break;
-			case SELL:
-				mode = sellMode;
+		case SELL:
+			mode = sellMode;
 			break;
 		}
 		return mode;
@@ -131,11 +131,11 @@ public class UserConfiguration {
 	public Double getMinimumRate(RecordSide side) {
 		Double rate = 0.0;
 		switch (side) {
-			case BUY:
-				rate = 1 - minimumBuyRate;
+		case BUY:
+			rate = 1 - minimumBuyRate;
 			break;
-			case SELL:
-				rate = 1 + minimumSellRate;
+		case SELL:
+			rate = 1 + minimumSellRate;
 			break;
 		}
 		return rate;
@@ -152,13 +152,13 @@ public class UserConfiguration {
 	public Double getBreakdownRate(RecordSide side) {
 		Double rate = 0.0;
 		switch (side) {
-			case BUY:
-				if (breakdownBuyRate != null)
-					rate = 1 - breakdownBuyRate;
+		case BUY:
+			if (breakdownBuyRate != null)
+				rate = 1 - breakdownBuyRate;
 			break;
-			case SELL:
-				if (breakdownSellRate != null)
-					rate = 1 + breakdownSellRate;
+		case SELL:
+			if (breakdownSellRate != null)
+				rate = 1 + breakdownSellRate;
 			break;
 		}
 		return rate;
@@ -183,13 +183,11 @@ public class UserConfiguration {
 	public Double getMaxInterval(RecordSide side) {
 		Double interval = null;
 		switch (side) {
-			case BUY:
-				interval = maxBuyInterval == null?
-					null: MILISSECONDS_PER_3H * maxBuyInterval;
+		case BUY:
+			interval = maxBuyInterval == null ? null : MILISSECONDS_PER_3H * maxBuyInterval;
 			break;
-			case SELL:
-				interval = maxSellInterval == null?
-					null: MILISSECONDS_PER_3H * maxSellInterval;
+		case SELL:
+			interval = maxSellInterval == null ? null : MILISSECONDS_PER_3H * maxSellInterval;
 			break;
 		}
 		return interval;
@@ -218,28 +216,28 @@ public class UserConfiguration {
 	public Double getIncDecPrice(RecordSide side) {
 		Double incDecPrice = 0.0;
 		switch (side) {
-			case BUY:
-				incDecPrice = Math.abs(this.incDecPrice);
+		case BUY:
+			incDecPrice = Math.abs(this.incDecPrice);
 			break;
-			case SELL:
-				incDecPrice = Math.abs(this.incDecPrice) * (-1);
+		case SELL:
+			incDecPrice = Math.abs(this.incDecPrice) * (-1);
 			break;
 		}
 		return incDecPrice;
 	}
-	
+
 	@Override
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
 		decFmt.setMaximumFractionDigits(5);
-		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
-		
+
 		StringBuilder sb = new StringBuilder();
-		
-		sb.append(this.getClass().getSimpleName() + ": ["); 
+
+		sb.append(this.getClass().getSimpleName() + ": [");
 		sb.append("\n  key: " + key.substring(0, 8) + "...");
 		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
 		sb.append(";\n  provider: " + provider);
@@ -264,8 +262,8 @@ public class UserConfiguration {
 		if (incDecPrice != null)
 			sb.append(";\n  incDecPrice: " + decFmt.format(incDecPrice));
 		sb.append("\n]");
-		
+
 		return sb.toString();
 	}
-	
+
 }

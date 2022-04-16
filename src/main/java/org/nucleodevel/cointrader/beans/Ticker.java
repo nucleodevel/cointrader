@@ -3,13 +3,13 @@ package org.nucleodevel.cointrader.beans;
 import java.math.BigDecimal;
 
 public class Ticker {
-	
+
 	private CoinCurrencyPair coinCurrencyPair;
 	private BigDecimal high;
 	private BigDecimal low;
 	private BigDecimal vol;
 	private BigDecimal last3HourVolume;
-	
+
 	public Ticker(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 	}
@@ -21,7 +21,7 @@ public class Ticker {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}

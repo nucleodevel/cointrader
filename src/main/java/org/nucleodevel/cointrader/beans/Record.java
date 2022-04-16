@@ -7,7 +7,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Calendar;
 
 public class Record implements Comparable<Record> {
-	
+
 	private CoinCurrencyPair coinCurrencyPair;
 	private BigInteger id;
 	private BigInteger clientId;
@@ -15,11 +15,8 @@ public class Record implements Comparable<Record> {
 	private BigDecimal coinAmount;
 	private BigDecimal currencyPrice;
 	private Calendar creationDate;
-	
-	public Record(
-		Coin coin, Currency currency, RecordSide side,
-		BigDecimal coinAmount, BigDecimal currencyPrice
-	) {
+
+	public Record(Coin coin, Currency currency, RecordSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 		this.side = side;
 		this.coinAmount = coinAmount;
@@ -33,7 +30,7 @@ public class Record implements Comparable<Record> {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}
@@ -95,10 +92,9 @@ public class Record implements Comparable<Record> {
 	}
 
 	public BigDecimal getSideAmount(RecordSide side) {
-		return side == RecordSide.BUY? getCurrencyAmount():
-			(side == RecordSide.SELL? getCoinAmount(): null);
+		return side == RecordSide.BUY ? getCurrencyAmount() : (side == RecordSide.SELL ? getCoinAmount() : null);
 	}
-	
+
 	public Calendar getCreationDate() {
 		return creationDate;
 	}
@@ -106,19 +102,19 @@ public class Record implements Comparable<Record> {
 	public void setCreationDate(Calendar creationDate) {
 		this.creationDate = creationDate;
 	}
-	
+
 	@Override
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
 		decFmt.setMaximumFractionDigits(8);
-		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
-		
+
 		StringBuilder sb = new StringBuilder();
-		
-		sb.append(this.getClass().getSimpleName() + ": ["); 
+
+		sb.append(this.getClass().getSimpleName() + ": [");
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
 		sb.append("; side: " + side);
@@ -128,7 +124,7 @@ public class Record implements Comparable<Record> {
 		if (creationDate != null)
 			sb.append("; creationDate: " + creationDate.getTime());
 		sb.append("]");
-		
+
 		return sb.toString();
 	}
 

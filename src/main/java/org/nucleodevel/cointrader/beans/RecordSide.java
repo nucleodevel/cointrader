@@ -1,8 +1,8 @@
 package org.nucleodevel.cointrader.beans;
 
 public enum RecordSide {
-	BUY("BUY"),
-	SELL("SELL");
+	BUY("BUY"), SELL("SELL");
+
 	private final String value;
 
 	private RecordSide(String value) {
@@ -12,7 +12,7 @@ public enum RecordSide {
 	public String getValue() {
 		return this.value;
 	}
-	
+
 	public RecordSide getOther() {
 		if (this == BUY)
 			return SELL;

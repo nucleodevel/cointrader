@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public class Withdrawal implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private CoinCurrencyPair coinCurrencyPair;
 	private Long withdrawalId;
 	private Integer status;
@@ -25,7 +25,7 @@ public class Withdrawal implements Serializable {
 	private BigDecimal volume;
 	private long created;
 	private long updated;
-	
+
 	public Withdrawal(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
 	}
@@ -37,7 +37,7 @@ public class Withdrawal implements Serializable {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}
@@ -120,11 +120,10 @@ public class Withdrawal implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Withdrawal [withdrawalId=" + withdrawalId + ", status="
-				+ status + ", statusDescrition=" + statusDescrition + ", coin="
-				+ getCoin() + ", currency=" + getCurrency() + ", transaction=" + transaction 
-				+ ", address=" + address + ", volume=" + volume + ", created=" 
-				+ created + ", updated=" + updated + "]";
-	}	
+		return "Withdrawal [withdrawalId=" + withdrawalId + ", status=" + status + ", statusDescrition="
+				+ statusDescrition + ", coin=" + getCoin() + ", currency=" + getCurrency() + ", transaction="
+				+ transaction + ", address=" + address + ", volume=" + volume + ", created=" + created + ", updated="
+				+ updated + "]";
+	}
 
 }

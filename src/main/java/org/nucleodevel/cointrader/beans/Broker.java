@@ -2,10 +2,8 @@ package org.nucleodevel.cointrader.beans;
 
 public enum Broker {
 
-	MERCADO_BITCOIN("MERCADO_BITCOIN"),
-	FOXBIT("FOXBIT"),
-	POLONIEX("POLONIEX");
-	
+	MERCADO_BITCOIN("MERCADO_BITCOIN"), FOXBIT("FOXBIT"), POLONIEX("POLONIEX");
+
 	private final String value;
 
 	private Broker(String value) {

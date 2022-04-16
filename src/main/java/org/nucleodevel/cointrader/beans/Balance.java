@@ -5,7 +5,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 public class Balance {
-	
+
 	private static final BigDecimal CURRENCY_MARGIN = new BigDecimal(0.00001);
 
 	private CoinCurrencyPair coinCurrencyPair;
@@ -26,7 +26,7 @@ public class Balance {
 	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
 		this.coinCurrencyPair = coinCurrencyPair;
 	}
-	
+
 	public Coin getCoin() {
 		return coinCurrencyPair.getCoin();
 	}
@@ -78,11 +78,11 @@ public class Balance {
 	public BigDecimal getSideAmount(RecordSide side) {
 		BigDecimal amount = new BigDecimal(0);
 		switch (side) {
-			case BUY:
-				amount = currencyAmount.subtract(CURRENCY_MARGIN);
+		case BUY:
+			amount = currencyAmount.subtract(CURRENCY_MARGIN);
 			break;
-			case SELL:
-				amount = coinAmount;
+		case SELL:
+			amount = coinAmount;
 			break;
 		}
 		return amount;
@@ -91,14 +91,12 @@ public class Balance {
 	public BigDecimal getEstimatedCoinAmount(RecordSide side, BigDecimal currencyPrice) {
 		BigDecimal amount = new BigDecimal(0);
 		switch (side) {
-			case BUY:
-				amount = new BigDecimal(
-					(currencyAmount.doubleValue() - CURRENCY_MARGIN.doubleValue()) / 
-					currencyPrice.doubleValue()
-				);
+		case BUY:
+			amount = new BigDecimal(
+					(currencyAmount.doubleValue() - CURRENCY_MARGIN.doubleValue()) / currencyPrice.doubleValue());
 			break;
-			case SELL:
-				amount = coinAmount;
+		case SELL:
+			amount = coinAmount;
 			break;
 		}
 		return amount;
@@ -107,11 +105,11 @@ public class Balance {
 	public BigDecimal getEstimatedCurrencyAmount(RecordSide side, BigDecimal currencyPrice) {
 		BigDecimal amount = new BigDecimal(0);
 		switch (side) {
-			case BUY:
-				amount = currencyAmount;
+		case BUY:
+			amount = currencyAmount;
 			break;
-			case SELL:
-				amount = new BigDecimal(coinAmount.doubleValue() * currencyPrice.doubleValue());
+		case SELL:
+			amount = new BigDecimal(coinAmount.doubleValue() * currencyPrice.doubleValue());
 			break;
 		}
 		return amount;
@@ -128,17 +126,17 @@ public class Balance {
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
 		decFmt.setMaximumFractionDigits(8);
-		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
-		
+
 		StringBuilder sb = new StringBuilder();
-		
-		sb.append(this.getClass().getSimpleName() + ": ["); 
+
+		sb.append(this.getClass().getSimpleName() + ": [");
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
-		sb.append("; coinAmount: " + (coinAmount == null? "0.0": decFmt.format(coinAmount)));
+		sb.append("; coinAmount: " + (coinAmount == null ? "0.0" : decFmt.format(coinAmount)));
 		if (coinLocked != null)
 			sb.append("; coinLocked: " + decFmt.format(coinLocked));
 		sb.append("; currencyAmount: " + decFmt.format(currencyAmount));
@@ -146,9 +144,9 @@ public class Balance {
 			sb.append("; currencyLocked: " + decFmt.format(currencyLocked));
 		sb.append("; clientId: " + clientId);
 		sb.append(']');
-		
+
 		return sb.toString();
-		
+
 	}
 
 }

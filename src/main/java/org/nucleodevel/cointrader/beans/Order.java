@@ -13,10 +13,7 @@ public class Order extends Record {
 	private Integer position;
 	private List<Operation> operations;
 
-	public Order(
-		Coin coin, Currency currency, RecordSide side,
-		BigDecimal coinAmount, BigDecimal currencyPrice
-	) {
+	public Order(Coin coin, Currency currency, RecordSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
 		super(coin, currency, side, coinAmount, currencyPrice);
 		this.operations = new ArrayList<Operation>();
 	}
@@ -52,23 +49,23 @@ public class Order extends Record {
 	public void setOperations(List<Operation> operations) {
 		this.operations = operations;
 	}
-	
+
 	@Override
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
 		decFmt.setMaximumFractionDigits(8);
-		DecimalFormatSymbols symbols=decFmt.getDecimalFormatSymbols();
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
 		symbols.setDecimalSeparator('.');
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
-		
+
 		StringBuilder sb = new StringBuilder();
-		
+
 		sb.append(this.getClass().getSimpleName() + ": [");
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
 		if (position != null)
-			sb.append("; position: " + getPosition()); 
+			sb.append("; position: " + getPosition());
 		sb.append("; side: " + getSide());
 		sb.append("; status: " + status);
 		sb.append("; coinAmount: " + decFmt.format(getCoinAmount()));
@@ -77,7 +74,7 @@ public class Order extends Record {
 		if (getCreationDate() != null)
 			sb.append("; creationDate: " + getCreationDate().getTime());
 		sb.append("]");
-		
+
 		return sb.toString();
 	}
 

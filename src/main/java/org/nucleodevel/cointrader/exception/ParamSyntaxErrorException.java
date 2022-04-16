@@ -12,7 +12,7 @@ package org.nucleodevel.cointrader.exception;
 public class ParamSyntaxErrorException extends Exception {
 
 	private static final long serialVersionUID = 3299761335363609520L;
-	
+
 	private String paramLabel;
 
 	public ParamSyntaxErrorException(String paramLabel) {

@@ -1,10 +1,8 @@
 package org.nucleodevel.cointrader.beans;
 
 public enum OrderStatus {
-	ACTIVE("ACTIVE"),
-	CANCELED("CANCELED"),
-	COMPLETED("COMPLETED");
-	
+	ACTIVE("ACTIVE"), CANCELED("CANCELED"), COMPLETED("COMPLETED");
+
 	private final String value;
 
 	private OrderStatus(String value) {
