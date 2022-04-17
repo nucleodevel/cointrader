@@ -2,6 +2,8 @@ package org.nucleodevel.cointrader.beans;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserConfiguration {
 
@@ -12,7 +14,7 @@ public class UserConfiguration {
 	private Provider provider;
 	private Broker broker;
 
-	private CoinCurrencyPair coinCurrencyPair;
+	private List<CoinCurrencyPair> coinCurrencyPairList;
 	private Integer delayTime;
 	private RecordSideMode buyMode;
 	private RecordSideMode sellMode;
@@ -28,7 +30,9 @@ public class UserConfiguration {
 	private Double incDecPrice;
 
 	public UserConfiguration() {
-		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
+		this.coinCurrencyPairList = new ArrayList<>();
+		this.coinCurrencyPairList.add(new CoinCurrencyPair(null, null));
+
 		maximumBuyCoinAmountPercentage = 1.0;
 		maximumSellCoinAmountPercentage = 1.0;
 		minimumBuyRate = 0.8;
@@ -71,28 +75,38 @@ public class UserConfiguration {
 		this.broker = broker;
 	}
 
-	public CoinCurrencyPair getCoinCurrencyPair() {
-		return coinCurrencyPair;
+	public List<CoinCurrencyPair> getCoinCurrencyPairList() {
+		return coinCurrencyPairList;
 	}
 
-	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
-		this.coinCurrencyPair = coinCurrencyPair;
+	public void setCoinCurrencyPairList(List<CoinCurrencyPair> coinCurrencyPairList) {
+		this.coinCurrencyPairList = coinCurrencyPairList;
+	}
+
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPairList == null || coinCurrencyPairList.isEmpty() ? null : coinCurrencyPairList.get(0);
 	}
 
 	public Coin getCoin() {
-		return coinCurrencyPair.getCoin();
+		return getCoinCurrencyPair().getCoin();
 	}
 
-	public void setCoin(Coin coin) {
-		coinCurrencyPair.setCoin(coin);
+	public void setCoinList(List<Coin> coinList) {
+		this.coinCurrencyPairList = new ArrayList<>();
+
+		Currency currency = getCurrency();
+
+		coinList.stream().forEach((coin) -> coinCurrencyPairList.add(new CoinCurrencyPair(coin, currency)));
 	}
 
 	public Currency getCurrency() {
-		return coinCurrencyPair.getCurrency();
+		return getCoinCurrencyPair() == null ? null : getCoinCurrencyPair().getCurrency();
 	}
 
 	public void setCurrency(Currency currency) {
-		coinCurrencyPair.setCurrency(currency);
+		if (coinCurrencyPairList != null) {
+			coinCurrencyPairList.stream().forEach((ccp) -> ccp.setCurrency(currency));
+		}
 	}
 
 	public Integer getDelayTime() {
@@ -267,8 +281,7 @@ public class UserConfiguration {
 		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
 		sb.append(";\n  provider: " + provider);
 		sb.append(";\n  broker: " + broker);
-		sb.append(";\n  coin: " + coinCurrencyPair.getCoin());
-		sb.append(";\n  currency: " + coinCurrencyPair.getCurrency());
+		sb.append(";\n  coinCurrencyPairList: " + coinCurrencyPairList);
 		sb.append(";\n  delayTime: " + delayTime);
 		sb.append(";\n  buyMode: " + buyMode);
 		sb.append(";\n  sellMode: " + sellMode);
