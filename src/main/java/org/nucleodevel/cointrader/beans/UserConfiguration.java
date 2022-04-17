@@ -16,6 +16,8 @@ public class UserConfiguration {
 	private Integer delayTime;
 	private RecordSideMode buyMode;
 	private RecordSideMode sellMode;
+	private Double maximumBuyCoinAmountPercentage;
+	private Double maximumSellCoinAmountPercentage;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double breakdownBuyRate;
@@ -27,6 +29,8 @@ public class UserConfiguration {
 
 	public UserConfiguration() {
 		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
+		maximumBuyCoinAmountPercentage = 1.0;
+		maximumSellCoinAmountPercentage = 1.0;
 		minimumBuyRate = 0.8;
 		minimumSellRate = 1.2;
 		breakdownBuyRate = null;
@@ -126,6 +130,27 @@ public class UserConfiguration {
 
 	public void setSellMode(RecordSideMode sellMode) {
 		this.sellMode = sellMode;
+	}
+
+	public Double getMaximumCoinAmountPercentage(RecordSide side) {
+		Double rate = 0.0;
+		switch (side) {
+		case BUY:
+			rate = maximumBuyCoinAmountPercentage;
+			break;
+		case SELL:
+			rate = maximumSellCoinAmountPercentage;
+			break;
+		}
+		return rate;
+	}
+
+	public void setMaximumBuyCoinAmountPercentage(Double maximumBuyCoinAmountPercentage) {
+		this.maximumBuyCoinAmountPercentage = maximumBuyCoinAmountPercentage;
+	}
+
+	public void setMaximumSellCoinAmountPercentage(Double maximumSellCoinAmountPercentage) {
+		this.maximumSellCoinAmountPercentage = maximumSellCoinAmountPercentage;
 	}
 
 	public Double getMinimumRate(RecordSide side) {
@@ -247,6 +272,10 @@ public class UserConfiguration {
 		sb.append(";\n  delayTime: " + delayTime);
 		sb.append(";\n  buyMode: " + buyMode);
 		sb.append(";\n  sellMode: " + sellMode);
+		if (maximumBuyCoinAmountPercentage != null)
+			sb.append(";\n  maximumBuyCoinAmountPercentage: " + decFmt.format(maximumBuyCoinAmountPercentage));
+		if (maximumSellCoinAmountPercentage != null)
+			sb.append(";\n  maximumSellCoinAmountPercentage: " + decFmt.format(maximumSellCoinAmountPercentage));
 		if (minimumBuyRate != null)
 			sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
 		if (minimumSellRate != null)

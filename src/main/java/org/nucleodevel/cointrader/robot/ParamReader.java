@@ -128,6 +128,20 @@ public class ParamReader {
 					case "-curr":
 						userConfiguration.setCurrency(Currency.valueOf(paramValue));
 						break;
+					case "-mbcap":
+						try {
+							userConfiguration.setMaximumBuyCoinAmountPercentage(Double.parseDouble(paramValue));
+						} catch (NumberFormatException e) {
+							throw new ParamValueErrorException(paramLabel);
+						}
+						break;
+					case "-mscap":
+						try {
+							userConfiguration.setMaximumSellCoinAmountPercentage(Double.parseDouble(paramValue));
+						} catch (NumberFormatException e) {
+							throw new ParamValueErrorException(paramLabel);
+						}
+						break;
 					case "-mbr":
 						try {
 							userConfiguration.setMinimumBuyRate(Double.parseDouble(paramValue));
