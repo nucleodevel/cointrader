@@ -25,7 +25,7 @@ public class CoinCurrencyPair {
 	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "{" + this.currency + "," + this.coin + "}";

@@ -2,13 +2,15 @@ package org.nucleodevel.cointrader.robot;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.nucleodevel.cointrader.api.ApiService;
@@ -17,6 +19,7 @@ import org.nucleodevel.cointrader.api.mercadobitcoin.MercadoBitcoinApiService;
 import org.nucleodevel.cointrader.api.poloniex.PoloniexApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
@@ -37,30 +40,44 @@ public class ProviderReport {
 
 	private UserConfiguration userConfiguration;
 
-	private ApiService apiService;
-	private Ticker ticker;
-	private Balance balance;
-	private OrderBook orderBook;
+	private Map<String, ApiService> apiServiceMap;
+	private Map<String, Ticker> tickerMap;
+	private Map<String, Balance> balanceMap;
+	private Map<String, BigDecimal> spreadMap;
+	private Map<String, OrderBook> orderBookMap;
 
-	private List<Order> activeBuyOrders;
-	private List<Order> activeSellOrders;
+	private Map<String, List<Order>> activeBuyOrdersMap;
+	private Map<String, List<Order>> activeSellOrdersMap;
 
 	private List<Order> userActiveBuyOrders;
 	private List<Order> userActiveSellOrders;
 
-	private List<Order> activeOrders;
+	private Map<String, List<Order>> userActiveOrdersMap;
 
-	private List<Order> userActiveOrders;
+	private Map<String, List<Operation>> userOperationsMap;
 
-	private List<Operation> userOperations;
-
-	private BigDecimal my24hCoinVolume;
+	private Map<String, BigDecimal> my24hCoinVolumeMap;
 
 	private static DecimalFormat decFmt;
 
-	public ProviderReport(UserConfiguration userConfiguration) {
+	public ProviderReport(UserConfiguration userConfiguration) throws ApiProviderException {
 		this.userConfiguration = userConfiguration;
 		makeDecimalFormat();
+
+		makeApiServiceMap();
+
+		tickerMap = new HashMap<>();
+		balanceMap = new HashMap<>();
+		spreadMap = new HashMap<>();
+		orderBookMap = new HashMap<>();
+
+		activeBuyOrdersMap = new HashMap<>();
+		activeSellOrdersMap = new HashMap<>();
+
+		userActiveOrdersMap = new HashMap<>();
+		userOperationsMap = new HashMap<>();
+
+		my24hCoinVolumeMap = new HashMap<>();
 	}
 
 	private static void makeDecimalFormat() {
@@ -75,13 +92,6 @@ public class ProviderReport {
 		}
 	}
 
-	public void readApiAtFirst() throws ApiProviderException {
-		/*
-		 * getTicker(); getBalance(); getOrderBook(); getUserActiveOrders();
-		 * getUserOperations();
-		 */
-	}
-
 	public UserConfiguration getUserConfiguration() {
 		return userConfiguration;
 	}
@@ -90,52 +100,104 @@ public class ProviderReport {
 		this.userConfiguration = userConfiguration;
 	}
 
-	public Coin getCoin() {
-		return userConfiguration.getCoin();
+	public List<CoinCurrencyPair> getCoinCurrencyPairList() throws ApiProviderException {
+		return userConfiguration.getCoinCurrencyPairList();
 	}
 
-	public Currency getCurrency() {
-		return userConfiguration.getCurrency();
+	public CoinCurrencyPair getCoinCurrencyPair() throws ApiProviderException {
+		return userConfiguration.getCoinCurrencyPairList().get(0);
+	}
+
+	public Coin getCoin() throws ApiProviderException {
+		return getCoinCurrencyPair().getCoin();
+	}
+
+	public Currency getCurrency() throws ApiProviderException {
+		return getCoinCurrencyPair().getCurrency();
+	}
+
+	private void makeApiServiceMap() throws ApiProviderException {
+		apiServiceMap = new HashMap<>();
+
+		Provider provider = userConfiguration.getProvider();
+		List<CoinCurrencyPair> coinCurrencyPairList = getCoinCurrencyPairList();
+
+		for (CoinCurrencyPair ccp : coinCurrencyPairList) {
+			if (provider == Provider.MERCADO_BITCOIN)
+				apiServiceMap.put(ccp.toString(), new MercadoBitcoinApiService(getUserConfiguration(), ccp));
+			else if (provider == Provider.BLINKTRADE)
+				apiServiceMap.put(ccp.toString(), new BlinktradeApiService(getUserConfiguration(), ccp));
+			else if (provider == Provider.POLONIEX)
+				apiServiceMap.put(ccp.toString(), new PoloniexApiService(getUserConfiguration(), ccp));
+		}
+	}
+
+	private ApiService getApiService(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		return apiServiceMap.get(coinCurrencyPair.toString());
 	}
 
 	private ApiService getApiService() throws ApiProviderException {
-		if (apiService == null) {
-			if (userConfiguration.getProvider() == Provider.MERCADO_BITCOIN)
-				apiService = new MercadoBitcoinApiService(getUserConfiguration());
-			else if (userConfiguration.getProvider() == Provider.BLINKTRADE)
-				apiService = new BlinktradeApiService(getUserConfiguration());
-			else if (userConfiguration.getProvider() == Provider.POLONIEX)
-				apiService = new PoloniexApiService(getUserConfiguration());
+		return apiServiceMap.get(getCoinCurrencyPair().toString());
+	}
+
+	public Ticker getTicker(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!tickerMap.containsKey(coinCurrencyPair.toString())) {
+			ApiService apiService = getApiService(coinCurrencyPair);
+			tickerMap.put(coinCurrencyPair.toString(), apiService.getTicker());
 		}
-		return apiService;
+		return tickerMap.get(coinCurrencyPair.toString());
 	}
 
 	public Ticker getTicker() throws ApiProviderException {
-		if (ticker == null)
-			ticker = getApiService().getTicker();
-		return ticker;
+		return tickerMap.get(getCoinCurrencyPair().toString());
+	}
+
+	public Balance getBalance(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!balanceMap.containsKey(coinCurrencyPair.toString())) {
+			ApiService apiService = getApiService(coinCurrencyPair);
+			balanceMap.put(coinCurrencyPair.toString(), apiService.getBalance());
+		}
+		return balanceMap.get(coinCurrencyPair.toString());
 	}
 
 	public Balance getBalance() throws ApiProviderException {
-		if (balance == null)
-			balance = getApiService().getBalance();
-		return balance;
+		return balanceMap.get(getCoinCurrencyPair().toString());
 	}
 
-	public OrderBook getOrderBook() throws ApiProviderException {
-		if (orderBook == null)
-			orderBook = getApiService().getOrderBook();
-		return orderBook;
-	}
+	public BigDecimal getSpread(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!spreadMap.containsKey(coinCurrencyPair.toString())) {
+			Order currentTopBuyOrder = getActiveOrders(coinCurrencyPair, RecordSide.BUY).get(0);
+			Order currentTopSellOrder = getActiveOrders(coinCurrencyPair, RecordSide.SELL).get(0);
 
-	public List<Order> getActiveOrders() throws ApiProviderException {
-		if (activeOrders == null) {
-			activeOrders = new ArrayList<Order>();
-			activeOrders.addAll(getActiveBuyOrders());
-			activeOrders.addAll(getActiveSellOrders());
-			Collections.sort(activeOrders);
+			BigDecimal currentTopBuyPrice = currentTopBuyOrder.getCurrencyPrice();
+			BigDecimal currentTopSellPrice = currentTopSellOrder.getCurrencyPrice();
+
+			BigDecimal spread = currentTopSellPrice.divide(currentTopBuyPrice, 6, RoundingMode.HALF_EVEN)
+					.subtract(new BigDecimal(1.0));
+			spreadMap.put(coinCurrencyPair.toString(), spread);
 		}
-		return activeOrders;
+		return spreadMap.get(coinCurrencyPair.toString());
+	}
+
+	public OrderBook getOrderBook(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!orderBookMap.containsKey(coinCurrencyPair.toString())) {
+			ApiService apiService = getApiService(coinCurrencyPair);
+			orderBookMap.put(coinCurrencyPair.toString(), apiService.getOrderBook());
+		}
+		return orderBookMap.get(coinCurrencyPair.toString());
+	}
+
+	public List<Order> getActiveOrders(CoinCurrencyPair coinCurrencyPair, RecordSide side) throws ApiProviderException {
+		List<Order> orders = new ArrayList<Order>();
+		switch (side) {
+		case BUY:
+			orders = getActiveBuyOrders(coinCurrencyPair);
+			break;
+		case SELL:
+			orders = getActiveSellOrders(coinCurrencyPair);
+			break;
+		}
+		return orders;
 	}
 
 	public List<Order> getActiveOrders(RecordSide side) throws ApiProviderException {
@@ -151,29 +213,46 @@ public class ProviderReport {
 		return orders;
 	}
 
-	private List<Order> getActiveBuyOrders() throws ApiProviderException {
-		if (activeBuyOrders == null) {
-			activeBuyOrders = getOrderBook().getBidOrders();
+	public List<Order> getActiveBuyOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!activeBuyOrdersMap.containsKey(coinCurrencyPair.toString())) {
+			activeBuyOrdersMap.put(coinCurrencyPair.toString(), getOrderBook(coinCurrencyPair).getBidOrders());
 		}
-		return activeBuyOrders;
+		return activeBuyOrdersMap.get(coinCurrencyPair.toString());
+	}
+
+	private List<Order> getActiveBuyOrders() throws ApiProviderException {
+		return activeBuyOrdersMap.get(getCoinCurrencyPair().toString());
+	}
+
+	public List<Order> getActiveSellOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!activeSellOrdersMap.containsKey(coinCurrencyPair.toString())) {
+			activeSellOrdersMap.put(coinCurrencyPair.toString(), getOrderBook(coinCurrencyPair).getAskOrders());
+		}
+		return activeSellOrdersMap.get(coinCurrencyPair.toString());
 	}
 
 	private List<Order> getActiveSellOrders() throws ApiProviderException {
-		if (activeSellOrders == null) {
-			activeSellOrders = getOrderBook().getAskOrders();
-		}
-		return activeSellOrders;
+		return activeSellOrdersMap.get(getCoinCurrencyPair().toString());
+	}
+
+	public Order getCurrentTopOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side) throws ApiProviderException {
+		return getActiveOrders(coinCurrencyPair, side).get(0);
 	}
 
 	public Order getCurrentTopOrder(RecordSide side) throws ApiProviderException {
-		return getActiveOrders(side).get(0);
+		return getCurrentTopOrder(getCoinCurrencyPair(), side);
+	}
+
+	public List<Order> getUserActiveOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!userActiveOrdersMap.containsKey(coinCurrencyPair.toString())) {
+			ApiService apiService = getApiService(coinCurrencyPair);
+			userActiveOrdersMap.put(coinCurrencyPair.toString(), apiService.getUserActiveOrders());
+		}
+		return userActiveOrdersMap.get(coinCurrencyPair.toString());
 	}
 
 	public List<Order> getUserActiveOrders() throws ApiProviderException {
-		if (userActiveOrders == null)
-			userActiveOrders = getApiService().getUserActiveOrders();
-		return userActiveOrders;
-
+		return userActiveOrdersMap.get(getCoinCurrencyPair().toString());
 	}
 
 	public List<Order> getUserActiveOrders(RecordSide side) throws ApiProviderException {
@@ -210,14 +289,20 @@ public class ProviderReport {
 		return userActiveSellOrders;
 	}
 
-	public List<Operation> getUserOperations() throws ApiProviderException {
-		if (userOperations == null)
-			userOperations = getApiService().getUserOperations();
-		return userOperations;
+	public List<Operation> getUserOperations(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!userOperationsMap.containsKey(coinCurrencyPair.toString())) {
+			ApiService apiService = getApiService(coinCurrencyPair);
+			userOperationsMap.put(coinCurrencyPair.toString(), apiService.getUserOperations());
+		}
+		return userOperationsMap.get(coinCurrencyPair.toString());
 	}
 
-	public BigDecimal getMy24hCoinVolume() throws ApiProviderException {
-		if (my24hCoinVolume == null) {
+	public List<Operation> getUserOperations() throws ApiProviderException {
+		return userOperationsMap.get(getCoinCurrencyPair().toString());
+	}
+
+	public BigDecimal getMy24hCoinVolume(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (!my24hCoinVolumeMap.containsKey(coinCurrencyPair.toString())) {
 			Calendar from = Calendar.getInstance();
 			Calendar to = Calendar.getInstance();
 
@@ -226,15 +311,31 @@ public class ProviderReport {
 			to.setTime(new Date());
 
 			BigDecimal volume = new BigDecimal(0);
-			for (Operation operation : getUserOperations())
+			for (Operation operation : getUserOperations(coinCurrencyPair))
 				if (operation.getCreationDate().getTimeInMillis() > from.getTimeInMillis())
 					volume = volume.add(operation.getCoinAmount());
 				else
 					break;
 
-			my24hCoinVolume = volume;
+			my24hCoinVolumeMap.put(coinCurrencyPair.toString(), volume);
 		}
-		return my24hCoinVolume;
+		return my24hCoinVolumeMap.get(coinCurrencyPair.toString());
+	}
+
+	public BigDecimal getMy24hCoinVolume() throws ApiProviderException {
+		return my24hCoinVolumeMap.get(getCoinCurrencyPair().toString());
+	}
+
+	public Operation getLastUserOperation(CoinCurrencyPair coinCurrencyPair, RecordSide side)
+			throws ApiProviderException {
+		Operation lastUserOperation = null;
+		for (Operation operation : getUserOperations(coinCurrencyPair)) {
+			if (lastUserOperation != null)
+				break;
+			if (operation.getSide() == side)
+				lastUserOperation = operation;
+		}
+		return lastUserOperation;
 	}
 
 	public Operation getLastUserOperation(RecordSide side) throws ApiProviderException {
@@ -246,6 +347,12 @@ public class ProviderReport {
 				lastUserOperation = operation;
 		}
 		return lastUserOperation;
+	}
+
+	public Operation getLastUserOperation(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+		if (getUserOperations(coinCurrencyPair).size() > 0)
+			return getUserOperations(coinCurrencyPair).get(0);
+		return null;
 	}
 
 	public Operation getLastUserOperation() throws ApiProviderException {
@@ -522,8 +629,7 @@ public class ProviderReport {
 				throw new NotAvailableMoneyException();
 			}
 
-			Order newOrder = new Order(userConfiguration.getCoin(), userConfiguration.getCurrency(), side, coinAmount,
-					lastRelevantPrice);
+			Order newOrder = new Order(getCoin(), getCurrency(), side, coinAmount, lastRelevantPrice);
 			newOrder.setType(OrderType.LIMITED);
 			return newOrder;
 		}
@@ -559,8 +665,7 @@ public class ProviderReport {
 				throw new NotAvailableMoneyException();
 			}
 
-			Order newOrder = new Order(userConfiguration.getCoin(), userConfiguration.getCurrency(), side, coinAmount,
-					lastRelevantPrice);
+			Order newOrder = new Order(getCoin(), getCurrency(), side, coinAmount, lastRelevantPrice);
 			newOrder.setType(OrderType.LIMITED);
 			return newOrder;
 		}
@@ -612,8 +717,7 @@ public class ProviderReport {
 									.getIncDecPrice(side);
 			if (isNearTheBestOtherSideOrder)
 				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
-			Order newOrder = new Order(userConfiguration.getCoin(), userConfiguration.getCurrency(), side, coinAmount,
-					currencyPrice);
+			Order newOrder = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 			newOrder.setType(OrderType.LIMITED);
 			newOrder.setPosition(orderIndex);
 			return newOrder;

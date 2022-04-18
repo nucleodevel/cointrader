@@ -36,6 +36,7 @@ import javax.net.ssl.HttpsURLConnection;
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
@@ -57,8 +58,9 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	// --------------------- Constructor
 
-	public MercadoBitcoinApiService(UserConfiguration userConfiguration) throws ApiProviderException {
-		super(userConfiguration);
+	public MercadoBitcoinApiService(UserConfiguration userConfiguration, CoinCurrencyPair coinCurrencyPair)
+			throws ApiProviderException {
+		super(userConfiguration, coinCurrencyPair);
 	}
 
 	// --------------------- Getters and setters
