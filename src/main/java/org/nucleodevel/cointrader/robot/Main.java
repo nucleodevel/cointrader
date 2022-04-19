@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
+import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.Ticker;
@@ -115,6 +116,24 @@ public class Main {
 							System.out.println("  " + report.getLastUserOperation(ccp, RecordSide.BUY));
 						if (report.getLastUserOperation(ccp, RecordSide.SELL) != null)
 							System.out.println("  " + report.getLastUserOperation(ccp, RecordSide.SELL));
+					}
+
+					System.out.println("");
+					System.out.println("My active orders by type");
+
+					if (report.getUserActiveOrders(ccp).size() == 0) {
+						System.out.println("  There were no operations yet!");
+					} else {
+						if (report.getUserActiveOrders(ccp, RecordSide.BUY) != null) {
+							for (Order o : report.getUserActiveOrders(ccp, RecordSide.BUY)) {
+								System.out.println("  " + o);
+							}
+						}
+						if (report.getUserActiveOrders(ccp, RecordSide.SELL) != null) {
+							for (Order o : report.getUserActiveOrders(ccp, RecordSide.SELL)) {
+								System.out.println("  " + o);
+							}
+						}
 					}
 
 					System.out.println("");

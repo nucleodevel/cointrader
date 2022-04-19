@@ -46,8 +46,8 @@ public class ProviderReport {
 	private Map<String, List<Order>> activeBuyOrdersMap;
 	private Map<String, List<Order>> activeSellOrdersMap;
 
-	private List<Order> userActiveBuyOrders;
-	private List<Order> userActiveSellOrders;
+	private Map<String, List<Order>> userActiveBuyOrdersMap;
+	private Map<String, List<Order>> userActiveSellOrdersMap;
 
 	private Map<String, List<Order>> userActiveOrdersMap;
 
@@ -70,6 +70,9 @@ public class ProviderReport {
 
 		activeBuyOrdersMap = new HashMap<>();
 		activeSellOrdersMap = new HashMap<>();
+
+		userActiveBuyOrdersMap = new HashMap<>();
+		userActiveSellOrdersMap = new HashMap<>();
 
 		userActiveOrdersMap = new HashMap<>();
 		userOperationsMap = new HashMap<>();
@@ -221,23 +224,29 @@ public class ProviderReport {
 	}
 
 	private List<Order> getUserActiveBuyOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
-		if (userActiveBuyOrders == null) {
-			userActiveBuyOrders = new ArrayList<Order>();
+		if (!userActiveBuyOrdersMap.containsKey(coinCurrencyPair.toString())) {
+			List<Order> orderList = new ArrayList<>();
+
 			for (Order order : getUserActiveOrders(coinCurrencyPair))
 				if (order.getSide() == RecordSide.BUY)
-					userActiveBuyOrders.add(order);
+					orderList.add(order);
+
+			userActiveBuyOrdersMap.put(coinCurrencyPair.toString(), orderList);
 		}
-		return userActiveBuyOrders;
+		return userActiveBuyOrdersMap.get(coinCurrencyPair.toString());
 	}
 
 	private List<Order> getUserActiveSellOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
-		if (userActiveSellOrders == null) {
-			userActiveSellOrders = new ArrayList<Order>();
+		if (!userActiveSellOrdersMap.containsKey(coinCurrencyPair.toString())) {
+			List<Order> orderList = new ArrayList<>();
+
 			for (Order order : getUserActiveOrders(coinCurrencyPair))
 				if (order.getSide() == RecordSide.SELL)
-					userActiveSellOrders.add(order);
+					orderList.add(order);
+
+			userActiveSellOrdersMap.put(coinCurrencyPair.toString(), orderList);
 		}
-		return userActiveSellOrders;
+		return userActiveSellOrdersMap.get(coinCurrencyPair.toString());
 	}
 
 	public List<Operation> getUserOperations(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
@@ -289,10 +298,8 @@ public class ProviderReport {
 
 	// ------------ Operations to make orders
 
-	public BigDecimal getLastRelevantPriceByOperations(RecordSide side, Boolean showMessages)
-			throws ApiProviderException {
-
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+	public BigDecimal getLastRelevantPriceByOperations(CoinCurrencyPair coinCurrencyPair, RecordSide side,
+			Boolean showMessages) throws ApiProviderException {
 
 		BigDecimal lastRelevantPriceByOperations = new BigDecimal(0);
 		List<Operation> groupOfOperations = new ArrayList<Operation>();
@@ -340,9 +347,8 @@ public class ProviderReport {
 		return lastRelevantPriceByOperations;
 	}
 
-	public BigDecimal getLastRelevantPriceByOrders(RecordSide side, Boolean showMessages) throws ApiProviderException {
-
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+	public BigDecimal getLastRelevantPriceByOrders(CoinCurrencyPair coinCurrencyPair, RecordSide side,
+			Boolean showMessages) throws ApiProviderException {
 
 		BigDecimal lastRelevantPriceByOrders = new BigDecimal(0);
 
@@ -374,9 +380,8 @@ public class ProviderReport {
 		return lastRelevantPriceByOrders;
 	}
 
-	public BigDecimal getLastRelevantInactivityTimeByOperations(RecordSide side) throws ApiProviderException {
-
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+	public BigDecimal getLastRelevantInactivityTimeByOperations(CoinCurrencyPair coinCurrencyPair, RecordSide side)
+			throws ApiProviderException {
 
 		BigDecimal lastRelevantInactivityTimeByOperations = new BigDecimal(0);
 
@@ -437,12 +442,12 @@ public class ProviderReport {
 	}
 
 	public void cancelOrder(Order order) throws ApiProviderException {
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+		CoinCurrencyPair coinCurrencyPair = order.getCoinCurrencyPair();
 		getApiService(coinCurrencyPair).cancelOrder(order);
 	}
 
 	public void createOrder(Order order, RecordSide side) throws ApiProviderException {
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+		CoinCurrencyPair coinCurrencyPair = order.getCoinCurrencyPair();
 
 		order.setSide(side);
 		order.setStatus(OrderStatus.ACTIVE);
@@ -454,88 +459,136 @@ public class ProviderReport {
 		System.out.println("Analising " + side + " order");
 		System.out.println("");
 
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
-
-		BigDecimal lastRelevantInactivityTime = getLastRelevantInactivityTimeByOperations(side.getOther());
-
-		Double maxAcceptedInactivityTime = getMaxAcceptedInactivityTime(coinCurrencyPair, side);
-		boolean isLongTimeWithoutOperation = lastRelevantInactivityTime == null || maxAcceptedInactivityTime == null
-				? false
-				: lastRelevantInactivityTime.longValue() > maxAcceptedInactivityTime;
-
-		if (lastRelevantInactivityTime != null && maxAcceptedInactivityTime != null) {
-			System.out.println("  Last 3 hour volume: " + getTicker(coinCurrencyPair).getLast3HourVolume() + " "
-					+ coinCurrencyPair.getCoin());
-			System.out.println("  Inactivity time: "
-					+ decFmt.format(lastRelevantInactivityTime.doubleValue() / (60 * 1000)) + " minutes");
-			System.out.println("  Max accepted inactivity time: "
-					+ decFmt.format(maxAcceptedInactivityTime / (60 * 1000)) + " minutes");
-		}
-
 		Boolean hasToWinCurrent = true;
 		BigDecimal lastRelevantPrice = null;
-		switch (mode) {
-		case ORDERS:
-			lastRelevantPrice = getLastRelevantPriceByOrders(side, true);
-			break;
-		case OTHER_ORDERS:
-			lastRelevantPrice = getLastRelevantPriceByOrders(side.getOther(), true)
-					.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
-			break;
-		case OPERATIONS:
-			lastRelevantPrice = getLastRelevantPriceByOperations(side, true);
-			break;
-		case OTHER_OPERATIONS:
-			BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrders(side, false);
-			BigDecimal lastRelevantPriceByOperations = getLastRelevantPriceByOperations(side.getOther(), false);
-			Boolean isBreakdown = false;
-			if (userConfiguration.getBreakdownRate(side) != null) {
-				BigDecimal breakdownPrice = lastRelevantPriceByOperations
-						.multiply(new BigDecimal(userConfiguration.getBreakdownRate(side)));
 
-				int compareBreakdownToOrders = breakdownPrice.compareTo(lastRelevantPriceByOrders);
-				isBreakdown = (side == RecordSide.BUY ? compareBreakdownToOrders < 0
-						: (side == RecordSide.SELL ? compareBreakdownToOrders > 0 : false));
+		CoinCurrencyPair bestCoinCurrencyPairBySpread = null;
+		BigDecimal bestSpread = new BigDecimal(0.0);
 
-				System.out.println("  Breakdown if breakdown price " + decFmt.format(breakdownPrice) + " is "
-						+ (side == RecordSide.BUY ? "less" : (side == RecordSide.SELL ? "greater" : "")) + " than "
-						+ side + " average price " + decFmt.format(lastRelevantPriceByOrders));
+		String bestSpreadMessage = "\n  Analising spreads";
 
-				if (isBreakdown)
-					System.out.println("  Breakdown was activated");
+		for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
+			BigDecimal ccpSpread = getSpread(ccp);
+
+			if (ccpSpread.compareTo(bestSpread) > 0) {
+				bestCoinCurrencyPairBySpread = ccp;
+				bestSpread = ccpSpread;
 			}
-			if (isLongTimeWithoutOperation || isBreakdown) {
-				lastRelevantPrice = getLastRelevantPriceByOrders(side, true);
-				hasToWinCurrent = false;
-			} else
-				lastRelevantPrice = getLastRelevantPriceByOperations(side.getOther(), true)
-						.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
 
-			break;
-		default:
-			Order myOrder = getUserActiveOrders(coinCurrencyPair, side).size() > 0
-					? getUserActiveOrders(coinCurrencyPair, side).get(0)
-					: null;
-			if (myOrder != null)
-				cancelOrder(myOrder);
-			System.out.println("\n  Don't make buy order but cancel any!");
-			break;
+			bestSpreadMessage += "\n    Spread of " + ccp + ": " + ccpSpread;
 		}
 
-		if (mode != RecordSideMode.NONE) {
+		bestSpreadMessage += "\n   The best spread is " + bestCoinCurrencyPairBySpread + ": " + bestSpread + "\n";
+
+		switch (mode) {
+
+		case ORDERS:
+			lastRelevantPrice = getLastRelevantPriceByOrders(bestCoinCurrencyPairBySpread, side, true);
+
 			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-			makeOrdersByLastRelevantPrice(side, lastRelevantPrice, lastRelevantInactivityTime, hasToWinCurrent);
+			makeOrdersByLastRelevantPrice(bestCoinCurrencyPairBySpread, side, lastRelevantPrice, hasToWinCurrent);
+			break;
+
+		case OTHER_ORDERS:
+
+			System.out.println(bestSpreadMessage);
+
+			System.out.println("");
+			System.out.println("  ---- " + side + ": " + bestCoinCurrencyPairBySpread);
+
+			lastRelevantPrice = getLastRelevantPriceByOrders(bestCoinCurrencyPairBySpread, side.getOther(), true)
+					.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
+
+			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
+
+			cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(bestCoinCurrencyPairBySpread, side);
+			makeOrdersByLastRelevantPrice(bestCoinCurrencyPairBySpread, side, lastRelevantPrice, hasToWinCurrent);
+			break;
+
+		case OPERATIONS:
+			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
+				lastRelevantPrice = getLastRelevantPriceByOperations(ccp, side, true);
+
+				System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
+				makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
+			}
+			break;
+
+		case OTHER_OPERATIONS:
+
+			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
+
+				System.out.println("");
+				System.out.println("  ---- " + side + ": " + ccp);
+
+				boolean isLongTimeWithoutOperation = false;
+
+				BigDecimal lastRelevantInactivityTime = getLastRelevantInactivityTimeByOperations(ccp, side.getOther());
+
+				Double maxAcceptedInactivityTime = getMaxAcceptedInactivityTime(ccp, side);
+				isLongTimeWithoutOperation = lastRelevantInactivityTime == null || maxAcceptedInactivityTime == null
+						? false
+						: lastRelevantInactivityTime.longValue() > maxAcceptedInactivityTime;
+
+				if (lastRelevantInactivityTime != null && maxAcceptedInactivityTime != null) {
+					System.out.println(
+							"  Last 3 hour volume: " + getTicker(ccp).getLast3HourVolume() + " " + ccp.getCoin());
+					System.out.println("  Inactivity time: "
+							+ decFmt.format(lastRelevantInactivityTime.doubleValue() / (60 * 1000)) + " minutes");
+					System.out.println("  Max accepted inactivity time: "
+							+ decFmt.format(maxAcceptedInactivityTime / (60 * 1000)) + " minutes");
+				}
+
+				Boolean isBreakdown = false;
+
+				BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrders(ccp, side, false);
+				BigDecimal lastRelevantPriceByOperations = getLastRelevantPriceByOperations(ccp, side.getOther(),
+						false);
+				if (userConfiguration.getBreakdownRate(side) != null) {
+					BigDecimal breakdownPrice = lastRelevantPriceByOperations
+							.multiply(new BigDecimal(userConfiguration.getBreakdownRate(side)));
+
+					int compareBreakdownToOrders = breakdownPrice.compareTo(lastRelevantPriceByOrders);
+					isBreakdown = (side == RecordSide.BUY ? compareBreakdownToOrders < 0
+							: (side == RecordSide.SELL ? compareBreakdownToOrders > 0 : false));
+
+					System.out.println("  Breakdown if breakdown price " + decFmt.format(breakdownPrice) + " is "
+							+ (side == RecordSide.BUY ? "less" : (side == RecordSide.SELL ? "greater" : "")) + " than "
+							+ side + " average price " + decFmt.format(lastRelevantPriceByOrders));
+
+					if (isBreakdown)
+						System.out.println("  Breakdown was activated");
+				}
+
+				if (isLongTimeWithoutOperation || isBreakdown) {
+					lastRelevantPrice = getLastRelevantPriceByOrders(ccp, side, true);
+					hasToWinCurrent = false;
+				} else
+					lastRelevantPrice = getLastRelevantPriceByOperations(ccp, side.getOther(), true)
+							.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
+
+				System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
+				makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
+			}
+			break;
+		default:
+			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
+				Order myOrder = getUserActiveOrders(ccp, side).size() > 0 ? getUserActiveOrders(ccp, side).get(0)
+						: null;
+				if (myOrder != null)
+					cancelOrder(myOrder);
+				System.out.println("\n  Don't make buy order but cancel any!");
+			}
+			break;
 		}
 	}
 
-	private void makeOrdersByLastRelevantPrice(RecordSide side, BigDecimal lastRelevantPrice,
-			BigDecimal lastRelevantInactivityTime, Boolean hasToWinCurrent) throws ApiProviderException {
-
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+	private void makeOrdersByLastRelevantPrice(CoinCurrencyPair coinCurrencyPair, RecordSide side,
+			BigDecimal lastRelevantPrice, Boolean hasToWinCurrent) throws ApiProviderException {
 
 		try {
-			Order newOrder = hasToWinCurrent ? winTheCurrentOrder(side, 0, lastRelevantPrice)
-					: winThePreviousOrder(side, 0, lastRelevantPrice);
+			Order newOrder = hasToWinCurrent ? winTheCurrentOrder(coinCurrencyPair, side, 0, lastRelevantPrice)
+					: winThePreviousOrder(coinCurrencyPair, side, 0, lastRelevantPrice);
 
 			List<Order> userActiveOrders = getUserActiveOrders(coinCurrencyPair, side);
 			Order myOrder = userActiveOrders.size() > 0 ? userActiveOrders.get(0) : null;
@@ -543,8 +596,10 @@ public class ProviderReport {
 			if (newOrder == myOrder || (newOrder == null && myOrder != null))
 				System.out.println("  Maintaining previous - " + myOrder);
 			else {
-				if (myOrder != null)
+				if (myOrder != null) {
 					cancelOrder(myOrder);
+					System.out.println("  " + side + " cancelled: " + " - " + myOrder);
+				}
 				createOrder(newOrder, side);
 				System.out.println("  " + side + " created: " + " - " + newOrder);
 			}
@@ -553,10 +608,28 @@ public class ProviderReport {
 		}
 	}
 
-	private Order winTheCurrentOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice)
-			throws ApiProviderException, NotAvailableMoneyException {
+	private void cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(CoinCurrencyPair coinCurrencyPair, RecordSide side)
+			throws ApiProviderException {
 
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+		for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
+
+			// avoid coinCurrencyPair passed by parameter
+			if (!ccp.toString().equals(coinCurrencyPair.toString())) {
+				List<Order> userActiveOrders = getUserActiveOrders(ccp, side);
+
+				Order myOrder = userActiveOrders.size() > 0 ? userActiveOrders.get(0) : null;
+				if (myOrder != null) {
+					System.out.println(
+							"  " + side + " cancelled by order of " + coinCurrencyPair + " : " + " - " + myOrder);
+					cancelOrder(myOrder);
+				}
+			}
+
+		}
+	}
+
+	private Order winTheCurrentOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
+			BigDecimal lastRelevantPrice) throws ApiProviderException, NotAvailableMoneyException {
 
 		List<Order> activeOrders = getActiveOrders(coinCurrencyPair, side);
 		if (orderIndex >= activeOrders.size() - 1) {
@@ -587,18 +660,16 @@ public class ProviderReport {
 			isAGoodOrder = side == RecordSide.BUY ? left <= right : left > right;
 
 		if (isAGoodOrder) {
-			Order newOrder = tryToWinAnOrder(side, orderIndex);
+			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex);
 			if (newOrder != null)
 				return newOrder;
 		}
 
-		return winTheCurrentOrder(side, orderIndex + 1, lastRelevantPrice);
+		return winTheCurrentOrder(coinCurrencyPair, side, orderIndex + 1, lastRelevantPrice);
 	}
 
-	private Order winThePreviousOrder(RecordSide side, Integer orderIndex, BigDecimal lastRelevantPrice)
-			throws ApiProviderException, NotAvailableMoneyException {
-
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
+	private Order winThePreviousOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
+			BigDecimal lastRelevantPrice) throws ApiProviderException, NotAvailableMoneyException {
 
 		List<Order> activeOrders = getActiveOrders(coinCurrencyPair, side);
 		if (orderIndex >= activeOrders.size() - 1) {
@@ -629,18 +700,16 @@ public class ProviderReport {
 			isAGoodOrder = side == RecordSide.BUY ? left <= right : left > right;
 
 		if (isAGoodOrder) {
-			Order newOrder = tryToWinAnOrder(side, orderIndex > 0 ? orderIndex - 1 : 0);
+			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex > 0 ? orderIndex - 1 : 0);
 			if (newOrder != null)
 				return newOrder;
 		}
 
-		return winThePreviousOrder(side, orderIndex + 1, lastRelevantPrice);
+		return winThePreviousOrder(coinCurrencyPair, side, orderIndex + 1, lastRelevantPrice);
 	}
 
-	private Order tryToWinAnOrder(RecordSide side, Integer orderIndex)
+	private Order tryToWinAnOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex)
 			throws NotAvailableMoneyException, ApiProviderException {
-
-		CoinCurrencyPair coinCurrencyPair = getCoinCurrencyPair();
 
 		List<Order> activeOrders = getActiveOrders(coinCurrencyPair, side);
 		List<Order> userActiveOrders = getUserActiveOrders(coinCurrencyPair, side);
