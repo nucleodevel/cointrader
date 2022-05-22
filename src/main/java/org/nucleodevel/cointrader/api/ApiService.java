@@ -6,6 +6,7 @@ import java.util.TimeZone;
 
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
@@ -18,19 +19,31 @@ public abstract class ApiService {
 
 	protected UserConfiguration userConfiguration;
 
+	protected CoinCurrencyPair coinCurrencyPair;
+
 	// --------------------- Constructors
 
-	public ApiService(UserConfiguration userConfiguration) throws ApiProviderException {
+	public ApiService(UserConfiguration userConfiguration, CoinCurrencyPair coinCurrencyPair)
+			throws ApiProviderException {
 		this.userConfiguration = userConfiguration;
+		this.coinCurrencyPair = coinCurrencyPair;
 		makeActionInConstructor();
 	}
 
+	public UserConfiguration getUserConfiguration() {
+		return userConfiguration;
+	}
+
+	public CoinCurrencyPair getCoinCurrencyPair() {
+		return coinCurrencyPair;
+	}
+
 	protected Coin getCoin() {
-		return userConfiguration.getCoin();
+		return coinCurrencyPair.getCoin();
 	}
 
 	protected Currency getCurrency() {
-		return userConfiguration.getCurrency();
+		return coinCurrencyPair.getCurrency();
 	}
 
 	protected abstract String getDomain();

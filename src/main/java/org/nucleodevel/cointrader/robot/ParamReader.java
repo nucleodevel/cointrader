@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
@@ -123,10 +125,29 @@ public class ParamReader {
 						}
 						break;
 					case "-coin":
-						userConfiguration.setCoin(Coin.valueOf(paramValue));
+						List<String> coinStrList = List.of(paramValue.split(";"));
+						List<Coin> coinList = new ArrayList<>();
+
+						coinStrList.stream().forEach((str) -> coinList.add(Coin.valueOf(str)));
+
+						userConfiguration.setCoinList(coinList);
 						break;
 					case "-curr":
 						userConfiguration.setCurrency(Currency.valueOf(paramValue));
+						break;
+					case "-mbcap":
+						try {
+							userConfiguration.setMaximumBuyCoinAmountPercentage(Double.parseDouble(paramValue));
+						} catch (NumberFormatException e) {
+							throw new ParamValueErrorException(paramLabel);
+						}
+						break;
+					case "-mscap":
+						try {
+							userConfiguration.setMaximumSellCoinAmountPercentage(Double.parseDouble(paramValue));
+						} catch (NumberFormatException e) {
+							throw new ParamValueErrorException(paramLabel);
+						}
 						break;
 					case "-mbr":
 						try {

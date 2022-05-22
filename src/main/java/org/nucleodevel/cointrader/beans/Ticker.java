@@ -72,7 +72,8 @@ public class Ticker {
 
 	@Override
 	public String toString() {
-		return "Ticker [high=" + high + ", low=" + low + ", vol=" + vol + "]";
+		return "Ticker [coinCurrencyPair " + coinCurrencyPair + ", high=" + high + ", low=" + low + ", vol=" + vol
+				+ "]";
 	}
 
 }

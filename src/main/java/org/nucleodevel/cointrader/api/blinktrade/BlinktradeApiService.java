@@ -25,6 +25,7 @@ import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
@@ -47,8 +48,9 @@ public class BlinktradeApiService extends ApiService {
 
 	// --------------------- Constructor
 
-	public BlinktradeApiService(UserConfiguration userConfiguration) throws ApiProviderException {
-		super(userConfiguration);
+	public BlinktradeApiService(UserConfiguration userConfiguration, CoinCurrencyPair coinCurrencyPair)
+			throws ApiProviderException {
+		super(userConfiguration, coinCurrencyPair);
 	}
 
 	// --------------------- Getters and setters
@@ -451,8 +453,8 @@ public class BlinktradeApiService extends ApiService {
 		List<Order> bidOrders = new ArrayList<Order>();
 		for (JsonElement row : bidArray) {
 			JsonArray rowArray = row.getAsJsonArray();
-			Order bidOrder = new Order(userConfiguration.getCoin(), userConfiguration.getCurrency(), RecordSide.BUY,
-					rowArray.get(1).getAsBigDecimal(), rowArray.get(0).getAsBigDecimal());
+			Order bidOrder = new Order(getCoin(), getCurrency(), RecordSide.BUY, rowArray.get(1).getAsBigDecimal(),
+					rowArray.get(0).getAsBigDecimal());
 			bidOrder.setClientId(rowArray.get(2).getAsBigInteger());
 			bidOrder.setStatus(OrderStatus.ACTIVE);
 			bidOrders.add(bidOrder);
@@ -461,14 +463,14 @@ public class BlinktradeApiService extends ApiService {
 		List<Order> askOrders = new ArrayList<Order>();
 		for (JsonElement row : askArray) {
 			JsonArray rowArray = row.getAsJsonArray();
-			Order askOrder = new Order(userConfiguration.getCoin(), userConfiguration.getCurrency(), RecordSide.SELL,
-					rowArray.get(1).getAsBigDecimal(), rowArray.get(0).getAsBigDecimal());
+			Order askOrder = new Order(getCoin(), getCurrency(), RecordSide.SELL, rowArray.get(1).getAsBigDecimal(),
+					rowArray.get(0).getAsBigDecimal());
 			askOrder.setClientId(rowArray.get(2).getAsBigInteger());
 			askOrder.setStatus(OrderStatus.ACTIVE);
 			askOrders.add(askOrder);
 		}
 
-		OrderBook orderBook = new OrderBook(userConfiguration.getCoin(), userConfiguration.getCurrency());
+		OrderBook orderBook = new OrderBook(getCoin(), getCurrency());
 		orderBook.setBidOrders(bidOrders);
 		orderBook.setAskOrders(askOrders);
 
@@ -482,7 +484,7 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
 		BigDecimal coinAmount = cumQty.add(leavesQty);
 		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal()
-				.divide(new BigDecimal(userConfiguration.getCurrency() == Currency.BRL ? SATOSHI_BASE : 1));
+				.divide(new BigDecimal(getCurrency() == Currency.BRL ? SATOSHI_BASE : 1));
 
 		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
@@ -501,7 +503,7 @@ public class BlinktradeApiService extends ApiService {
 		BigDecimal leavesQty = jsonArray.get(4).getAsBigDecimal().divide(new BigDecimal(SATOSHI_BASE));
 		BigDecimal coinAmount = cumQty.add(leavesQty);
 		BigDecimal currencyPrice = jsonArray.get(11).getAsBigDecimal()
-				.divide(new BigDecimal(userConfiguration.getCurrency() == Currency.BRL ? SATOSHI_BASE : 1));
+				.divide(new BigDecimal(getCurrency() == Currency.BRL ? SATOSHI_BASE : 1));
 
 		Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 

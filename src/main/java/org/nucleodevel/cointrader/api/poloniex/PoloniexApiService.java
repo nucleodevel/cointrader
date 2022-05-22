@@ -41,6 +41,7 @@ import javax.net.ssl.HttpsURLConnection;
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
+import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
@@ -61,9 +62,9 @@ public class PoloniexApiService extends ApiService {
 
 	// --------------------- Constructor
 
-	public PoloniexApiService(UserConfiguration userConfiguration) throws ApiProviderException {
-		super(userConfiguration);
-		makeActionInConstructor();
+	public PoloniexApiService(UserConfiguration userConfiguration, CoinCurrencyPair coinCurrencyPair)
+			throws ApiProviderException {
+		super(userConfiguration, coinCurrencyPair);
 	}
 
 	// --------------------- Getters and setters

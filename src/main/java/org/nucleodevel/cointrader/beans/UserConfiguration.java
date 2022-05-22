@@ -2,6 +2,8 @@ package org.nucleodevel.cointrader.beans;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserConfiguration {
 
@@ -12,10 +14,13 @@ public class UserConfiguration {
 	private Provider provider;
 	private Broker broker;
 
-	private CoinCurrencyPair coinCurrencyPair;
+	private Currency currency;
+	private List<Coin> coinList;
 	private Integer delayTime;
 	private RecordSideMode buyMode;
 	private RecordSideMode sellMode;
+	private Double maximumBuyCoinAmountPercentage;
+	private Double maximumSellCoinAmountPercentage;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double breakdownBuyRate;
@@ -26,7 +31,11 @@ public class UserConfiguration {
 	private Double incDecPrice;
 
 	public UserConfiguration() {
-		this.coinCurrencyPair = new CoinCurrencyPair(null, null);
+		currency = null;
+		coinList = new ArrayList<>();
+
+		maximumBuyCoinAmountPercentage = 1.0;
+		maximumSellCoinAmountPercentage = 1.0;
 		minimumBuyRate = 0.8;
 		minimumSellRate = 1.2;
 		breakdownBuyRate = null;
@@ -67,28 +76,28 @@ public class UserConfiguration {
 		this.broker = broker;
 	}
 
-	public CoinCurrencyPair getCoinCurrencyPair() {
-		return coinCurrencyPair;
-	}
-
-	public void setCoinCurrencyPair(CoinCurrencyPair coinCurrencyPair) {
-		this.coinCurrencyPair = coinCurrencyPair;
-	}
-
-	public Coin getCoin() {
-		return coinCurrencyPair.getCoin();
-	}
-
-	public void setCoin(Coin coin) {
-		coinCurrencyPair.setCoin(coin);
-	}
-
 	public Currency getCurrency() {
-		return coinCurrencyPair.getCurrency();
+		return currency;
 	}
 
 	public void setCurrency(Currency currency) {
-		coinCurrencyPair.setCurrency(currency);
+		this.currency = currency;
+	}
+
+	public List<Coin> getCoinList() {
+		return coinList;
+	}
+
+	public void setCoinList(List<Coin> coinList) {
+		this.coinList = coinList;
+	}
+
+	public List<CoinCurrencyPair> getCoinCurrencyPairList() {
+		List<CoinCurrencyPair> coinCurrencyPairList = new ArrayList<>();
+
+		coinList.stream().forEach((coin) -> coinCurrencyPairList.add(new CoinCurrencyPair(coin, getCurrency())));
+
+		return coinCurrencyPairList;
 	}
 
 	public Integer getDelayTime() {
@@ -126,6 +135,27 @@ public class UserConfiguration {
 
 	public void setSellMode(RecordSideMode sellMode) {
 		this.sellMode = sellMode;
+	}
+
+	public Double getMaximumCoinAmountPercentage(RecordSide side) {
+		Double rate = 0.0;
+		switch (side) {
+		case BUY:
+			rate = maximumBuyCoinAmountPercentage;
+			break;
+		case SELL:
+			rate = maximumSellCoinAmountPercentage;
+			break;
+		}
+		return rate;
+	}
+
+	public void setMaximumBuyCoinAmountPercentage(Double maximumBuyCoinAmountPercentage) {
+		this.maximumBuyCoinAmountPercentage = maximumBuyCoinAmountPercentage;
+	}
+
+	public void setMaximumSellCoinAmountPercentage(Double maximumSellCoinAmountPercentage) {
+		this.maximumSellCoinAmountPercentage = maximumSellCoinAmountPercentage;
 	}
 
 	public Double getMinimumRate(RecordSide side) {
@@ -226,6 +256,10 @@ public class UserConfiguration {
 		return incDecPrice;
 	}
 
+	public boolean isSingleCoin() {
+		return coinList == null || coinList.size() == 1;
+	}
+
 	@Override
 	public String toString() {
 		DecimalFormat decFmt = new DecimalFormat();
@@ -242,11 +276,15 @@ public class UserConfiguration {
 		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
 		sb.append(";\n  provider: " + provider);
 		sb.append(";\n  broker: " + broker);
-		sb.append(";\n  coin: " + coinCurrencyPair.getCoin());
-		sb.append(";\n  currency: " + coinCurrencyPair.getCurrency());
+		sb.append(";\n  coinList: " + coinList);
+		sb.append(";\n  currency: " + currency);
 		sb.append(";\n  delayTime: " + delayTime);
 		sb.append(";\n  buyMode: " + buyMode);
 		sb.append(";\n  sellMode: " + sellMode);
+		if (maximumBuyCoinAmountPercentage != null)
+			sb.append(";\n  maximumBuyCoinAmountPercentage: " + decFmt.format(maximumBuyCoinAmountPercentage));
+		if (maximumSellCoinAmountPercentage != null)
+			sb.append(";\n  maximumSellCoinAmountPercentage: " + decFmt.format(maximumSellCoinAmountPercentage));
 		if (minimumBuyRate != null)
 			sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
 		if (minimumSellRate != null)
