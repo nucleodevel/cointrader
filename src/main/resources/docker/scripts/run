@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ -n "${TIMEZONE}" ] && [ -f /usr/share/zoneinfo/${TIMEZONE} ]; then
+
+	echo ${TIMEZONE} > /etc/timezone
+	rm /etc/localtime
+	ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
+	dpkg-reconfigure -f noninteractive tzdata
+	
+else 
+	echo "TIMEZONE ${TIMEZONE} not defined or not present."
+    exit
+fi
+
+CONFFILE_IN_VOLUME=/data/conf/${CONFFILE}
+
+if [ -f "$CONFFILE_IN_VOLUME" ]; then
+
+	ln -s /data/conf/${CONFFILE} /etc/cointrader/cointrader.conf
+	
+	java -jar /usr/share/cointrader/cointrader.jar -f /etc/cointrader/cointrader.conf >> /var/log/cointrader.log
+	
+else 
+    echo "The file ${CONFFILE} does not exist."
+    exit
+fi
