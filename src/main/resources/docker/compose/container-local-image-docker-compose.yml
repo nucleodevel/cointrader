@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  cointrader:
+    hostname: cointrader
+    container_name: cointrader
+    image: nucleodevel/cointrader:latest    
+    volumes:
+     - cointrader:/data
+    environment:
+      - CONFFILE=${CONFFILE}
+      - TIMEZONE=${TIMEZONE}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+volumes:
+  cointrader:
+    external: true
+    
