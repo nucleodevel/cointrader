@@ -7,7 +7,7 @@ RUN touch /var/log/cointrader.log
 RUN ln -sf /dev/stdout /var/log/cointrader.log
 
 COPY target/cointrader.jar /usr/share/cointrader/cointrader.jar
-COPY src/main/resources/docker/scripts/run /usr/share/cointrader/run
+COPY src/main/resources/docker/entrypoint/run /usr/share/cointrader/run
 
 RUN chmod +x /usr/share/cointrader/run
 CMD ["/usr/share/cointrader/run"]
