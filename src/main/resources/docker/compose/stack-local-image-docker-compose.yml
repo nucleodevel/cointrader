@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    hostname: cointrader
+    hostname: ${HOSTNAME}
     image: nucleodevel/cointrader:latest
     deploy:
       replicas: 1
@@ -29,7 +29,7 @@ services:
 
 networks:
   rede-proxy:
-    name: rede-swarm-cointrader
+    name: rede-swarm-${HOSTNAME}
     
 volumes:
   cointrader:

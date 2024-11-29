@@ -366,10 +366,15 @@ public class FoxbitApiService extends ApiService {
 			client.close();
 
 			return responseString;
-		} catch (InvalidKeyException | NoSuchAlgorithmException | IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
-
-			throw new ApiProviderException(e);
+			throw new ApiProviderException("Internal error: Failure in connection.");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			throw new ApiProviderException("Internal error: Cryptography Algorithm not found.");
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+			throw new ApiProviderException("Invalid Key or Signature.");
 		}
 	}
 
