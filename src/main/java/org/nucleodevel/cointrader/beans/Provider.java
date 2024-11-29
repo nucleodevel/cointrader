@@ -2,7 +2,7 @@ package org.nucleodevel.cointrader.beans;
 
 public enum Provider {
 
-	MERCADO_BITCOIN("MERCADO_BITCOIN"), BLINKTRADE("BLINKTRADE"), POLONIEX("POLONIEX");
+	MERCADO_BITCOIN("MERCADO_BITCOIN"), FOXBIT("FOXBIT"), BLINKTRADE("BLINKTRADE"), POLONIEX("POLONIEX");
 
 	private final String value;
 
