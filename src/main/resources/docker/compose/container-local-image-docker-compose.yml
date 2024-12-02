@@ -2,8 +2,8 @@ version: '3.7'
 
 services:
   cointrader:
-    hostname: cointrader
-    container_name: cointrader
+    hostname: ${HOSTNAME}
+    container_name: ${HOSTNAME}
     image: nucleodevel/cointrader:latest    
     volumes:
      - cointrader:/data

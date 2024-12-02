@@ -2,8 +2,10 @@ package org.nucleodevel.cointrader.utils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
 
 /**
@@ -58,6 +60,43 @@ public class Utils {
 
 		return null;
 
+	}
+
+	public static String toISO8601UTC(Calendar calendar) {
+
+		Date date = calendar.getTime();
+
+		TimeZone tz = TimeZone.getTimeZone("UTC");
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+		df.setTimeZone(tz);
+		return df.format(date);
+	}
+
+	public static String toISO8601UTCWithoutMillisAndFinalZ(Calendar calendar) {
+
+		Date date = calendar.getTime();
+
+		TimeZone tz = TimeZone.getTimeZone("UTC");
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		df.setTimeZone(tz);
+		return df.format(date);
+	}
+
+	public static Calendar fromISO8601UTC(String dateStr) {
+		TimeZone tz = TimeZone.getTimeZone("UTC");
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+		df.setTimeZone(tz);
+
+		try {
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(df.parse(dateStr));
+
+			return calendar;
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 }

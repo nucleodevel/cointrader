@@ -14,6 +14,7 @@ import java.util.TimeZone;
 
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.api.blinktrade.BlinktradeApiService;
+import org.nucleodevel.cointrader.api.foxbit.FoxbitApiService;
 import org.nucleodevel.cointrader.api.mercadobitcoin.MercadoBitcoinApiService;
 import org.nucleodevel.cointrader.api.poloniex.PoloniexApiService;
 import org.nucleodevel.cointrader.beans.Balance;
@@ -119,6 +120,8 @@ public class ProviderReport {
 		for (CoinCurrencyPair ccp : coinCurrencyPairList) {
 			if (provider == Provider.MERCADO_BITCOIN)
 				apiServiceMap.put(ccp.toString(), new MercadoBitcoinApiService(getUserConfiguration(), ccp));
+			else if (provider == Provider.FOXBIT)
+				apiServiceMap.put(ccp.toString(), new FoxbitApiService(getUserConfiguration(), ccp));
 			else if (provider == Provider.BLINKTRADE)
 				apiServiceMap.put(ccp.toString(), new BlinktradeApiService(getUserConfiguration(), ccp));
 			else if (provider == Provider.POLONIEX)
