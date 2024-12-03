@@ -9,7 +9,7 @@ import java.util.Calendar;
 public class Record implements Comparable<Record> {
 
 	private CoinCurrencyPair coinCurrencyPair;
-	private BigInteger id;
+	private String id;
 	private BigInteger clientId;
 	private RecordSide side;
 	private BigDecimal coinAmount;
@@ -47,11 +47,11 @@ public class Record implements Comparable<Record> {
 		coinCurrencyPair.setCurrency(currency);
 	}
 
-	public BigInteger getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(BigInteger id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

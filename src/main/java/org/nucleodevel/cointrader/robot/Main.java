@@ -72,7 +72,6 @@ public class Main {
 				// creating paramReader and reading APIs
 				userConfiguration = paramReader.getUserConfiguration();
 				ProviderReport report = new ProviderReport(userConfiguration);
-				// report.readApiAtFirst();
 
 				System.out.println("");
 				System.out.println("\n---- Params");
@@ -122,7 +121,7 @@ public class Main {
 					System.out.println("My active orders by type");
 
 					if (report.getUserActiveOrders(ccp).size() == 0) {
-						System.out.println("  There were no operations yet!");
+						System.out.println("  There are no orders yet!");
 					} else {
 						if (report.getUserActiveOrders(ccp, RecordSide.BUY) != null) {
 							for (Order o : report.getUserActiveOrders(ccp, RecordSide.BUY)) {

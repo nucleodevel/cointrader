@@ -172,7 +172,9 @@ public class PoloniexApiService extends ApiService {
 
 			Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
-			operation.setId(BigInteger.valueOf(jsonObject.get("tradeID").getAsLong()));
+			BigInteger id = BigInteger.valueOf(jsonObject.get("tradeID").getAsLong());
+			operation.setId("" + id.longValue());
+
 			operation.setRate(null);
 			operation.setCreationDate(Calendar.getInstance());
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -239,7 +241,9 @@ public class PoloniexApiService extends ApiService {
 
 			Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
-			operation.setId(BigInteger.valueOf(jsonObject.get("tradeID").getAsLong()));
+			BigInteger id = BigInteger.valueOf(jsonObject.get("tradeID").getAsLong());
+			operation.setId("" + id.longValue());
+
 			operation.setRate(null);
 			operation.setCreationDate(Calendar.getInstance());
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -506,7 +510,9 @@ public class PoloniexApiService extends ApiService {
 		BigDecimal currencyPrice = new BigDecimal(jsonObject.get("rate").getAsString());
 
 		Order order = new Order(coin, currency, side, coinAmount, currencyPrice);
-		order.setId(BigInteger.valueOf(jsonObject.get("orderNumber").getAsLong()));
+
+		BigInteger id = BigInteger.valueOf(jsonObject.get("orderNumber").getAsLong());
+		order.setId("" + id.longValue());
 
 		order.setCreationDate(Calendar.getInstance());
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
