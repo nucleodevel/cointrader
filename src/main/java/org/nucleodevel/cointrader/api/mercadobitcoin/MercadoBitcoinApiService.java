@@ -48,7 +48,9 @@ import com.google.gson.JsonParser;
 
 public class MercadoBitcoinApiService extends ApiService {
 
-	private static Authorized authorized;
+	private static final long SECONDS_BEFORE_EXPIRE_TO_RENEW = 120;
+
+	private static Authorization authorization;
 	private static Account account;
 
 	// --------------------- Constructor
@@ -110,6 +112,9 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
+		System.out.println(authorization);
+		System.out.println(account);
+
 		Map<String, String> queryParamMap = Map.of("symbols", getCoinCurrencyPairUrlString());
 		JsonArray tickerJsonArray = (JsonArray) makePublicRequest("tickers", queryParamMap);
 		return getTicker(tickerJsonArray);
@@ -215,7 +220,9 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	private void authorize() throws ApiProviderException {
 
-		if (authorized == null || authorized.isExpired()) {
+		if (authorization == null || authorization.isExpired()) {
+			System.out.println("Authorizing...");
+
 			URL url;
 			try {
 				url = new URL(getDomain() + "/api/v4/authorize");
@@ -251,7 +258,7 @@ public class MercadoBitcoinApiService extends ApiService {
 					if (accessToken != null && !accessToken.isEmpty()) {
 						long expiration = jsonResponse.getAsJsonPrimitive("expiration").getAsLong();
 
-						authorized = new Authorized(accessToken, expiration);
+						authorization = new Authorization(accessToken, expiration, SECONDS_BEFORE_EXPIRE_TO_RENEW);
 					}
 				}
 			} catch (IOException e) {
@@ -263,11 +270,13 @@ public class MercadoBitcoinApiService extends ApiService {
 
 	private Account getAccount() throws ApiProviderException {
 
-		if (authorized == null || authorized.isExpired()) {
+		if (authorization == null || authorization.isExpired()) {
 			authorize();
 		}
 
 		if (account == null) {
+			System.out.println("Getting account...");
+
 			URL url;
 			try {
 				url = new URL(getDomain() + "/api/v4/accounts");
@@ -276,7 +285,7 @@ public class MercadoBitcoinApiService extends ApiService {
 
 				conn.setRequestMethod("GET");
 				conn.setRequestProperty("Content-Type", "application/json");
-				conn.setRequestProperty("Authorization", "Bearer " + authorized.getAccessToken());
+				conn.setRequestProperty("Authorization", "Bearer " + authorization.getAccessToken());
 
 				try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
 					StringBuilder response = new StringBuilder();
@@ -387,6 +396,9 @@ public class MercadoBitcoinApiService extends ApiService {
 			e.printStackTrace();
 		}
 
+		if (authorization == null || authorization.isExpired())
+			authorize();
+
 		if (account == null)
 			getAccount();
 
@@ -412,7 +424,7 @@ public class MercadoBitcoinApiService extends ApiService {
 
 			conn.setRequestMethod(requestMethod);
 			conn.setRequestProperty("Content-Type", "application/json");
-			conn.setRequestProperty("Authorization", "Bearer " + authorized.getAccessToken());
+			conn.setRequestProperty("Authorization", "Bearer " + authorization.getAccessToken());
 
 			if (bodyJsonObject != null) {
 				conn.setRequestProperty("Accept", "application/json");
