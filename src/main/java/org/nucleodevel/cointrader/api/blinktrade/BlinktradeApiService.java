@@ -186,7 +186,9 @@ public class BlinktradeApiService extends ApiService {
 
 			Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
-			operation.setId(BigInteger.valueOf(jsonObject.get("tid").getAsLong()));
+			BigInteger id = BigInteger.valueOf(jsonObject.get("tid").getAsLong());
+			operation.setId("" + id.longValue());
+
 			operation.setRate(null);
 			operation.setCreationDate(Calendar.getInstance());
 			operation.getCreationDate().setTimeInMillis(created * 1000);
@@ -489,7 +491,9 @@ public class BlinktradeApiService extends ApiService {
 		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
 		order.setClientId(jsonArray.get(0).getAsBigInteger());
-		order.setId(jsonArray.get(1).getAsBigInteger());
+
+		BigInteger id = jsonArray.get(1).getAsBigInteger();
+		order.setId("" + id.longValue());
 
 		order.setCreationDate(Utils.getCalendar(jsonArray.get(12).getAsString()));
 
@@ -508,7 +512,9 @@ public class BlinktradeApiService extends ApiService {
 		Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
 		operation.setClientId(jsonArray.get(0).getAsBigInteger());
-		operation.setId(jsonArray.get(1).getAsBigInteger());
+
+		BigInteger id = jsonArray.get(1).getAsBigInteger();
+		operation.setId("" + id.longValue());
 
 		operation.setCreationDate(Utils.getCalendar(jsonArray.get(12).getAsString()));
 

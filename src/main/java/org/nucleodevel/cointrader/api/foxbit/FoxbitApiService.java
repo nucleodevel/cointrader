@@ -176,7 +176,7 @@ public class FoxbitApiService extends ApiService {
 
 			Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
-			operation.setId(id);
+			operation.setId("" + id.longValue());
 			operation.setRate(null);
 			operation.setCreationDate(createdAt);
 
@@ -238,7 +238,7 @@ public class FoxbitApiService extends ApiService {
 
 			Operation operation = new Operation(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
-			operation.setId(id);
+			operation.setId("" + id.longValue());
 			operation.setRate(null);
 			operation.setCreationDate(createdAt);
 
@@ -283,7 +283,7 @@ public class FoxbitApiService extends ApiService {
 		JsonObject jsonResponse = JsonParser.parseString(createResponse).getAsJsonObject();
 		BigInteger id = jsonResponse.getAsJsonPrimitive("id").getAsBigInteger();
 
-		order.setId(id);
+		order.setId("" + id.longValue());
 
 		return order;
 	}
@@ -477,7 +477,7 @@ public class FoxbitApiService extends ApiService {
 		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
 
 		order.setClientId(clientId);
-		order.setId(id);
+		order.setId("" + id.longValue());
 		order.setStatus(status);
 
 		order.setCreationDate(createdAt);
