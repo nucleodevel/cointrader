@@ -6,15 +6,8 @@
 
 package org.nucleodevel.cointrader.api.mercadobitcoin;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -23,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
@@ -46,12 +37,21 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation.Builder;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 public class MercadoBitcoinApiService extends ApiService {
 
 	private static final long SECONDS_BEFORE_EXPIRE_TO_RENEW = 120;
 
 	private static Authorization authorization;
 	private static Account account;
+
+	private Client client = ClientBuilder.newClient();
 
 	// --------------------- Constructor
 
@@ -223,47 +223,25 @@ public class MercadoBitcoinApiService extends ApiService {
 		if (authorization == null || authorization.isExpired()) {
 			System.out.println("Authorizing...");
 
-			URL url;
-			try {
-				url = new URL(getDomain() + "/api/v4/authorize");
+			String url = getDomain() + "/api/v4/authorize";
 
-				HttpURLConnection conn = (HttpsURLConnection) url.openConnection();
+			JsonObject bodyJsonObject = new JsonObject();
+			bodyJsonObject.addProperty("login", userConfiguration.getKey());
+			bodyJsonObject.addProperty("password", userConfiguration.getSecret());
 
-				conn.setRequestMethod("POST");
-				conn.setRequestProperty("Content-Type", "application/json");
-				conn.setRequestProperty("Accept", "application/json");
+			String body = bodyJsonObject.toString();
 
-				conn.setDoOutput(true);
+			Response response = client.target(url).request(MediaType.APPLICATION_JSON).post(Entity.json(body));
 
-				JsonObject bodyJsonObject = new JsonObject();
-				bodyJsonObject.addProperty("login", userConfiguration.getKey());
-				bodyJsonObject.addProperty("password", userConfiguration.getSecret());
+			String responseStr = response.readEntity(String.class);
 
-				String body = bodyJsonObject.toString();
+			JsonObject jsonResponse = (JsonObject) JsonParser.parseString(responseStr);
+			String accessToken = jsonResponse.getAsJsonPrimitive("access_token").getAsString();
 
-				try (OutputStream os = conn.getOutputStream()) {
-					byte[] input = body.getBytes("utf-8");
-					os.write(input, 0, input.length);
-				}
-				try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
-					StringBuilder response = new StringBuilder();
-					String responseLine = null;
-					while ((responseLine = br.readLine()) != null) {
-						response.append(responseLine.trim());
-					}
+			if (accessToken != null && !accessToken.isEmpty()) {
+				long expiration = jsonResponse.getAsJsonPrimitive("expiration").getAsLong();
 
-					JsonObject jsonResponse = (JsonObject) JsonParser.parseString(response.toString());
-					String accessToken = jsonResponse.getAsJsonPrimitive("access_token").getAsString();
-
-					if (accessToken != null && !accessToken.isEmpty()) {
-						long expiration = jsonResponse.getAsJsonPrimitive("expiration").getAsLong();
-
-						authorization = new Authorization(accessToken, expiration, SECONDS_BEFORE_EXPIRE_TO_RENEW);
-					}
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new ApiProviderException("Internal error: Failure in connection.");
+				authorization = new Authorization(accessToken, expiration, SECONDS_BEFORE_EXPIRE_TO_RENEW);
 			}
 		}
 	}
@@ -277,39 +255,22 @@ public class MercadoBitcoinApiService extends ApiService {
 		if (account == null) {
 			System.out.println("Getting account...");
 
-			URL url;
-			try {
-				url = new URL(getDomain() + "/api/v4/accounts");
+			String url = getDomain() + "/api/v4/accounts";
 
-				HttpURLConnection conn = (HttpsURLConnection) url.openConnection();
+			String responseStr = client.target(url.toString()).request(MediaType.APPLICATION_JSON)
+					.header("Authorization", "Bearer " + authorization.getAccessToken()).get(String.class);
 
-				conn.setRequestMethod("GET");
-				conn.setRequestProperty("Content-Type", "application/json");
-				conn.setRequestProperty("Authorization", "Bearer " + authorization.getAccessToken());
+			JsonArray jsonResponse = (JsonArray) JsonParser.parseString(responseStr);
+			if (jsonResponse != null && jsonResponse.size() > 0) {
+				JsonObject jsonObject = jsonResponse.get(0).getAsJsonObject();
 
-				try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"))) {
-					StringBuilder response = new StringBuilder();
-					String responseLine = null;
-					while ((responseLine = br.readLine()) != null) {
-						response.append(responseLine.trim());
-					}
+				String id = jsonObject.getAsJsonPrimitive("id").getAsString();
+				String name = jsonObject.getAsJsonPrimitive("name").getAsString();
+				String type = jsonObject.getAsJsonPrimitive("type").getAsString();
+				String currency = jsonObject.getAsJsonPrimitive("currency").getAsString();
+				String currencySign = jsonObject.getAsJsonPrimitive("currency").getAsString();
 
-					JsonArray jsonResponse = (JsonArray) JsonParser.parseString(response.toString());
-					if (jsonResponse != null && jsonResponse.size() > 0) {
-						JsonObject jsonObject = jsonResponse.get(0).getAsJsonObject();
-
-						String id = jsonObject.getAsJsonPrimitive("id").getAsString();
-						String name = jsonObject.getAsJsonPrimitive("name").getAsString();
-						String type = jsonObject.getAsJsonPrimitive("type").getAsString();
-						String currency = jsonObject.getAsJsonPrimitive("currency").getAsString();
-						String currencySign = jsonObject.getAsJsonPrimitive("currency").getAsString();
-
-						account = new Account(id, name, type, currency, currencySign);
-					}
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new ApiProviderException("Internal error: Failure in connection.");
+				account = new Account(id, name, type, currency, currencySign);
 			}
 		}
 
@@ -329,7 +290,7 @@ public class MercadoBitcoinApiService extends ApiService {
 			throw new ApiProviderException("Invalid coin pair.");
 		}
 
-		StringBuffer url = new StringBuffer(method);
+		StringBuffer url = new StringBuffer(getPublicApiUrl() + method);
 
 		StringBuilder queryString = new StringBuilder();
 		if (params != null) {
@@ -344,41 +305,9 @@ public class MercadoBitcoinApiService extends ApiService {
 
 		url.append(queryString);
 
-		try {
-			URL urlVar = new URL(getPublicApiUrl() + url.toString());
-			HttpsURLConnection conn = (HttpsURLConnection) urlVar.openConnection();
-			conn.setRequestMethod("GET");
-			conn.setRequestProperty("Content-Type", "application/json");
+		String responseStr = client.target(url.toString()).request(MediaType.APPLICATION_JSON).get(String.class);
 
-			conn.getResponseCode();
-
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			} catch (IOException e) {
-				if (conn.getErrorStream() != null) {
-					reader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-				}
-			}
-			StringBuilder sb = new StringBuilder();
-			String line = null;
-
-			if (reader != null) {
-				while ((line = reader.readLine()) != null) {
-					sb.append(line + "\n");
-				}
-			}
-
-			String response = sb.toString();
-			JsonElement jsonElement = JsonParser.parseString(response);
-
-			return jsonElement;
-		} catch (MalformedURLException e) {
-			throw new ApiProviderException("Internal error: Invalid URL.");
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new ApiProviderException("Internal error: Failure in connection.");
-		}
+		return JsonParser.parseString(responseStr);
 	}
 
 	private JsonElement makePrivateRequest(String method, String requestMethod, Map<String, String> queryParams)
@@ -402,64 +331,36 @@ public class MercadoBitcoinApiService extends ApiService {
 		if (account == null)
 			getAccount();
 
+		StringBuilder queryString = new StringBuilder();
+		if (queryParams != null && !queryParams.isEmpty()) {
+			queryString.append("?");
+			for (Map.Entry<String, String> param : queryParams.entrySet()) {
+				if (queryString.length() > 0) {
+					queryString.append("&");
+				}
+				queryString.append(param.getKey()).append("=").append(param.getValue());
+			}
+		}
+
+		String url = getPrivateApiUrl() + method + queryString;
+
+		Builder request = client.target(url).request(MediaType.APPLICATION_JSON).header("Authorization",
+				"Bearer " + authorization.getAccessToken());
+
 		String responseStr = null;
 
-		try {
+		if (requestMethod.equals("POST")) {
+			String body = bodyJsonObject.toString();
 
-			StringBuilder queryString = new StringBuilder();
-			if (queryParams != null && !queryParams.isEmpty()) {
-				queryString.append("?");
-				for (Map.Entry<String, String> param : queryParams.entrySet()) {
-					if (queryString.length() > 0) {
-						queryString.append("&");
-					}
-					queryString.append(param.getKey()).append("=").append(param.getValue());
-				}
-			}
-
-			URL url = new URL(getPrivateApiUrl() + method + queryString);
-
-			HttpURLConnection conn;
-			conn = (HttpsURLConnection) url.openConnection();
-
-			conn.setRequestMethod(requestMethod);
-			conn.setRequestProperty("Content-Type", "application/json");
-			conn.setRequestProperty("Authorization", "Bearer " + authorization.getAccessToken());
-
-			if (bodyJsonObject != null) {
-				conn.setRequestProperty("Accept", "application/json");
-
-				conn.setDoOutput(true);
-
-				String body = bodyJsonObject.toString();
-				try (OutputStream os = conn.getOutputStream()) {
-					byte[] input = body.getBytes("utf-8");
-					os.write(input, 0, input.length);
-				}
-			}
-
-			BufferedReader reader = null;
-			reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			StringBuilder sb = new StringBuilder();
-			String line = null;
-
-			while ((line = reader.readLine()) != null) {
-				sb.append(line + "\n");
-			}
-
-			responseStr = sb.toString();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new ApiProviderException("Internal error: Failure in connection.");
+			Response response = request.post(Entity.json(body));
+			responseStr = response.hasEntity() ? response.readEntity(String.class) : null;
+		} else if (requestMethod.equals("DELETE")) {
+			request.delete();
+		} else {
+			responseStr = request.get(String.class);
 		}
 
-		if (responseStr == null) {
-			throw new ApiProviderException("Internal error: null response from the server.");
-		}
-
-		JsonElement jsonResponse = JsonParser.parseString(responseStr);
-
-		return (jsonResponse == null) ? null : jsonResponse;
+		return responseStr == null ? null : JsonParser.parseString(responseStr);
 	}
 
 	// --------------------- Object to json

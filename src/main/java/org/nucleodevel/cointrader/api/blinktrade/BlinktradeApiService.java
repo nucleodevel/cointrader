@@ -1,12 +1,7 @@
 package org.nucleodevel.cointrader.api.blinktrade;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -19,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Broker;
@@ -44,7 +37,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation.Builder;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 public class BlinktradeApiService extends ApiService {
+
+	private Client client = ClientBuilder.newClient();
 
 	// --------------------- Constructor
 
@@ -104,41 +106,6 @@ public class BlinktradeApiService extends ApiService {
 
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
-		/*
-		 * Ticker ticker = new Ticker(getCoin(), getCurrency());
-		 * 
-		 * BigDecimal high = new BigDecimal(0); BigDecimal low = new
-		 * BigDecimal(Double.MAX_VALUE); BigDecimal vol = new BigDecimal(0);
-		 * 
-		 * Calendar from = Calendar.getInstance(); Calendar to = Calendar.getInstance();
-		 * 
-		 * from.setTime(new Date()); from.add(Calendar.HOUR, -24); to.setTime(new
-		 * Date());
-		 * 
-		 * List<Operation> operations = getOperationList(from, to);
-		 * 
-		 * for (Operation operation: operations) { vol =
-		 * vol.add(operation.getCoinAmount()); if
-		 * (operation.getCurrencyPrice().compareTo(high) == 1) high =
-		 * operation.getCurrencyPrice(); if (operation.getCurrencyPrice().compareTo(low)
-		 * == -1) low = operation.getCurrencyPrice(); }
-		 * 
-		 * System.out.println( operations.get(0).getCreationDate().getTime() + "-" +
-		 * operations.get(operations.size() - 1).getCreationDate().getTime() );
-		 * 
-		 * ticker.setHigh(high); ticker.setLow(low); ticker.setVol(vol);
-		 * 
-		 * from.setTime(new Date()); from.add(Calendar.HOUR, -3); to.setTime(new
-		 * Date()); BigDecimal last3HourVolume = new BigDecimal(0); List<Operation>
-		 * last3HourOperations = getOperationList(from, to);
-		 * 
-		 * for (Operation operation: last3HourOperations) last3HourVolume =
-		 * last3HourVolume.add(operation.getCoinAmount());
-		 * 
-		 * ticker.setLast3HourVolume(last3HourVolume);
-		 * 
-		 * return ticker;
-		 */
 		return null;
 	}
 
@@ -309,40 +276,17 @@ public class BlinktradeApiService extends ApiService {
 	// --------------------- Request methods
 
 	private String makePublicRequest(String requestUrl) throws ApiProviderException {
-		URL url = null;
-		URLConnection http = null;
-
-		try {
-			url = new URL(getPublicApiUrl() + requestUrl);
-			http = url.openConnection();
-		} catch (Exception e) {
-			throw new ApiProviderException("API URL initialization fail", e);
-		}
-
-		http.setRequestProperty("Content-Type", "application/json");
-
-		http.setDoInput(true);
-
-		InputStream is = null;
-
-		String responseMessage = null;
-
-		try {
-			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is, "UTF-8");
-		} catch (Exception e) {
-			throw new ApiProviderException("API response retrieve fail", e);
-		}
 
 		// putting delay time
 		try {
-			TimeUnit.MILLISECONDS.sleep(100);
+			TimeUnit.MILLISECONDS.sleep(1010);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
-		return responseMessage;
+		String url = getPublicApiUrl() + requestUrl;
 
+		return client.target(url.toString()).request(MediaType.APPLICATION_JSON).get(String.class);
 	}
 
 	private String makePrivateRequest(String requestMessage) throws ApiProviderException {
@@ -357,7 +301,16 @@ public class BlinktradeApiService extends ApiService {
 				SecretKeySpec secret_key = new SecretKeySpec(userConfiguration.getSecret().getBytes(), ALGORITHM);
 				sha_HMAC.init(secret_key);
 				byte encoded[] = sha_HMAC.doFinal(nonce.getBytes());
-				signature = Hex.encodeHexString(encoded);
+
+				StringBuilder hexString = new StringBuilder();
+				for (byte b : encoded) {
+					String hex = Integer.toHexString(0xff & b);
+					if (hex.length() == 1)
+						hexString.append('0');
+					hexString.append(hex);
+				}
+
+				signature = hexString.toString();
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
@@ -366,60 +319,14 @@ public class BlinktradeApiService extends ApiService {
 			throw new ApiProviderException("Message signature fail", e);
 		}
 
-		URL url = null;
-		URLConnection http = null;
+		String url = getPrivateApiUrl();
 
-		try {
-			url = new URL(getPrivateApiUrl());
-			http = url.openConnection();
+		Builder request = client.target(url).request(MediaType.APPLICATION_JSON)
+				.header("Content-Type", "application/json").header("APIKey", userConfiguration.getKey())
+				.header("Nonce", nonce).header("Signature", signature);
 
-		} catch (Exception e) {
-			throw new ApiProviderException("API URL initialization fail", e);
-		}
-
-		try {
-			Method setRequestMethod = http.getClass().getMethod("setRequestMethod", String.class);
-			setRequestMethod.invoke(http, "POST");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		http.setRequestProperty("Content-Type", "application/json");
-		http.setRequestProperty("APIKey", userConfiguration.getKey());
-		http.setRequestProperty("Nonce", nonce);
-		http.setRequestProperty("Signature", signature);
-
-		http.setDoOutput(true);
-		http.setDoInput(true);
-
-		OutputStream os = null;
-		InputStream is = null;
-
-		try {
-			os = http.getOutputStream();
-			os.write(requestMessage.getBytes());
-			os.flush();
-		} catch (Exception e) {
-			throw new ApiProviderException("API Request fail", e);
-		}
-
-		String responseMessage = null;
-
-		try {
-			is = http.getInputStream();
-			responseMessage = IOUtils.toString(is, "UTF-8");
-		} catch (Exception e) {
-			throw new ApiProviderException("API response retrieve fail", e);
-		}
-
-		// putting delay time
-		try {
-			TimeUnit.MILLISECONDS.sleep(100);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		return responseMessage;
+		Response response = request.post(Entity.json(requestMessage));
+		return response.hasEntity() ? response.readEntity(String.class) : null;
 
 	}
 
