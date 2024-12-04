@@ -1,6 +1,5 @@
 package org.nucleodevel.cointrader.api.foxbit;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -14,19 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
@@ -48,7 +39,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation.Builder;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 public class FoxbitApiService extends ApiService {
+
+	private Client client = ClientBuilder.newClient();
 
 	// --------------------- Constructor
 
@@ -113,31 +113,30 @@ public class FoxbitApiService extends ApiService {
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
 
-		String tickerResponse = request("GET", "/rest/v3/markets/" + getCoinCurrencyPairUrlString() + "/ticker/24hr",
-				null, null);
-		JsonObject tickerJsonObject = JsonParser.parseString(tickerResponse).getAsJsonObject();
+		JsonElement responseJsonElement = request("GET",
+				"/rest/v3/markets/" + getCoinCurrencyPairUrlString() + "/ticker/24hr", null, null);
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
 
-		return getTicker(tickerJsonObject);
+		return getTicker(responseJsonObject);
 	}
 
 	@Override
 	public Balance getBalance() throws ApiProviderException {
 
-		String balanceResponse = request("GET", "/rest/v3/accounts", null, null);
-		JsonObject balanceJsonObject = JsonParser.parseString(balanceResponse).getAsJsonObject();
+		JsonElement responseJsonElement = request("GET", "/rest/v3/accounts", null, null);
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
 
-		return getBalance(balanceJsonObject);
+		return getBalance(responseJsonObject);
 	}
 
 	@Override
 	public OrderBook getOrderBook() throws ApiProviderException {
 
-		String orderBookResponse = null;
-		orderBookResponse = request("GET", "/rest/v3/markets/" + getCoinCurrencyPairUrlString() + "/orderbook", null,
-				null);
-		JsonObject orderBookJsonObject = JsonParser.parseString(orderBookResponse).getAsJsonObject();
+		JsonElement responseJsonElement = request("GET",
+				"/rest/v3/markets/" + getCoinCurrencyPairUrlString() + "/orderbook", null, null);
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
 
-		return getOrderBook(orderBookJsonObject);
+		return getOrderBook(responseJsonObject);
 	}
 
 	@Override
@@ -153,13 +152,13 @@ public class FoxbitApiService extends ApiService {
 		if (to != null)
 			queryParams.put("end_time", Utils.toISO8601UTCWithoutMillisAndFinalZ(to));
 
-		String operationListResponse = request("GET",
+		JsonElement responseJsonElement = request("GET",
 				"/rest/v3/markets/" + getCoinCurrencyPairUrlString() + "/trades/history", queryParams, null);
-		JsonObject operationListJsonObject = JsonParser.parseString(operationListResponse).getAsJsonObject();
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
 
 		List<Operation> operationList = new ArrayList<Operation>();
 
-		JsonArray dataJsonArray = operationListJsonObject.getAsJsonArray("data");
+		JsonArray dataJsonArray = responseJsonObject.getAsJsonArray("data");
 		for (JsonElement rowJsonElement : dataJsonArray) {
 			JsonObject rowJsonObject = rowJsonElement.getAsJsonObject();
 
@@ -193,10 +192,10 @@ public class FoxbitApiService extends ApiService {
 
 		queryParams.put("state", "ACTIVE");
 
-		String userActiveOrdersResponse = request("GET", "/rest/v3/orders", queryParams, null);
-		JsonObject userActiveOrdersJsonObject = JsonParser.parseString(userActiveOrdersResponse).getAsJsonObject();
+		JsonElement responseJsonElement = request("GET", "/rest/v3/orders", queryParams, null);
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
 
-		JsonArray dataJsonArray = userActiveOrdersJsonObject.getAsJsonArray("data");
+		JsonArray dataJsonArray = responseJsonObject.getAsJsonArray("data");
 
 		List<Order> activeOrders = new ArrayList<Order>();
 		for (JsonElement rowJsonElement : dataJsonArray) {
@@ -216,12 +215,12 @@ public class FoxbitApiService extends ApiService {
 
 		queryParams.put("market_symbol", getCoinCurrencyPairUrlString());
 
-		String operationListResponse = request("GET", "/rest/v3/trades", queryParams, null);
-		JsonObject operationListJsonObject = JsonParser.parseString(operationListResponse).getAsJsonObject();
+		JsonElement responseJsonElement = request("GET", "/rest/v3/trades", queryParams, null);
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
 
 		List<Operation> operationList = new ArrayList<Operation>();
 
-		JsonArray dataJsonArray = operationListJsonObject.getAsJsonArray("data");
+		JsonArray dataJsonArray = responseJsonObject.getAsJsonArray("data");
 		for (JsonElement rowJsonElement : dataJsonArray) {
 			JsonObject rowJsonObject = rowJsonElement.getAsJsonObject();
 
@@ -278,10 +277,10 @@ public class FoxbitApiService extends ApiService {
 		orderToCreate.addProperty("type", typeStr);
 		orderToCreate.addProperty("price", decFmt.format(order.getCurrencyPrice()));
 		orderToCreate.addProperty("quantity", decFmt.format(order.getCoinAmount()));
-		String createResponse = request("POST", "/rest/v3/orders", null, orderToCreate.toString());
+		JsonElement responseJsonElement = request("POST", "/rest/v3/orders", null, orderToCreate.toString());
 
-		JsonObject jsonResponse = JsonParser.parseString(createResponse).getAsJsonObject();
-		BigInteger id = jsonResponse.getAsJsonPrimitive("id").getAsBigInteger();
+		JsonObject responseJsonObject = responseJsonElement.getAsJsonObject();
+		BigInteger id = responseJsonObject.getAsJsonPrimitive("id").getAsBigInteger();
 
 		order.setId("" + id.longValue());
 
@@ -292,6 +291,7 @@ public class FoxbitApiService extends ApiService {
 
 	private Map<String, String> sign(String method, String path, Map<String, String> params, String body)
 			throws NoSuchAlgorithmException, InvalidKeyException {
+
 		StringBuilder queryString = new StringBuilder();
 		if (params != null) {
 			for (Map.Entry<String, String> param : params.entrySet()) {
@@ -328,8 +328,15 @@ public class FoxbitApiService extends ApiService {
 		return signatureData;
 	}
 
-	private String request(String method, String path, Map<String, String> params, String body)
+	private JsonElement request(String method, String path, Map<String, String> params, String body)
 			throws ApiProviderException {
+
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(1010);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		Map<String, String> signatureData;
 		try {
@@ -341,34 +348,28 @@ public class FoxbitApiService extends ApiService {
 			}
 			String url = urlBuilder.toString();
 
-			HttpRequestBase request;
+			String signature = signatureData.get("signature");
+			String timestamp = signatureData.get("timestamp");
+
+			Builder request = client.target(url).request(MediaType.APPLICATION_JSON)
+					.header("X-FB-ACCESS-KEY", userConfiguration.getKey()).header("X-FB-ACCESS-TIMESTAMP", timestamp)
+					.header("X-FB-ACCESS-SIGNATURE", signature).header("Content-Type", "application/json");
+
+			String responseStr = null;
+
 			if ("GET".equalsIgnoreCase(method)) {
-				request = new HttpGet(url);
+				responseStr = request.get(String.class);
 			} else if ("POST".equalsIgnoreCase(method)) {
-				request = new HttpPost(url);
-				((HttpPost) request).setEntity(new StringEntity(body));
+				Response response = request.post(Entity.json(body));
+				responseStr = response.hasEntity() ? response.readEntity(String.class) : null;
 			} else if ("PUT".equalsIgnoreCase(method)) {
-				request = new HttpPut(url);
-				((HttpPut) request).setEntity(new StringEntity(body));
+				Response response = request.put(Entity.json(body));
+				responseStr = response.hasEntity() ? response.readEntity(String.class) : null;
 			} else {
 				throw new IllegalArgumentException("Unsupported HTTP method: " + method);
 			}
-			String signature = signatureData.get("signature");
-			String timestamp = signatureData.get("timestamp");
-			request.setHeader("X-FB-ACCESS-KEY", userConfiguration.getKey());
-			request.setHeader("X-FB-ACCESS-TIMESTAMP", timestamp);
-			request.setHeader("X-FB-ACCESS-SIGNATURE", signature);
-			request.setHeader("Content-Type", "application/json");
 
-			CloseableHttpClient client = HttpClients.createDefault();
-			CloseableHttpResponse response = client.execute(request);
-			String responseString = EntityUtils.toString(response.getEntity());
-			client.close();
-
-			return responseString;
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new ApiProviderException("Internal error: Failure in connection.");
+			return responseStr == null ? null : JsonParser.parseString(responseStr);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 			throw new ApiProviderException("Internal error: Cryptography Algorithm not found.");

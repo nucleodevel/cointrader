@@ -6,16 +6,9 @@
 
 package org.nucleodevel.cointrader.api.poloniex;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -36,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.net.ssl.HttpsURLConnection;
 
 import org.nucleodevel.cointrader.api.ApiService;
 import org.nucleodevel.cointrader.beans.Balance;
@@ -58,7 +50,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation.Builder;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 public class PoloniexApiService extends ApiService {
+
+	private Client client = ClientBuilder.newClient();
 
 	// --------------------- Constructor
 
@@ -308,67 +309,44 @@ public class PoloniexApiService extends ApiService {
 	// --------------------- Request methods
 
 	private JsonElement makePublicRequest(String method, JsonHashMap args) throws ApiProviderException {
+
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(1010);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		if (getCoin() == null || getCurrency() == null) {
 			throw new ApiProviderException("Invalid coin pair.");
 		}
 
-		try {
-			// add method and nonce to args
-			if (args == null) {
-				args = new JsonHashMap();
-			}
-
-			String argsVar = "";
-			for (Map.Entry<String, Object> arg : args.entrySet())
-				argsVar += "&" + arg.getKey() + "=" + arg.getValue();
-
-			URL urlVar = new URL(getPublicApiUrl() + "?command=" + method + "&currencyPair=" + getCurrency() + "_"
-					+ getCoin() + argsVar);
-
-			HttpsURLConnection conn = (HttpsURLConnection) urlVar.openConnection();
-			conn.setRequestMethod("GET");
-			conn.setRequestProperty("Content-Type", "application/json");
-
-			conn.getResponseCode();
-
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			} catch (IOException e) {
-				if (conn.getErrorStream() != null) {
-					reader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-				}
-			}
-			StringBuilder sb = new StringBuilder();
-			String line = null;
-
-			if (reader != null) {
-				while ((line = reader.readLine()) != null) {
-					sb.append(line + "\n");
-				}
-			}
-
-			String response = sb.toString();
-			JsonElement jsonElement = JsonParser.parseString(response);
-
-			// putting delay time
-			try {
-				TimeUnit.MILLISECONDS.sleep(1010);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
-			return jsonElement;
-		} catch (MalformedURLException e) {
-			throw new ApiProviderException("Internal error: Invalid URL.");
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new ApiProviderException("Internal error: Failure in connection.");
+		// add method and nonce to args
+		if (args == null) {
+			args = new JsonHashMap();
 		}
+
+		String argsVar = "";
+		for (Map.Entry<String, Object> arg : args.entrySet())
+			argsVar += "&" + arg.getKey() + "=" + arg.getValue();
+
+		String url = getPublicApiUrl() + "?command=" + method + "&currencyPair=" + getCurrency() + "_" + getCoin()
+				+ argsVar;
+
+		String responseStr = client.target(url.toString()).request(MediaType.APPLICATION_JSON).get(String.class);
+
+		return JsonParser.parseString(responseStr);
 	}
 
 	@SuppressWarnings("deprecation")
 	private JsonElement makePrivateRequest(String method, JsonHashMap args) throws ApiProviderException {
+
+		// putting delay time
+		try {
+			TimeUnit.MILLISECONDS.sleep(1010);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		try {
 			setAuthKeys();
@@ -378,9 +356,6 @@ public class PoloniexApiService extends ApiService {
 		if (!initialized) {
 			throw new ApiProviderException();
 		}
-
-		// prep the call
-		preAuth();
 
 		// add method and nonce to args
 		if (args == null) {
@@ -400,50 +375,21 @@ public class PoloniexApiService extends ApiService {
 			postData += arg + "=" + URLEncoder.encode((String) args.get(arg));
 		}
 
-		// create connection
-		URLConnection conn = null;
-		StringBuffer response = new StringBuffer();
+		String url = getPrivateApiUrl();
+
+		Builder request;
 		try {
-			URL url = new URL(getPrivateApiUrl());
-			conn = url.openConnection();
-			conn.setUseCaches(false);
-			conn.setDoOutput(true);
-
-			conn.setRequestProperty("Key", userConfiguration.getKey());
-			conn.setRequestProperty("Sign", toHex(mac.doFinal(postData.getBytes("UTF-8"))));
-			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			conn.setRequestProperty("User-Agent", USER_AGENT);
-
-			// write post data
-			OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-			out.write(postData);
-			out.close();
-
-			// read response
-			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			String line = null;
-			while ((line = in.readLine()) != null)
-				response.append(line);
-			in.close();
-		} catch (MalformedURLException e) {
-			throw new ApiProviderException("Internal error.", e);
-		} catch (IOException e) {
-			throw new ApiProviderException("Error connecting to BTC-E.", e);
+			request = client.target(url).request(MediaType.APPLICATION_JSON).header("Key", userConfiguration.getKey())
+					.header("Sign", toHex(mac.doFinal(postData.getBytes("UTF-8"))))
+					.header("Content-Type", "application/x-www-form-urlencoded").header("User-Agent", USER_AGENT);
+		} catch (UnsupportedEncodingException | IllegalStateException e) {
+			throw new ApiProviderException("Signature fail", e);
 		}
 
-		JsonElement jsonElement = JsonParser.parseString(response.toString());
-
-		// putting delay time
-		try {
-			TimeUnit.MILLISECONDS.sleep(1010);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		return jsonElement;
+		Response response = request.post(Entity.json(postData));
+		String responseStr = response.hasEntity() ? response.readEntity(String.class) : null;
+		return JsonParser.parseString(responseStr);
 	}
-
-	// --------------------- Object to json
 
 	// --------------------- Json to object
 
@@ -549,19 +495,6 @@ public class PoloniexApiService extends ApiService {
 		initialized = true;
 	}
 
-	@SuppressWarnings("static-access")
-	private final void preAuth() {
-		long elapsed = System.currentTimeMillis() - auth_last_request;
-		if (elapsed < auth_request_limit) {
-			try {
-				Thread.currentThread().sleep(auth_request_limit - elapsed);
-			} catch (InterruptedException e) {
-
-			}
-		}
-		auth_last_request = System.currentTimeMillis();
-	}
-
 	private String toHex(byte[] b) throws UnsupportedEncodingException {
 		return String.format("%040x", new BigInteger(1, b));
 	}
@@ -570,8 +503,6 @@ public class PoloniexApiService extends ApiService {
 
 	private static final String USER_AGENT = "Mozilla/5.0 (compatible; BTCE-API/1.0; MSIE 6.0 compatible; +https://github.com/abwaters/btce-api)";
 	private boolean initialized = false;
-	private static long auth_last_request = 0;
-	private static long auth_request_limit = 1000; // request limit in milliseconds
 
 	@SuppressWarnings("unused")
 	private byte[] mbTapiCodeBytes;
