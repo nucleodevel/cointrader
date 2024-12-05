@@ -1,5 +1,7 @@
 package org.nucleodevel.cointrader.robot;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -10,13 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.nucleodevel.cointrader.api.ApiService;
-import org.nucleodevel.cointrader.api.blinktrade.BlinktradeApiService;
-import org.nucleodevel.cointrader.api.foxbit.FoxbitApiService;
-import org.nucleodevel.cointrader.api.mercadobitcoin.MercadoBitcoinApiService;
-import org.nucleodevel.cointrader.api.poloniex.PoloniexApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Operation;
@@ -111,22 +108,27 @@ public class ProviderReport {
 
 	// ------------ Operations to read data
 
+	@SuppressWarnings("unchecked")
 	private void makeApiServiceMap() throws ApiProviderException {
 		apiServiceMap = new HashMap<>();
 
 		Provider provider = userConfiguration.getProvider();
 		List<CoinCurrencyPair> coinCurrencyPairList = getCoinCurrencyPairList();
 
-		for (CoinCurrencyPair ccp : coinCurrencyPairList) {
-			if (provider == Provider.MERCADO_BITCOIN)
-				apiServiceMap.put(ccp.toString(), new MercadoBitcoinApiService(getUserConfiguration(), ccp));
-			else if (provider == Provider.FOXBIT)
-				apiServiceMap.put(ccp.toString(), new FoxbitApiService(getUserConfiguration(), ccp));
-			else if (provider == Provider.BLINKTRADE)
-				apiServiceMap.put(ccp.toString(), new BlinktradeApiService(getUserConfiguration(), ccp));
-			else if (provider == Provider.POLONIEX)
-				apiServiceMap.put(ccp.toString(), new PoloniexApiService(getUserConfiguration(), ccp));
+		try {
+			Class<ApiService> apiServiceClass = (Class<ApiService>) Class.forName(provider.getImplementer());
+			Constructor<ApiService> apiServiceConstructor = apiServiceClass
+					.getDeclaredConstructor(UserConfiguration.class, CoinCurrencyPair.class);
+
+			for (CoinCurrencyPair ccp : coinCurrencyPairList) {
+				ApiService apiService = apiServiceConstructor.newInstance(getUserConfiguration(), ccp);
+				apiServiceMap.put(ccp.toString(), apiService);
+			}
+		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
+				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
 		}
+
 	}
 
 	private ApiService getApiService(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
@@ -383,67 +385,6 @@ public class ProviderReport {
 		return lastRelevantPriceByOrders;
 	}
 
-	public BigDecimal getLastRelevantInactivityTimeByOperations(CoinCurrencyPair coinCurrencyPair, RecordSide side)
-			throws ApiProviderException {
-
-		BigDecimal lastRelevantInactivityTimeByOperations = new BigDecimal(0);
-
-		List<Operation> groupOfOperations = new ArrayList<Operation>();
-		BigDecimal oldCoinAmount = new BigDecimal(0);
-		Double sumOfMoney = 0.0;
-
-		Double moneyWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
-
-		Calendar now = Calendar.getInstance();
-		now.setTime(new Date());
-		if (getApiService(coinCurrencyPair).getTimeZone().getDisplayName()
-				.equals(TimeZone.getTimeZone("GMT").getDisplayName())) {
-			TimeZone tz1 = getApiService(coinCurrencyPair).getTimeZone();
-			TimeZone tz2 = TimeZone.getTimeZone("GMT-03:00");
-			int timeDifference = tz1.getRawOffset() - tz2.getRawOffset();
-			now.add(Calendar.HOUR, timeDifference / 60 / 60 / 1000);
-		}
-
-		Long nowTime = now.getTimeInMillis();
-
-		for (Operation operation : getUserOperations(coinCurrencyPair)) {
-			Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
-			if (operation.getSide() == side) {
-				if (sumOfMoney + otherSideAmount <= moneyWithOpenOrders) {
-					sumOfMoney += otherSideAmount;
-					groupOfOperations.add(operation);
-				} else {
-					oldCoinAmount = operation.getCoinAmount();
-					if (side == RecordSide.BUY)
-						operation.setCoinAmount(new BigDecimal(moneyWithOpenOrders - sumOfMoney));
-					else if (side == RecordSide.SELL)
-						operation.setCoinAmount(new BigDecimal(
-								(moneyWithOpenOrders - sumOfMoney) / operation.getCurrencyPrice().doubleValue()));
-					groupOfOperations.add(operation);
-					sumOfMoney += moneyWithOpenOrders - sumOfMoney;
-					break;
-				}
-			}
-		}
-		if (sumOfMoney != 0) {
-			for (Operation operation : groupOfOperations) {
-				Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
-				Long operationTime = operation.getCreationDate().getTimeInMillis();
-				Long interval = nowTime - operationTime;
-
-				lastRelevantInactivityTimeByOperations = new BigDecimal(
-						lastRelevantInactivityTimeByOperations.doubleValue()
-								+ (otherSideAmount * interval / sumOfMoney));
-			}
-		} else
-			return null;
-
-		if (groupOfOperations.size() > 0)
-			groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);
-
-		return lastRelevantInactivityTimeByOperations;
-	}
-
 	public void cancelOrder(Order order) throws ApiProviderException {
 		CoinCurrencyPair coinCurrencyPair = order.getCoinCurrencyPair();
 		getApiService(coinCurrencyPair).cancelOrder(order);
@@ -524,24 +465,6 @@ public class ProviderReport {
 				System.out.println("");
 				System.out.println("  ---- " + side + ": " + ccp);
 
-				boolean isLongTimeWithoutOperation = false;
-
-				BigDecimal lastRelevantInactivityTime = getLastRelevantInactivityTimeByOperations(ccp, side.getOther());
-
-				Double maxAcceptedInactivityTime = getMaxAcceptedInactivityTime(ccp, side);
-				isLongTimeWithoutOperation = lastRelevantInactivityTime == null || maxAcceptedInactivityTime == null
-						? false
-						: lastRelevantInactivityTime.longValue() > maxAcceptedInactivityTime;
-
-				if (lastRelevantInactivityTime != null && maxAcceptedInactivityTime != null) {
-					System.out.println(
-							"  Last 3 hour volume: " + getTicker(ccp).getLast3HourVolume() + " " + ccp.getCoin());
-					System.out.println("  Inactivity time: "
-							+ decFmt.format(lastRelevantInactivityTime.doubleValue() / (60 * 1000)) + " minutes");
-					System.out.println("  Max accepted inactivity time: "
-							+ decFmt.format(maxAcceptedInactivityTime / (60 * 1000)) + " minutes");
-				}
-
 				Boolean isBreakdown = false;
 
 				BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrders(ccp, side, false);
@@ -563,7 +486,7 @@ public class ProviderReport {
 						System.out.println("  Breakdown was activated");
 				}
 
-				if (isLongTimeWithoutOperation || isBreakdown) {
+				if (isBreakdown) {
 					lastRelevantPrice = getLastRelevantPriceByOrders(ccp, side, true);
 					hasToWinCurrent = false;
 				} else
@@ -755,13 +678,6 @@ public class ProviderReport {
 			return myOrder;
 		}
 		return null;
-	}
-
-	private Double getMaxAcceptedInactivityTime(CoinCurrencyPair coinCurrencyPair, RecordSide side)
-			throws ApiProviderException {
-		return getTicker(coinCurrencyPair) == null || userConfiguration.getMaxInterval(side) == null ? null
-				: userConfiguration.getMaxInterval(side)
-						/ (getTicker(coinCurrencyPair).getLast3HourVolume().doubleValue());
 	}
 
 }

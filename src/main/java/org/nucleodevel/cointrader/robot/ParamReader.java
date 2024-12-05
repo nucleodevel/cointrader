@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Provider;
@@ -135,20 +134,6 @@ public class ParamReader {
 					case "-curr":
 						userConfiguration.setCurrency(Currency.valueOf(paramValue));
 						break;
-					case "-mbcap":
-						try {
-							userConfiguration.setMaximumBuyCoinAmountPercentage(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
-					case "-mscap":
-						try {
-							userConfiguration.setMaximumSellCoinAmountPercentage(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
 					case "-mbr":
 						try {
 							userConfiguration.setMinimumBuyRate(Double.parseDouble(paramValue));
@@ -177,20 +162,6 @@ public class ParamReader {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-mbi":
-						try {
-							userConfiguration.setMaxBuyInterval(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
-					case "-msi":
-						try {
-							userConfiguration.setMaxSellInterval(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
 					case "-mca":
 						try {
 							userConfiguration.setMinimumCoinAmount(Double.parseDouble(paramValue));
@@ -213,9 +184,6 @@ public class ParamReader {
 						break;
 					case "-up":
 						userConfiguration.setProvider(Provider.valueOf(paramValue));
-						break;
-					case "-ub":
-						userConfiguration.setBroker(Broker.valueOf(paramValue));
 						break;
 					default:
 						throw new ParamLabelErrorException(paramLabel);

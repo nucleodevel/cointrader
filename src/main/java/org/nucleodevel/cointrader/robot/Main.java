@@ -136,21 +136,6 @@ public class Main {
 					}
 
 					System.out.println("");
-					System.out.println("Last 3 hour volume: " + ticker.getLast3HourVolume() + " " + ccp.getCoin());
-					if (userConfiguration.getMaxInterval(RecordSide.BUY) != null)
-						System.out
-								.println("  Max accepted inactivity time for buying: "
-										+ (double) (userConfiguration.getMaxInterval(RecordSide.BUY)
-												/ (ticker.getLast3HourVolume().doubleValue()) / (60 * 1000))
-										+ " minutes");
-					if (userConfiguration.getMaxInterval(RecordSide.SELL) != null)
-						System.out
-								.println("  Max accepted inactivity time for selling: "
-										+ (double) (userConfiguration.getMaxInterval(RecordSide.SELL)
-												/ (ticker.getLast3HourVolume().doubleValue()) / (60 * 1000))
-										+ " minutes");
-
-					System.out.println("");
 					System.out.println("Current spread: " + report.getSpread(ccp));
 					System.out.println("");
 					System.out.println("Current top orders by type");

@@ -7,26 +7,19 @@ import java.util.List;
 
 public class UserConfiguration {
 
-	private static long MILISSECONDS_PER_3H = 10800000;
-
 	private String key;
 	private String secret;
 	private Provider provider;
-	private Broker broker;
 
 	private Currency currency;
 	private List<Coin> coinList;
 	private Integer delayTime;
 	private RecordSideMode buyMode;
 	private RecordSideMode sellMode;
-	private Double maximumBuyCoinAmountPercentage;
-	private Double maximumSellCoinAmountPercentage;
 	private Double minimumBuyRate;
 	private Double minimumSellRate;
 	private Double breakdownBuyRate;
 	private Double breakdownSellRate;
-	private Double maxBuyInterval;
-	private Double maxSellInterval;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
 
@@ -34,14 +27,10 @@ public class UserConfiguration {
 		currency = null;
 		coinList = new ArrayList<>();
 
-		maximumBuyCoinAmountPercentage = 1.0;
-		maximumSellCoinAmountPercentage = 1.0;
-		minimumBuyRate = 0.8;
-		minimumSellRate = 1.2;
+		minimumBuyRate = null;
+		minimumSellRate = null;
 		breakdownBuyRate = null;
 		breakdownSellRate = null;
-		maxBuyInterval = null;
-		maxSellInterval = null;
 	}
 
 	public String getKey() {
@@ -66,14 +55,6 @@ public class UserConfiguration {
 
 	public void setProvider(Provider provider) {
 		this.provider = provider;
-	}
-
-	public Broker getBroker() {
-		return broker;
-	}
-
-	public void setBroker(Broker broker) {
-		this.broker = broker;
 	}
 
 	public Currency getCurrency() {
@@ -137,27 +118,6 @@ public class UserConfiguration {
 		this.sellMode = sellMode;
 	}
 
-	public Double getMaximumCoinAmountPercentage(RecordSide side) {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			rate = maximumBuyCoinAmountPercentage;
-			break;
-		case SELL:
-			rate = maximumSellCoinAmountPercentage;
-			break;
-		}
-		return rate;
-	}
-
-	public void setMaximumBuyCoinAmountPercentage(Double maximumBuyCoinAmountPercentage) {
-		this.maximumBuyCoinAmountPercentage = maximumBuyCoinAmountPercentage;
-	}
-
-	public void setMaximumSellCoinAmountPercentage(Double maximumSellCoinAmountPercentage) {
-		this.maximumSellCoinAmountPercentage = maximumSellCoinAmountPercentage;
-	}
-
 	public Double getMinimumRate(RecordSide side) {
 		Double rate = 0.0;
 		switch (side) {
@@ -210,27 +170,6 @@ public class UserConfiguration {
 		this.breakdownSellRate = breakdownSellRate;
 	}
 
-	public Double getMaxInterval(RecordSide side) {
-		Double interval = null;
-		switch (side) {
-		case BUY:
-			interval = maxBuyInterval == null ? null : MILISSECONDS_PER_3H * maxBuyInterval;
-			break;
-		case SELL:
-			interval = maxSellInterval == null ? null : MILISSECONDS_PER_3H * maxSellInterval;
-			break;
-		}
-		return interval;
-	}
-
-	public void setMaxBuyInterval(Double maxBuyInterval) {
-		this.maxBuyInterval = maxBuyInterval;
-	}
-
-	public void setMaxSellInterval(Double maxSellInterval) {
-		this.maxSellInterval = maxSellInterval;
-	}
-
 	public Double getMinimumCoinAmount() {
 		return minimumCoinAmount;
 	}
@@ -275,16 +214,12 @@ public class UserConfiguration {
 		sb.append("\n  key: " + key.substring(0, 8) + "...");
 		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
 		sb.append(";\n  provider: " + provider);
-		sb.append(";\n  broker: " + broker);
 		sb.append(";\n  coinList: " + coinList);
 		sb.append(";\n  currency: " + currency);
 		sb.append(";\n  delayTime: " + delayTime);
 		sb.append(";\n  buyMode: " + buyMode);
 		sb.append(";\n  sellMode: " + sellMode);
-		if (maximumBuyCoinAmountPercentage != null)
-			sb.append(";\n  maximumBuyCoinAmountPercentage: " + decFmt.format(maximumBuyCoinAmountPercentage));
-		if (maximumSellCoinAmountPercentage != null)
-			sb.append(";\n  maximumSellCoinAmountPercentage: " + decFmt.format(maximumSellCoinAmountPercentage));
+
 		if (minimumBuyRate != null)
 			sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
 		if (minimumSellRate != null)
@@ -293,8 +228,6 @@ public class UserConfiguration {
 			sb.append(";\n  breakdownBuyRate: " + decFmt.format(breakdownBuyRate));
 		if (breakdownSellRate != null)
 			sb.append(";\n  breakdownSellRate: " + decFmt.format(breakdownSellRate));
-		sb.append(";\n  maxBuyInterval: " + maxBuyInterval);
-		sb.append(";\n  maxSellInterval: " + maxSellInterval);
 		if (minimumCoinAmount != null)
 			sb.append(";\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
 		if (incDecPrice != null)

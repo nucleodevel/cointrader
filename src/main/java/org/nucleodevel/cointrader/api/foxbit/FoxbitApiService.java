@@ -98,10 +98,6 @@ public class FoxbitApiService extends ApiService {
 		if (userConfiguration.getSecret() == null) {
 			throw new ApiProviderException("Secret cannot be null");
 		}
-
-		if (userConfiguration.getBroker() == null) {
-			throw new ApiProviderException("Broker cannot be null");
-		}
 	}
 
 	private String getCoinCurrencyPairUrlString() {
