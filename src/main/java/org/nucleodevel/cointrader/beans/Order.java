@@ -13,6 +13,12 @@ public class Order extends Record {
 	private Integer position;
 	private List<Operation> operations;
 
+	public Order(Coin coin, Currency currency, RecordSide side, BigDecimal coinAmount, BigDecimal currencyPrice, OrderType type) {
+		super(coin, currency, side, coinAmount, currencyPrice);
+		this.type = type;
+		this.operations = new ArrayList<Operation>();
+	}
+
 	public Order(Coin coin, Currency currency, RecordSide side, BigDecimal coinAmount, BigDecimal currencyPrice) {
 		super(coin, currency, side, coinAmount, currencyPrice);
 		this.operations = new ArrayList<Operation>();
@@ -64,6 +70,7 @@ public class Order extends Record {
 		sb.append(this.getClass().getSimpleName() + ": [");
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
+		sb.append("; type: " + getType());
 		if (position != null)
 			sb.append("; position: " + getPosition());
 		sb.append("; side: " + getSide());

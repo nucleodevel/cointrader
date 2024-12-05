@@ -26,6 +26,7 @@ import org.nucleodevel.cointrader.beans.Operation;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.OrderBook;
 import org.nucleodevel.cointrader.beans.OrderStatus;
+import org.nucleodevel.cointrader.beans.OrderType;
 import org.nucleodevel.cointrader.beans.RecordFilter;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.Ticker;
@@ -373,7 +374,14 @@ public class MercadoBitcoinApiService extends ApiService {
 			int scale = Math.abs((int) Math.round(log10));
 
 			jsonObject.addProperty("async", false);
-			jsonObject.addProperty("type", "limit");
+			
+			if (order.getType() == null)
+				order.setType(OrderType.LIMIT);
+			
+			String typeStr = order.getType() == OrderType.LIMIT ? "limit"
+					: (order.getType() == OrderType.MARKET ? "market" : null);
+			jsonObject.addProperty("type", typeStr);
+			
 			if (order.getSide() != null)
 				jsonObject.addProperty("side", order.getSide().getValue().toLowerCase());
 			if (order.getCoinAmount() != null)
@@ -481,12 +489,16 @@ public class MercadoBitcoinApiService extends ApiService {
 		Coin coin = Coin.valueOf(coinPair.substring(0, 3).toUpperCase());
 		Currency currency = Currency.valueOf(coinPair.substring(4, 7).toUpperCase());
 
+		String typeString = jsonObject.getAsJsonPrimitive("type").getAsString();
+		OrderType type = typeString.equals("limit") ? OrderType.LIMIT
+				: (typeString.equals("market") ? OrderType.MARKET : null);
+
 		String sideStr = jsonObject.get("side").getAsString();
 		RecordSide side = sideStr.equals("buy") ? RecordSide.BUY : (sideStr.equals("sell") ? RecordSide.SELL : null);
 		BigDecimal coinAmount = new BigDecimal(jsonObject.get("qty").getAsString());
 		BigDecimal currencyPrice = new BigDecimal(jsonObject.get("limitPrice").getAsString());
 
-		Order order = new Order(coin, currency, side, coinAmount, currencyPrice);
+		Order order = new Order(coin, currency, side, coinAmount, currencyPrice, type);
 		order.setId((jsonObject.get("id").getAsString()));
 
 		String statusStr = jsonObject.get("status").getAsString();

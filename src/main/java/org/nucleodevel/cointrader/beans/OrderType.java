@@ -2,7 +2,7 @@ package org.nucleodevel.cointrader.beans;
 
 public enum OrderType {
 
-	MARKET("MARKET"), LIMITED("LIMITED");
+	MARKET("MARKET"), LIMIT("LIMIT");
 
 	private final String value;
 

@@ -25,6 +25,7 @@ import org.nucleodevel.cointrader.beans.OrderBook;
 import org.nucleodevel.cointrader.beans.OrderStatus;
 import org.nucleodevel.cointrader.beans.OrderType;
 import org.nucleodevel.cointrader.beans.Provider;
+import org.nucleodevel.cointrader.beans.Record;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.Ticker;
@@ -33,8 +34,6 @@ import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.exception.NotAvailableMoneyException;
 
 public class ProviderReport {
-
-	private static long numOfConsideredOrdersForLastRelevantPriceByOrders = 5;
 
 	private UserConfiguration userConfiguration;
 
@@ -301,86 +300,94 @@ public class ProviderReport {
 
 	// ------------ Operations to make orders
 
-	public BigDecimal getLastRelevantPriceByOperations(CoinCurrencyPair coinCurrencyPair, RecordSide side,
+	public BigDecimal getLastRelevantPriceByUserOperationList(CoinCurrencyPair coinCurrencyPair,
+			RecordSide requesterSide, RecordSide userOperationListSide, Boolean showMessages)
+			throws ApiProviderException {
+
+		List<Record> recordList = new ArrayList<>();
+		for (Operation operation : getUserOperations(coinCurrencyPair))
+			if (operation.getSide() == userOperationListSide)
+				recordList.add(operation);
+
+		return getLastRelevantPriceByRecordList(requesterSide, recordList, showMessages);
+	}
+
+	public BigDecimal getLastRelevantPriceByActiveOrderList(CoinCurrencyPair coinCurrencyPair, RecordSide requesterSide,
+			RecordSide activeOrderListSide, Boolean showMessages) throws ApiProviderException {
+
+		List<Record> recordList = new ArrayList<>();
+		for (Order order : getActiveOrders(coinCurrencyPair, activeOrderListSide))
+			recordList.add(order);
+
+		return getLastRelevantPriceByRecordList(requesterSide, recordList, showMessages);
+	}
+
+	public BigDecimal getLastRelevantPriceByRecordList(RecordSide requesterSide, List<Record> recordList,
 			Boolean showMessages) throws ApiProviderException {
 
-		BigDecimal lastRelevantPriceByOperations = new BigDecimal(0);
-		List<Operation> groupOfOperations = new ArrayList<Operation>();
-		BigDecimal oldCoinAmount = new BigDecimal(0);
-		Double sumOfMoney = 0.0;
+		Record firstRecord = recordList.get(0);
+		CoinCurrencyPair coinCurrencyPair = firstRecord.getCoinCurrencyPair();
+		RecordSide recordListSide = firstRecord.getSide();
 
-		Double moneyWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
+		Double requesterBalanceAmount = getBalance(coinCurrencyPair).getSideAmount(requesterSide).doubleValue();
 
-		for (Operation operation : getUserOperations(coinCurrencyPair)) {
-			Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
-			if (operation.getSide() == side) {
-				if (sumOfMoney + otherSideAmount <= moneyWithOpenOrders) {
-					sumOfMoney += otherSideAmount;
-					groupOfOperations.add(operation);
-				} else {
-					oldCoinAmount = operation.getCoinAmount();
-					if (side == RecordSide.BUY)
-						operation.setCoinAmount(new BigDecimal(moneyWithOpenOrders - sumOfMoney));
-					else if (side == RecordSide.SELL)
-						operation.setCoinAmount(new BigDecimal(
-								(moneyWithOpenOrders - sumOfMoney) / operation.getCurrencyPrice().doubleValue()));
-					groupOfOperations.add(operation);
-					sumOfMoney += moneyWithOpenOrders - sumOfMoney;
-					break;
+		List<Record> resultList = new ArrayList<>();
+		Double sumOfAmount = 0.0;
+		for (Record record : recordList) {
+			BigDecimal coinAmount = record.getCoinAmount();
+			boolean isARelevantRecord = coinAmount.doubleValue() > userConfiguration.getMinimumCoinAmount();
+
+			if (isARelevantRecord) {
+				Double requesterAmount = record.getSideAmount(requesterSide).doubleValue();
+				if (record.getSide() == recordListSide) {
+					if (sumOfAmount + requesterAmount <= requesterBalanceAmount) {
+						sumOfAmount += requesterAmount;
+						resultList.add(record);
+					} else {
+						if (recordListSide == RecordSide.BUY)
+							record.setCoinAmount(new BigDecimal(
+									(requesterBalanceAmount - sumOfAmount) / record.getCurrencyPrice().doubleValue()));
+						else if (recordListSide == RecordSide.SELL)
+							record.setCoinAmount(new BigDecimal(requesterBalanceAmount - sumOfAmount));
+						resultList.add(record);
+						sumOfAmount += requesterBalanceAmount - sumOfAmount;
+						break;
+					}
 				}
 			}
 		}
-		if (sumOfMoney != 0) {
-			for (Operation operation : groupOfOperations) {
-				Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
-				lastRelevantPriceByOperations = new BigDecimal(lastRelevantPriceByOperations.doubleValue()
-						+ (otherSideAmount * operation.getCurrencyPrice().doubleValue() / sumOfMoney));
+
+		Double sumOfCoinAmount = 0.0;
+		for (Record record : resultList) {
+			Double coinAmount = record.getCoinAmount().doubleValue();
+			sumOfCoinAmount += coinAmount;
+		}
+
+		boolean sumOfCoinAmountIsNotRelevant = sumOfCoinAmount < userConfiguration.getMinimumCoinAmount();
+
+		BigDecimal lastRelevantPrice = new BigDecimal(0);
+
+		if (resultList.size() == 1 || sumOfCoinAmountIsNotRelevant) {
+			Record firstRecordOfResultList = resultList.get(0);
+			lastRelevantPrice = firstRecordOfResultList.getCurrencyPrice();
+		} else {
+			for (Record record : resultList) {
+				Double requesterAmount = record.getSideAmount(requesterSide).doubleValue();
+				lastRelevantPrice = new BigDecimal(lastRelevantPrice.doubleValue()
+						+ (requesterAmount * record.getCurrencyPrice().doubleValue() / sumOfAmount));
 			}
-		}
-		if (showMessages) {
-			System.out.println("  Last relevant " + side + " price: " + decFmt.format(lastRelevantPriceByOperations));
-			System.out.println("  Considered operations: ");
-			for (Operation operation : groupOfOperations)
-				System.out.println("    " + operation.toString());
-			System.out.println("");
-		}
-		if (groupOfOperations.size() > 0)
-			groupOfOperations.get(groupOfOperations.size() - 1).setCoinAmount(oldCoinAmount);
-
-		return lastRelevantPriceByOperations;
-	}
-
-	public BigDecimal getLastRelevantPriceByOrders(CoinCurrencyPair coinCurrencyPair, RecordSide side,
-			Boolean showMessages) throws ApiProviderException {
-
-		BigDecimal lastRelevantPriceByOrders = new BigDecimal(0);
-
-		double sumOfCoin = 0;
-		double sumOfNumerators = 0;
-
-		List<Order> groupOfOrders = new ArrayList<Order>();
-
-		for (int i = 0; i < numOfConsideredOrdersForLastRelevantPriceByOrders; i++) {
-			Order order = (Order) getActiveOrders(coinCurrencyPair, side).get(i);
-			sumOfCoin += order.getCoinAmount().doubleValue();
-			sumOfNumerators += order.getCoinAmount().doubleValue() * order.getCurrencyPrice().doubleValue();
-			groupOfOrders.add(order);
-		}
-
-		if (sumOfCoin != 0) {
-			lastRelevantPriceByOrders = new BigDecimal(sumOfNumerators / sumOfCoin);
 		}
 
 		if (showMessages) {
 			System.out.println(
-					"  Last relevant " + side + " price by orders: " + decFmt.format(lastRelevantPriceByOrders));
-			System.out.println("  Considered orders: ");
-			for (Order order : groupOfOrders)
-				System.out.println("    " + order);
+					"  Last relevant " + recordListSide + " price by records: " + decFmt.format(lastRelevantPrice));
+			System.out.println("  Considered records: ");
+			for (Record record : resultList)
+				System.out.println("    " + record);
 			System.out.println("");
 		}
 
-		return lastRelevantPriceByOrders;
+		return lastRelevantPrice;
 	}
 
 	public BigDecimal getLastRelevantInactivityTimeByOperations(CoinCurrencyPair coinCurrencyPair, RecordSide side)
@@ -392,7 +399,7 @@ public class ProviderReport {
 		BigDecimal oldCoinAmount = new BigDecimal(0);
 		Double sumOfMoney = 0.0;
 
-		Double moneyWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
+		Double requesterBalanceAmount = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
 
 		Calendar now = Calendar.getInstance();
 		now.setTime(new Date());
@@ -409,18 +416,18 @@ public class ProviderReport {
 		for (Operation operation : getUserOperations(coinCurrencyPair)) {
 			Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
 			if (operation.getSide() == side) {
-				if (sumOfMoney + otherSideAmount <= moneyWithOpenOrders) {
+				if (sumOfMoney + otherSideAmount <= requesterBalanceAmount) {
 					sumOfMoney += otherSideAmount;
 					groupOfOperations.add(operation);
 				} else {
 					oldCoinAmount = operation.getCoinAmount();
 					if (side == RecordSide.BUY)
-						operation.setCoinAmount(new BigDecimal(moneyWithOpenOrders - sumOfMoney));
+						operation.setCoinAmount(new BigDecimal(requesterBalanceAmount - sumOfMoney));
 					else if (side == RecordSide.SELL)
 						operation.setCoinAmount(new BigDecimal(
-								(moneyWithOpenOrders - sumOfMoney) / operation.getCurrencyPrice().doubleValue()));
+								(requesterBalanceAmount - sumOfMoney) / operation.getCurrencyPrice().doubleValue()));
 					groupOfOperations.add(operation);
-					sumOfMoney += moneyWithOpenOrders - sumOfMoney;
+					sumOfMoney += requesterBalanceAmount - sumOfMoney;
 					break;
 				}
 			}
@@ -446,7 +453,7 @@ public class ProviderReport {
 
 	public void cancelOrder(Order order) throws ApiProviderException {
 		CoinCurrencyPair coinCurrencyPair = order.getCoinCurrencyPair();
-		getApiService(coinCurrencyPair).cancelOrder(order);
+		// getApiService(coinCurrencyPair).cancelOrder(order);
 	}
 
 	public void createOrder(Order order, RecordSide side) throws ApiProviderException {
@@ -454,7 +461,7 @@ public class ProviderReport {
 
 		order.setSide(side);
 		order.setStatus(OrderStatus.ACTIVE);
-		getApiService(coinCurrencyPair).createOrder(order);
+		// getApiService(coinCurrencyPair).createOrder(order);
 	}
 
 	public void makeOrdersByLastRelevantPrice(RecordSide side, RecordSideMode mode) throws ApiProviderException {
@@ -486,7 +493,7 @@ public class ProviderReport {
 		switch (mode) {
 
 		case ORDERS:
-			lastRelevantPrice = getLastRelevantPriceByOrders(bestCoinCurrencyPairBySpread, side, true);
+			lastRelevantPrice = getLastRelevantPriceByActiveOrderList(bestCoinCurrencyPairBySpread, side, side, true);
 
 			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 			makeOrdersByLastRelevantPrice(bestCoinCurrencyPairBySpread, side, lastRelevantPrice, hasToWinCurrent);
@@ -499,8 +506,8 @@ public class ProviderReport {
 			System.out.println("");
 			System.out.println("  ---- " + side + ": " + bestCoinCurrencyPairBySpread);
 
-			lastRelevantPrice = getLastRelevantPriceByOrders(bestCoinCurrencyPairBySpread, side.getOther(), true)
-					.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
+			lastRelevantPrice = getLastRelevantPriceByActiveOrderList(bestCoinCurrencyPairBySpread, side,
+					side.getOther(), true).multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
 
 			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 
@@ -510,7 +517,7 @@ public class ProviderReport {
 
 		case OPERATIONS:
 			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
-				lastRelevantPrice = getLastRelevantPriceByOperations(ccp, side, true);
+				lastRelevantPrice = getLastRelevantPriceByUserOperationList(ccp, side, side, true);
 
 				System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 				makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
@@ -544,9 +551,9 @@ public class ProviderReport {
 
 				Boolean isBreakdown = false;
 
-				BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrders(ccp, side, false);
-				BigDecimal lastRelevantPriceByOperations = getLastRelevantPriceByOperations(ccp, side.getOther(),
-						false);
+				BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByActiveOrderList(ccp, side, side, false);
+				BigDecimal lastRelevantPriceByOperations = getLastRelevantPriceByUserOperationList(ccp, side,
+						side.getOther(), false);
 				if (userConfiguration.getBreakdownRate(side) != null) {
 					BigDecimal breakdownPrice = lastRelevantPriceByOperations
 							.multiply(new BigDecimal(userConfiguration.getBreakdownRate(side)));
@@ -564,10 +571,10 @@ public class ProviderReport {
 				}
 
 				if (isLongTimeWithoutOperation || isBreakdown) {
-					lastRelevantPrice = getLastRelevantPriceByOrders(ccp, side, true);
+					lastRelevantPrice = getLastRelevantPriceByActiveOrderList(ccp, side, side, true);
 					hasToWinCurrent = false;
 				} else
-					lastRelevantPrice = getLastRelevantPriceByOperations(ccp, side.getOther(), true)
+					lastRelevantPrice = getLastRelevantPriceByUserOperationList(ccp, side, side.getOther(), true)
 							.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
 
 				System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
@@ -648,8 +655,7 @@ public class ProviderReport {
 			}
 
 			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
-					lastRelevantPrice);
-			newOrder.setType(OrderType.LIMITED);
+					lastRelevantPrice, OrderType.LIMIT);
 			return newOrder;
 		}
 
@@ -688,8 +694,7 @@ public class ProviderReport {
 			}
 
 			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
-					lastRelevantPrice);
-			newOrder.setType(OrderType.LIMITED);
+					lastRelevantPrice, OrderType.LIMIT);
 			return newOrder;
 		}
 
@@ -742,8 +747,7 @@ public class ProviderReport {
 			if (isNearTheBestOtherSideOrder)
 				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
 			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
-					currencyPrice);
-			newOrder.setType(OrderType.LIMITED);
+					currencyPrice, OrderType.LIMIT);
 			newOrder.setPosition(orderIndex);
 			return newOrder;
 		} else if ((decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))

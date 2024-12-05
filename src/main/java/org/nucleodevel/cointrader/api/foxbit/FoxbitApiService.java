@@ -268,7 +268,7 @@ public class FoxbitApiService extends ApiService {
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
 
-		String typeStr = order.getType() == OrderType.LIMITED ? "LIMIT"
+		String typeStr = order.getType() == OrderType.LIMIT ? "LIMIT"
 				: (order.getType() == OrderType.MARKET ? "MARKET" : null);
 
 		JsonObject orderToCreate = new JsonObject();
@@ -461,6 +461,10 @@ public class FoxbitApiService extends ApiService {
 		BigDecimal coinAmount = jsonObject.getAsJsonPrimitive("quantity").getAsBigDecimal();
 		BigDecimal currencyPrice = jsonObject.getAsJsonPrimitive("price").getAsBigDecimal();
 
+		String typeString = jsonObject.getAsJsonPrimitive("type").getAsString();
+		OrderType type = typeString.equals("LIMIT") ? OrderType.LIMIT
+				: (typeString.equals("MARKET") ? OrderType.MARKET : null);
+
 		String sideString = jsonObject.getAsJsonPrimitive("side").getAsString();
 		RecordSide side = sideString.equals("BUY") ? RecordSide.BUY
 				: (sideString.equals("SELL") ? RecordSide.SELL : null);
@@ -475,7 +479,7 @@ public class FoxbitApiService extends ApiService {
 		String createdAtStr = jsonObject.getAsJsonPrimitive("created_at").getAsString();
 		Calendar createdAt = Utils.fromISO8601UTC(createdAtStr);
 
-		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice);
+		Order order = new Order(getCoin(), getCurrency(), side, coinAmount, currencyPrice, type);
 
 		order.setClientId(clientId);
 		order.setId("" + id.longValue());

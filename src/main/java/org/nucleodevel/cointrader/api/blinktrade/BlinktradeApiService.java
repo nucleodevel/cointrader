@@ -250,7 +250,7 @@ public class BlinktradeApiService extends ApiService {
 		Coin coin = order.getCoin();
 		Currency currency = order.getCurrency();
 		RecordSide side = order.getSide();
-		OrderType type = OrderType.LIMITED;
+		OrderType type = OrderType.LIMIT;
 		BigDecimal coinAmount = order.getCoinAmount();
 		BigDecimal currencyPrice = order.getCurrencyPrice();
 
@@ -263,7 +263,7 @@ public class BlinktradeApiService extends ApiService {
 		request.put("ClOrdID", clientOrderId);
 		request.put("Symbol", coin.getValue() + currency.getValue());
 		request.put("Side", side == RecordSide.BUY ? "1" : (side == RecordSide.SELL ? "2" : null));
-		request.put("OrdType", type == OrderType.MARKET ? "1" : (type == OrderType.LIMITED ? "2" : null));
+		request.put("OrdType", type == OrderType.MARKET ? "1" : (type == OrderType.LIMIT ? "2" : null));
 		request.put("OrderQty", coinAmount.toBigInteger());
 		request.put("Price", currencyPrice.toBigInteger());
 		request.put("BrokerID", getBrokerId());

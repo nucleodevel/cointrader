@@ -105,12 +105,19 @@ public class Record implements Comparable<Record> {
 
 	@Override
 	public String toString() {
-		DecimalFormat decFmt = new DecimalFormat();
-		decFmt.setMaximumFractionDigits(8);
-		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
-		symbols.setDecimalSeparator('.');
-		symbols.setGroupingSeparator(',');
-		decFmt.setDecimalFormatSymbols(symbols);
+		DecimalFormat defaultDecFmt = new DecimalFormat();
+		defaultDecFmt.setMaximumFractionDigits(8);
+		DecimalFormatSymbols coinDecFmtSymbols = defaultDecFmt.getDecimalFormatSymbols();
+		coinDecFmtSymbols.setDecimalSeparator('.');
+		coinDecFmtSymbols.setGroupingSeparator(',');
+		defaultDecFmt.setDecimalFormatSymbols(coinDecFmtSymbols);
+
+		DecimalFormat currencyAmountDecFmt = new DecimalFormat();
+		currencyAmountDecFmt.setMaximumFractionDigits(3);
+		DecimalFormatSymbols currencyDecFmtSymbols = currencyAmountDecFmt.getDecimalFormatSymbols();
+		currencyDecFmtSymbols.setDecimalSeparator('.');
+		currencyDecFmtSymbols.setGroupingSeparator(',');
+		currencyAmountDecFmt.setDecimalFormatSymbols(currencyDecFmtSymbols);
 
 		StringBuilder sb = new StringBuilder();
 
@@ -118,9 +125,9 @@ public class Record implements Comparable<Record> {
 		sb.append("coin: " + getCoin());
 		sb.append("; currency: " + getCurrency());
 		sb.append("; side: " + side);
-		sb.append("; coinAmount: " + decFmt.format(coinAmount));
-		sb.append("; currencyPrice: " + decFmt.format(currencyPrice));
-		sb.append("; estimatedCurrencyAmount: " + decFmt.format(getCurrencyAmount()));
+		sb.append("; coinAmount: " + defaultDecFmt.format(coinAmount));
+		sb.append("; currencyPrice: " + defaultDecFmt.format(currencyPrice));
+		sb.append("; estimatedCurrencyAmount: " + currencyAmountDecFmt.format(getCurrencyAmount()));
 		if (creationDate != null)
 			sb.append("; creationDate: " + creationDate.getTime());
 		sb.append("]");
