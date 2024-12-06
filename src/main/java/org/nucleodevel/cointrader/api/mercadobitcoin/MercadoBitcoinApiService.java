@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import org.nucleodevel.cointrader.api.ApiService;
+import org.nucleodevel.cointrader.api.AbstractApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
@@ -44,7 +44,7 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-public class MercadoBitcoinApiService extends ApiService {
+public class MercadoBitcoinApiService extends AbstractApiService {
 
 	private static final long SECONDS_BEFORE_EXPIRE_TO_RENEW = 120;
 

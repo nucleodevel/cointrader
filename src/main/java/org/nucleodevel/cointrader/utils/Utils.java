@@ -2,6 +2,8 @@ package org.nucleodevel.cointrader.utils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -97,6 +99,19 @@ public class Utils {
 		}
 
 		return null;
+	}
+
+	public static DecimalFormat getDefaultDecimalFormat() {
+
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(8);
+
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
+
+		return decFmt;
 	}
 
 }

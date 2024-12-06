@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.nucleodevel.cointrader.api.ApiService;
+import org.nucleodevel.cointrader.api.AbstractApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Operation;
@@ -28,6 +28,7 @@ import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.exception.NotAvailableMoneyException;
+import org.nucleodevel.cointrader.recordsidemode.implementer.AbstractRecordSideModeImplementer;
 
 public class ProviderReport {
 
@@ -35,7 +36,7 @@ public class ProviderReport {
 
 	private UserConfiguration userConfiguration;
 
-	private Map<String, ApiService> apiServiceMap;
+	private Map<String, AbstractApiService> apiServiceMap;
 	private Map<String, Ticker> tickerMap;
 	private Map<String, Balance> balanceMap;
 	private Map<String, BigDecimal> spreadMap;
@@ -108,7 +109,6 @@ public class ProviderReport {
 
 	// ------------ Operations to read data
 
-	@SuppressWarnings("unchecked")
 	private void makeApiServiceMap() throws ApiProviderException {
 		apiServiceMap = new HashMap<>();
 
@@ -116,28 +116,28 @@ public class ProviderReport {
 		List<CoinCurrencyPair> coinCurrencyPairList = getCoinCurrencyPairList();
 
 		try {
-			Class<ApiService> apiServiceClass = (Class<ApiService>) Class.forName(provider.getImplementer());
-			Constructor<ApiService> apiServiceConstructor = apiServiceClass
+			Class<? extends AbstractApiService> apiServiceClass = provider.getImplementer();
+			Constructor<? extends AbstractApiService> apiServiceConstructor = apiServiceClass
 					.getDeclaredConstructor(UserConfiguration.class, CoinCurrencyPair.class);
 
 			for (CoinCurrencyPair ccp : coinCurrencyPairList) {
-				ApiService apiService = apiServiceConstructor.newInstance(getUserConfiguration(), ccp);
+				AbstractApiService apiService = apiServiceConstructor.newInstance(getUserConfiguration(), ccp);
 				apiServiceMap.put(ccp.toString(), apiService);
 			}
-		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
-				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	private ApiService getApiService(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
+	private AbstractApiService getApiService(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		return apiServiceMap.get(coinCurrencyPair.toString());
 	}
 
 	public Ticker getTicker(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		if (!tickerMap.containsKey(coinCurrencyPair.toString())) {
-			ApiService apiService = getApiService(coinCurrencyPair);
+			AbstractApiService apiService = getApiService(coinCurrencyPair);
 			tickerMap.put(coinCurrencyPair.toString(), apiService.getTicker());
 		}
 		return tickerMap.get(coinCurrencyPair.toString());
@@ -145,7 +145,7 @@ public class ProviderReport {
 
 	public Balance getBalance(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		if (!balanceMap.containsKey(coinCurrencyPair.toString())) {
-			ApiService apiService = getApiService(coinCurrencyPair);
+			AbstractApiService apiService = getApiService(coinCurrencyPair);
 			balanceMap.put(coinCurrencyPair.toString(), apiService.getBalance());
 		}
 		return balanceMap.get(coinCurrencyPair.toString());
@@ -168,7 +168,7 @@ public class ProviderReport {
 
 	public OrderBook getOrderBook(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		if (!orderBookMap.containsKey(coinCurrencyPair.toString())) {
-			ApiService apiService = getApiService(coinCurrencyPair);
+			AbstractApiService apiService = getApiService(coinCurrencyPair);
 			orderBookMap.put(coinCurrencyPair.toString(), apiService.getOrderBook());
 		}
 		return orderBookMap.get(coinCurrencyPair.toString());
@@ -207,7 +207,7 @@ public class ProviderReport {
 
 	public List<Order> getUserActiveOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		if (!userActiveOrdersMap.containsKey(coinCurrencyPair.toString())) {
-			ApiService apiService = getApiService(coinCurrencyPair);
+			AbstractApiService apiService = getApiService(coinCurrencyPair);
 			userActiveOrdersMap.put(coinCurrencyPair.toString(), apiService.getUserActiveOrders());
 		}
 		return userActiveOrdersMap.get(coinCurrencyPair.toString());
@@ -256,7 +256,7 @@ public class ProviderReport {
 
 	public List<Operation> getUserOperations(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		if (!userOperationsMap.containsKey(coinCurrencyPair.toString())) {
-			ApiService apiService = getApiService(coinCurrencyPair);
+			AbstractApiService apiService = getApiService(coinCurrencyPair);
 			userOperationsMap.put(coinCurrencyPair.toString(), apiService.getUserOperations());
 		}
 		return userOperationsMap.get(coinCurrencyPair.toString());
@@ -404,112 +404,23 @@ public class ProviderReport {
 		System.out.println("");
 
 		Boolean hasToWinCurrent = true;
-		BigDecimal lastRelevantPrice = null;
 
-		CoinCurrencyPair bestCoinCurrencyPairBySpread = null;
-		BigDecimal bestSpread = new BigDecimal(0.0);
-
-		String bestSpreadMessage = "\n  Analising spreads";
-
-		for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
-			BigDecimal ccpSpread = getSpread(ccp);
-
-			if (ccpSpread.compareTo(bestSpread) > 0) {
-				bestCoinCurrencyPairBySpread = ccp;
-				bestSpread = ccpSpread;
-			}
-
-			bestSpreadMessage += "\n    Spread of " + ccp + ": " + ccpSpread;
+		Class<? extends AbstractRecordSideModeImplementer> recordSideModeImplementerClass = mode.getImplementer();
+		Constructor<? extends AbstractRecordSideModeImplementer> recordSideModeImplementerConstructor;
+		try {
+			recordSideModeImplementerConstructor = recordSideModeImplementerClass
+					.getDeclaredConstructor(ProviderReport.class);
+			AbstractRecordSideModeImplementer recordSideModeImplementer = recordSideModeImplementerConstructor
+					.newInstance(this);
+			recordSideModeImplementer.makeOrdersByLastRelevantPrice(this, side, hasToWinCurrent);
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
 		}
 
-		bestSpreadMessage += "\n   The best spread is " + bestCoinCurrencyPairBySpread + ": " + bestSpread + "\n";
-
-		switch (mode) {
-
-		case ORDERS:
-			lastRelevantPrice = getLastRelevantPriceByOrders(bestCoinCurrencyPairBySpread, side, true);
-
-			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-			makeOrdersByLastRelevantPrice(bestCoinCurrencyPairBySpread, side, lastRelevantPrice, hasToWinCurrent);
-			break;
-
-		case OTHER_ORDERS:
-
-			System.out.println(bestSpreadMessage);
-
-			System.out.println("");
-			System.out.println("  ---- " + side + ": " + bestCoinCurrencyPairBySpread);
-
-			lastRelevantPrice = getLastRelevantPriceByOrders(bestCoinCurrencyPairBySpread, side.getOther(), true)
-					.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
-
-			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-
-			cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(bestCoinCurrencyPairBySpread, side);
-			makeOrdersByLastRelevantPrice(bestCoinCurrencyPairBySpread, side, lastRelevantPrice, hasToWinCurrent);
-			break;
-
-		case OPERATIONS:
-			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
-				lastRelevantPrice = getLastRelevantPriceByOperations(ccp, side, true);
-
-				System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-				makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
-			}
-			break;
-
-		case OTHER_OPERATIONS:
-
-			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
-
-				System.out.println("");
-				System.out.println("  ---- " + side + ": " + ccp);
-
-				Boolean isBreakdown = false;
-
-				BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrders(ccp, side, false);
-				BigDecimal lastRelevantPriceByOperations = getLastRelevantPriceByOperations(ccp, side.getOther(),
-						false);
-				if (userConfiguration.getBreakdownRate(side) != null) {
-					BigDecimal breakdownPrice = lastRelevantPriceByOperations
-							.multiply(new BigDecimal(userConfiguration.getBreakdownRate(side)));
-
-					int compareBreakdownToOrders = breakdownPrice.compareTo(lastRelevantPriceByOrders);
-					isBreakdown = (side == RecordSide.BUY ? compareBreakdownToOrders < 0
-							: (side == RecordSide.SELL ? compareBreakdownToOrders > 0 : false));
-
-					System.out.println("  Breakdown if breakdown price " + decFmt.format(breakdownPrice) + " is "
-							+ (side == RecordSide.BUY ? "less" : (side == RecordSide.SELL ? "greater" : "")) + " than "
-							+ side + " average price " + decFmt.format(lastRelevantPriceByOrders));
-
-					if (isBreakdown)
-						System.out.println("  Breakdown was activated");
-				}
-
-				if (isBreakdown) {
-					lastRelevantPrice = getLastRelevantPriceByOrders(ccp, side, true);
-					hasToWinCurrent = false;
-				} else
-					lastRelevantPrice = getLastRelevantPriceByOperations(ccp, side.getOther(), true)
-							.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
-
-				System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-				makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
-			}
-			break;
-		default:
-			for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {
-				Order myOrder = getUserActiveOrders(ccp, side).size() > 0 ? getUserActiveOrders(ccp, side).get(0)
-						: null;
-				if (myOrder != null)
-					cancelOrder(myOrder);
-				System.out.println("\n  Don't make buy order but cancel any!");
-			}
-			break;
-		}
 	}
 
-	private void makeOrdersByLastRelevantPrice(CoinCurrencyPair coinCurrencyPair, RecordSide side,
+	public void makeOrdersByLastRelevantPrice(CoinCurrencyPair coinCurrencyPair, RecordSide side,
 			BigDecimal lastRelevantPrice, Boolean hasToWinCurrent) throws ApiProviderException {
 
 		try {
@@ -534,7 +445,7 @@ public class ProviderReport {
 		}
 	}
 
-	private void cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(CoinCurrencyPair coinCurrencyPair, RecordSide side)
+	public void cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(CoinCurrencyPair coinCurrencyPair, RecordSide side)
 			throws ApiProviderException {
 
 		for (CoinCurrencyPair ccp : getCoinCurrencyPairList()) {

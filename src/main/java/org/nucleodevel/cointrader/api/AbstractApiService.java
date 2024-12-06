@@ -15,7 +15,7 @@ import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 
-public abstract class ApiService {
+public abstract class AbstractApiService {
 
 	protected UserConfiguration userConfiguration;
 
@@ -23,7 +23,7 @@ public abstract class ApiService {
 
 	// --------------------- Constructors
 
-	public ApiService(UserConfiguration userConfiguration, CoinCurrencyPair coinCurrencyPair)
+	public AbstractApiService(UserConfiguration userConfiguration, CoinCurrencyPair coinCurrencyPair)
 			throws ApiProviderException {
 		this.userConfiguration = userConfiguration;
 		this.coinCurrencyPair = coinCurrencyPair;

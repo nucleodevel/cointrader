@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.nucleodevel.cointrader.api.ApiService;
+import org.nucleodevel.cointrader.api.AbstractApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
@@ -57,7 +57,7 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-public class PoloniexApiService extends ApiService {
+public class PoloniexApiService extends AbstractApiService {
 
 	private Client client = ClientBuilder.newClient();
 
