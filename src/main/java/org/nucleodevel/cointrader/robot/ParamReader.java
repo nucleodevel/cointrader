@@ -106,14 +106,14 @@ public class ParamReader {
 					String paramValue = args[1];
 
 					switch (paramLabel) {
-					case "-dt":
+					case "-delayTime":
 						try {
 							userConfiguration.setDelayTime(Integer.parseInt(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-bm":
+					case "-buyMode":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.BUY)
 									.setMode(RecordSideMode.valueOf(paramValue));
@@ -121,7 +121,7 @@ public class ParamReader {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-sm":
+					case "-sellMode":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.SELL)
 									.setMode(RecordSideMode.valueOf(paramValue));
@@ -137,26 +137,26 @@ public class ParamReader {
 
 						userConfiguration.setCoinList(coinList);
 						break;
-					case "-curr":
+					case "-currency":
 						userConfiguration.setCurrency(Currency.valueOf(paramValue));
 						break;
-					case "-mbr":
+					case "-buyRegularRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.BUY)
-									.setMinimumRate(Double.parseDouble(paramValue));
+									.setRegularRate(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-msr":
+					case "-sellRegularRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.SELL)
-									.setMinimumRate(Double.parseDouble(paramValue));
+									.setRegularRate(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-bbr":
+					case "-buyBreakdownRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.BUY)
 									.setBreakdownRate(Double.parseDouble(paramValue));
@@ -164,7 +164,7 @@ public class ParamReader {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-bsr":
+					case "-sellBreakdownRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.SELL)
 									.setBreakdownRate(Double.parseDouble(paramValue));
@@ -172,27 +172,27 @@ public class ParamReader {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-mca":
+					case "-minimumCoinAmount":
 						try {
 							userConfiguration.setMinimumCoinAmount(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-idp":
+					case "-incDecPrice":
 						try {
 							userConfiguration.setIncDecPrice(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-uk":
+					case "-key":
 						userConfiguration.setKey(paramValue);
 						break;
-					case "-us":
+					case "-secret":
 						userConfiguration.setSecret(paramValue);
 						break;
-					case "-up":
+					case "-provider":
 						userConfiguration.setProvider(Provider.valueOf(paramValue));
 						break;
 					default:

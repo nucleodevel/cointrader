@@ -131,8 +131,6 @@ public class PoloniexApiService extends AbstractApiService {
 		for (Operation operation : last3HourOperations)
 			last3HourVolume = last3HourVolume.add(operation.getCoinAmount());
 
-		ticker.setLast3HourVolume(last3HourVolume);
-
 		return ticker;
 	}
 

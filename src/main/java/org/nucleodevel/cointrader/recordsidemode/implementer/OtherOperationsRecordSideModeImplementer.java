@@ -54,7 +54,7 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 				lastRelevantPrice = providerReport.getLastRelevantPriceByOrders(ccp, side, true);
 				hasToWinCurrent = false;
 			} else {
-				Double effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRate();
+				Double effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRegularRate();
 				lastRelevantPrice = providerReport.getLastRelevantPriceByOperations(ccp, side.getOther(), true)
 						.multiply(new BigDecimal(effectiveRate));
 			}

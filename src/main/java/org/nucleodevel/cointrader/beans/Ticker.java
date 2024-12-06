@@ -8,7 +8,6 @@ public class Ticker {
 	private BigDecimal high;
 	private BigDecimal low;
 	private BigDecimal vol;
-	private BigDecimal last3HourVolume;
 
 	public Ticker(Coin coin, Currency currency) {
 		this.coinCurrencyPair = new CoinCurrencyPair(coin, currency);
@@ -60,14 +59,6 @@ public class Ticker {
 
 	public void setVol(BigDecimal vol) {
 		this.vol = vol;
-	}
-
-	public BigDecimal getLast3HourVolume() {
-		return last3HourVolume;
-	}
-
-	public void setLast3HourVolume(BigDecimal last3HourVolume) {
-		this.last3HourVolume = last3HourVolume;
 	}
 
 	@Override

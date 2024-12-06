@@ -390,8 +390,6 @@ public class FoxbitApiService extends AbstractApiService {
 		ticker.setLow(rolling24hJsonObj.getAsJsonPrimitive("low").getAsBigDecimal());
 		ticker.setVol(rolling24hJsonObj.getAsJsonPrimitive("volume").getAsBigDecimal());
 
-		ticker.setLast3HourVolume(ticker.getVol().divide(BigDecimal.valueOf(8L)));
-
 		return ticker;
 	}
 

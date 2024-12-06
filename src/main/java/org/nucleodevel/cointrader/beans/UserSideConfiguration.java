@@ -8,7 +8,7 @@ public class UserSideConfiguration {
 	private RecordSide side;
 
 	private RecordSideMode mode;
-	private Double minimumRate;
+	private Double regularRate;
 	private Double breakdownRate;
 
 	public UserSideConfiguration(RecordSide side) {
@@ -32,12 +32,12 @@ public class UserSideConfiguration {
 		this.mode = mode;
 	}
 
-	public Double getMinimumRate() {
-		return minimumRate;
+	public Double getRegularRate() {
+		return regularRate;
 	}
 
-	public void setMinimumRate(Double minimumRate) {
-		this.minimumRate = minimumRate;
+	public void setRegularRate(Double regularRate) {
+		this.regularRate = regularRate;
 	}
 
 	public Double getBreakdownRate() {
@@ -48,32 +48,12 @@ public class UserSideConfiguration {
 		this.breakdownRate = breakdownRate;
 	}
 
-	public Double getEffeciveRate() {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			rate = 1 - minimumRate;
-			break;
-		case SELL:
-			rate = 1 + minimumRate;
-			break;
-		}
-		return rate;
+	public Double getEffeciveRegularRate() {
+		return 1 + side.getMultiplierFactorForRates().doubleValue() * regularRate;
 	}
 
 	public Double getEffeciveBreakdownRate() {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			if (breakdownRate != null)
-				rate = 1 - breakdownRate;
-			break;
-		case SELL:
-			if (breakdownRate != null)
-				rate = 1 + breakdownRate;
-			break;
-		}
-		return rate;
+		return 1 + side.getMultiplierFactorForRates().doubleValue() * breakdownRate;
 	}
 
 	@Override
@@ -93,8 +73,8 @@ public class UserSideConfiguration {
 			sb.append("\n      side: " + side);
 		if (mode != null)
 			sb.append("\n      mode: " + mode);
-		if (minimumRate != null)
-			sb.append("\n      minimumRate: " + decFmt.format(minimumRate));
+		if (regularRate != null)
+			sb.append("\n      regularRate: " + decFmt.format(regularRate));
 		if (breakdownRate != null)
 			sb.append("\n      breakdownRate: " + decFmt.format(breakdownRate));
 

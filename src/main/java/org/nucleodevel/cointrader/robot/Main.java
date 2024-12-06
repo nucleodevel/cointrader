@@ -94,8 +94,6 @@ public class Main {
 					System.out.println("  My participation: " + decFmt
 							.format(report.getMy24hCoinVolume(ccp).doubleValue() / ticker.getVol().doubleValue()));
 
-					System.out.println("  Last 3 hour volume: " + decFmt.format(ticker.getLast3HourVolume()));
-
 					System.out.println("");
 					System.out.println(report.getBalance(ccp));
 

@@ -403,8 +403,6 @@ public class MercadoBitcoinApiService extends AbstractApiService {
 			ticker.setHigh(tickerJsonObject.getAsJsonPrimitive("high").getAsBigDecimal());
 			ticker.setLow(tickerJsonObject.getAsJsonPrimitive("low").getAsBigDecimal());
 			ticker.setVol(tickerJsonObject.getAsJsonPrimitive("vol").getAsBigDecimal());
-
-			ticker.setLast3HourVolume(ticker.getVol().divide(BigDecimal.valueOf(8L)));
 		}
 
 		return ticker;
