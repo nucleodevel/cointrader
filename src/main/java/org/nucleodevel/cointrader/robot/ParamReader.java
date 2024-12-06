@@ -10,8 +10,10 @@ import java.util.List;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Provider;
+import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
+import org.nucleodevel.cointrader.beans.UserSideConfiguration;
 import org.nucleodevel.cointrader.exception.ParamLabelErrorException;
 import org.nucleodevel.cointrader.exception.ParamSyntaxErrorException;
 import org.nucleodevel.cointrader.exception.ParamValueErrorException;
@@ -80,6 +82,8 @@ public class ParamReader {
 			throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException, IOException {
 
 		userConfiguration = new UserConfiguration();
+		userConfiguration.setSideConfiguration(RecordSide.BUY, new UserSideConfiguration(RecordSide.BUY));
+		userConfiguration.setSideConfiguration(RecordSide.SELL, new UserSideConfiguration(RecordSide.SELL));
 
 		if (getFileName().equals(""))
 			return;
@@ -111,14 +115,16 @@ public class ParamReader {
 						break;
 					case "-bm":
 						try {
-							userConfiguration.setBuyMode(RecordSideMode.valueOf(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.BUY)
+									.setMode(RecordSideMode.valueOf(paramValue));
 						} catch (Exception ex) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
 					case "-sm":
 						try {
-							userConfiguration.setSellMode(RecordSideMode.valueOf(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.SELL)
+									.setMode(RecordSideMode.valueOf(paramValue));
 						} catch (Exception ex) {
 							throw new ParamValueErrorException(paramLabel);
 						}
@@ -136,28 +142,32 @@ public class ParamReader {
 						break;
 					case "-mbr":
 						try {
-							userConfiguration.setMinimumBuyRate(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.BUY)
+									.setMinimumRate(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
 					case "-msr":
 						try {
-							userConfiguration.setMinimumSellRate(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.SELL)
+									.setMinimumRate(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
 					case "-bbr":
 						try {
-							userConfiguration.setBreakdownBuyRate(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.BUY)
+									.setBreakdownRate(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
 					case "-bsr":
 						try {
-							userConfiguration.setBreakdownSellRate(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.SELL)
+									.setBreakdownRate(Double.parseDouble(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}

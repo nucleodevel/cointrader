@@ -26,6 +26,7 @@ import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
+import org.nucleodevel.cointrader.beans.UserSideConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
 import org.nucleodevel.cointrader.exception.NotAvailableMoneyException;
 import org.nucleodevel.cointrader.recordsidemode.implementer.AbstractRecordSideModeImplementer;
@@ -42,14 +43,7 @@ public class ProviderReport {
 	private Map<String, BigDecimal> spreadMap;
 	private Map<String, OrderBook> orderBookMap;
 
-	private Map<String, List<Order>> activeBuyOrdersMap;
-	private Map<String, List<Order>> activeSellOrdersMap;
-
-	private Map<String, List<Order>> userActiveBuyOrdersMap;
-	private Map<String, List<Order>> userActiveSellOrdersMap;
-
 	private Map<String, List<Order>> userActiveOrdersMap;
-
 	private Map<String, List<Operation>> userOperationsMap;
 
 	private Map<String, BigDecimal> my24hCoinVolumeMap;
@@ -66,12 +60,6 @@ public class ProviderReport {
 		balanceMap = new HashMap<>();
 		spreadMap = new HashMap<>();
 		orderBookMap = new HashMap<>();
-
-		activeBuyOrdersMap = new HashMap<>();
-		activeSellOrdersMap = new HashMap<>();
-
-		userActiveBuyOrdersMap = new HashMap<>();
-		userActiveSellOrdersMap = new HashMap<>();
 
 		userActiveOrdersMap = new HashMap<>();
 		userOperationsMap = new HashMap<>();
@@ -153,8 +141,8 @@ public class ProviderReport {
 
 	public BigDecimal getSpread(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
 		if (!spreadMap.containsKey(coinCurrencyPair.toString())) {
-			Order currentTopBuyOrder = getActiveOrders(coinCurrencyPair, RecordSide.BUY).get(0);
-			Order currentTopSellOrder = getActiveOrders(coinCurrencyPair, RecordSide.SELL).get(0);
+			Order currentTopBuyOrder = getOrderBookBySide(coinCurrencyPair, RecordSide.BUY).get(0);
+			Order currentTopSellOrder = getOrderBookBySide(coinCurrencyPair, RecordSide.SELL).get(0);
 
 			BigDecimal currentTopBuyPrice = currentTopBuyOrder.getCurrencyPrice();
 			BigDecimal currentTopSellPrice = currentTopSellOrder.getCurrencyPrice();
@@ -174,35 +162,13 @@ public class ProviderReport {
 		return orderBookMap.get(coinCurrencyPair.toString());
 	}
 
-	public List<Order> getActiveOrders(CoinCurrencyPair coinCurrencyPair, RecordSide side) throws ApiProviderException {
-		List<Order> orders = new ArrayList<Order>();
-		switch (side) {
-		case BUY:
-			orders = getActiveBuyOrders(coinCurrencyPair);
-			break;
-		case SELL:
-			orders = getActiveSellOrders(coinCurrencyPair);
-			break;
-		}
-		return orders;
-	}
-
-	public List<Order> getActiveBuyOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
-		if (!activeBuyOrdersMap.containsKey(coinCurrencyPair.toString())) {
-			activeBuyOrdersMap.put(coinCurrencyPair.toString(), getOrderBook(coinCurrencyPair).getBidOrders());
-		}
-		return activeBuyOrdersMap.get(coinCurrencyPair.toString());
-	}
-
-	public List<Order> getActiveSellOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
-		if (!activeSellOrdersMap.containsKey(coinCurrencyPair.toString())) {
-			activeSellOrdersMap.put(coinCurrencyPair.toString(), getOrderBook(coinCurrencyPair).getAskOrders());
-		}
-		return activeSellOrdersMap.get(coinCurrencyPair.toString());
+	public List<Order> getOrderBookBySide(CoinCurrencyPair coinCurrencyPair, RecordSide side)
+			throws ApiProviderException {
+		return getOrderBook(coinCurrencyPair).getOrdersBySide(side);
 	}
 
 	public Order getCurrentTopOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side) throws ApiProviderException {
-		return getActiveOrders(coinCurrencyPair, side).get(0);
+		return getOrderBookBySide(coinCurrencyPair, side).get(0);
 	}
 
 	public List<Order> getUserActiveOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
@@ -215,43 +181,13 @@ public class ProviderReport {
 
 	public List<Order> getUserActiveOrders(CoinCurrencyPair coinCurrencyPair, RecordSide side)
 			throws ApiProviderException {
-		List<Order> orders = new ArrayList<Order>();
-		switch (side) {
-		case BUY:
-			orders = getUserActiveBuyOrders(coinCurrencyPair);
-			break;
-		case SELL:
-			orders = getUserActiveSellOrders(coinCurrencyPair);
-			break;
-		}
-		return orders;
 
-	}
+		List<Order> orderList = new ArrayList<>();
+		for (Order order : getUserActiveOrders(coinCurrencyPair))
+			if (order.getSide() == side)
+				orderList.add(order);
 
-	private List<Order> getUserActiveBuyOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
-		if (!userActiveBuyOrdersMap.containsKey(coinCurrencyPair.toString())) {
-			List<Order> orderList = new ArrayList<>();
-
-			for (Order order : getUserActiveOrders(coinCurrencyPair))
-				if (order.getSide() == RecordSide.BUY)
-					orderList.add(order);
-
-			userActiveBuyOrdersMap.put(coinCurrencyPair.toString(), orderList);
-		}
-		return userActiveBuyOrdersMap.get(coinCurrencyPair.toString());
-	}
-
-	private List<Order> getUserActiveSellOrders(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
-		if (!userActiveSellOrdersMap.containsKey(coinCurrencyPair.toString())) {
-			List<Order> orderList = new ArrayList<>();
-
-			for (Order order : getUserActiveOrders(coinCurrencyPair))
-				if (order.getSide() == RecordSide.SELL)
-					orderList.add(order);
-
-			userActiveSellOrdersMap.put(coinCurrencyPair.toString(), orderList);
-		}
-		return userActiveSellOrdersMap.get(coinCurrencyPair.toString());
+		return orderList;
 	}
 
 	public List<Operation> getUserOperations(CoinCurrencyPair coinCurrencyPair) throws ApiProviderException {
@@ -309,34 +245,35 @@ public class ProviderReport {
 		BigDecimal lastRelevantPriceByOperations = new BigDecimal(0);
 		List<Operation> groupOfOperations = new ArrayList<Operation>();
 		BigDecimal oldCoinAmount = new BigDecimal(0);
-		Double sumOfMoney = 0.0;
+		Double sumOfAmount = 0.0;
 
-		Double moneyWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
+		Double amountWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
 
 		for (Operation operation : getUserOperations(coinCurrencyPair)) {
 			Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
 			if (operation.getSide() == side) {
-				if (sumOfMoney + otherSideAmount <= moneyWithOpenOrders) {
-					sumOfMoney += otherSideAmount;
+				if (sumOfAmount + otherSideAmount <= amountWithOpenOrders) {
+					sumOfAmount += otherSideAmount;
 					groupOfOperations.add(operation);
 				} else {
 					oldCoinAmount = operation.getCoinAmount();
-					if (side == RecordSide.BUY)
-						operation.setCoinAmount(new BigDecimal(moneyWithOpenOrders - sumOfMoney));
-					else if (side == RecordSide.SELL)
-						operation.setCoinAmount(new BigDecimal(
-								(moneyWithOpenOrders - sumOfMoney) / operation.getCurrencyPrice().doubleValue()));
+					double restOfAmount = amountWithOpenOrders - sumOfAmount;
+					double operationPrice = operation.getCurrencyPrice().doubleValue();
+					double operationCoinAmount = side == RecordSide.BUY ? restOfAmount
+							: (side == RecordSide.SELL ? restOfAmount / operationPrice : null);
+
+					operation.setCoinAmount(new BigDecimal(operationCoinAmount));
 					groupOfOperations.add(operation);
-					sumOfMoney += moneyWithOpenOrders - sumOfMoney;
+					sumOfAmount += amountWithOpenOrders - sumOfAmount;
 					break;
 				}
 			}
 		}
-		if (sumOfMoney != 0) {
+		if (sumOfAmount != 0) {
 			for (Operation operation : groupOfOperations) {
 				Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
 				lastRelevantPriceByOperations = new BigDecimal(lastRelevantPriceByOperations.doubleValue()
-						+ (otherSideAmount * operation.getCurrencyPrice().doubleValue() / sumOfMoney));
+						+ (otherSideAmount * operation.getCurrencyPrice().doubleValue() / sumOfAmount));
 			}
 		}
 		if (showMessages) {
@@ -363,7 +300,7 @@ public class ProviderReport {
 		List<Order> groupOfOrders = new ArrayList<Order>();
 
 		for (int i = 0; i < numOfConsideredOrdersForLastRelevantPriceByOrders; i++) {
-			Order order = (Order) getActiveOrders(coinCurrencyPair, side).get(i);
+			Order order = (Order) getOrderBookBySide(coinCurrencyPair, side).get(i);
 			sumOfCoin += order.getCoinAmount().doubleValue();
 			sumOfNumerators += order.getCoinAmount().doubleValue() * order.getCurrencyPrice().doubleValue();
 			groupOfOrders.add(order);
@@ -398,7 +335,11 @@ public class ProviderReport {
 		getApiService(coinCurrencyPair).createOrder(order);
 	}
 
-	public void makeOrdersByLastRelevantPrice(RecordSide side, RecordSideMode mode) throws ApiProviderException {
+	public void makeOrdersByLastRelevantPrice(UserSideConfiguration sideConfiguration) throws ApiProviderException {
+
+		RecordSide side = sideConfiguration.getSide();
+		RecordSideMode mode = sideConfiguration.getMode();
+
 		System.out.println("");
 		System.out.println("Analising " + side + " order");
 		System.out.println("");
@@ -468,7 +409,7 @@ public class ProviderReport {
 	private Order winTheCurrentOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
 			BigDecimal lastRelevantPrice) throws ApiProviderException, NotAvailableMoneyException {
 
-		List<Order> activeOrders = getActiveOrders(coinCurrencyPair, side);
+		List<Order> activeOrders = getOrderBookBySide(coinCurrencyPair, side);
 		if (orderIndex >= activeOrders.size() - 1) {
 			Order myOrder = getUserActiveOrders(coinCurrencyPair, side).size() > 0
 					? getUserActiveOrders(coinCurrencyPair, side).get(0)
@@ -494,7 +435,7 @@ public class ProviderReport {
 
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 		if (!isAGoodOrder && left != null)
-			isAGoodOrder = side == RecordSide.BUY ? left <= right : left > right;
+			isAGoodOrder = side == RecordSide.BUY ? left <= right : (side == RecordSide.SELL ? left > right : null);
 
 		if (isAGoodOrder) {
 			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex);
@@ -508,7 +449,7 @@ public class ProviderReport {
 	private Order winThePreviousOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
 			BigDecimal lastRelevantPrice) throws ApiProviderException, NotAvailableMoneyException {
 
-		List<Order> activeOrders = getActiveOrders(coinCurrencyPair, side);
+		List<Order> activeOrders = getOrderBookBySide(coinCurrencyPair, side);
 		if (orderIndex >= activeOrders.size() - 1) {
 			Order myOrder = getUserActiveOrders(coinCurrencyPair, side).size() > 0
 					? getUserActiveOrders(coinCurrencyPair, side).get(0)
@@ -534,7 +475,7 @@ public class ProviderReport {
 
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
 		if (!isAGoodOrder && left != null)
-			isAGoodOrder = side == RecordSide.BUY ? left <= right : left > right;
+			isAGoodOrder = side == RecordSide.BUY ? left <= right : (side == RecordSide.SELL ? left > right : null);
 
 		if (isAGoodOrder) {
 			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex > 0 ? orderIndex - 1 : 0);
@@ -548,7 +489,7 @@ public class ProviderReport {
 	private Order tryToWinAnOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex)
 			throws NotAvailableMoneyException, ApiProviderException {
 
-		List<Order> activeOrders = getActiveOrders(coinCurrencyPair, side);
+		List<Order> activeOrders = getOrderBookBySide(coinCurrencyPair, side);
 		List<Order> userActiveOrders = getUserActiveOrders(coinCurrencyPair, side);
 
 		Order order = activeOrders.get(orderIndex);

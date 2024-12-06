@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.RecordSide;
-import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
@@ -139,34 +138,15 @@ public class Main {
 					System.out.println("Current spread: " + report.getSpread(ccp));
 					System.out.println("");
 					System.out.println("Current top orders by type");
-					System.out.println("  " + report.getActiveOrders(ccp, RecordSide.BUY).get(0));
-					System.out.println("  " + report.getActiveOrders(ccp, RecordSide.SELL).get(0));
+					System.out.println("  " + report.getOrderBookBySide(ccp, RecordSide.BUY).get(0));
+					System.out.println("  " + report.getOrderBookBySide(ccp, RecordSide.SELL).get(0));
 				}
 
 				System.out.println("");
 				System.out.println("---- Analise and make orders");
 
-				if (userConfiguration.isSingleCoin()) {
-
-					// analise and make orders
-
-					RecordSideMode buyMode = userConfiguration.getBuyMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.BUY, buyMode);
-
-					RecordSideMode sellMode = userConfiguration.getSellMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.SELL, sellMode);
-
-				} else {
-
-					// analise and make orders
-
-					RecordSideMode buyMode = userConfiguration.getBuyMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.BUY, buyMode);
-
-					RecordSideMode sellMode = userConfiguration.getSellMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.SELL, sellMode);
-
-				}
+				for (RecordSide side : RecordSide.values())
+					report.makeOrdersByLastRelevantPrice(userConfiguration.getSideConfiguration(side));
 
 				System.out.println("\n---- Finish reading: " + (new Date()));
 			} catch (ApiProviderException e) {

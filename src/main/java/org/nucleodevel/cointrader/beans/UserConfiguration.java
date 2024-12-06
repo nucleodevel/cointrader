@@ -3,7 +3,9 @@ package org.nucleodevel.cointrader.beans;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserConfiguration {
 
@@ -14,23 +16,15 @@ public class UserConfiguration {
 	private Currency currency;
 	private List<Coin> coinList;
 	private Integer delayTime;
-	private RecordSideMode buyMode;
-	private RecordSideMode sellMode;
-	private Double minimumBuyRate;
-	private Double minimumSellRate;
-	private Double breakdownBuyRate;
-	private Double breakdownSellRate;
 	private Double minimumCoinAmount;
 	private Double incDecPrice;
 
+	private Map<RecordSide, UserSideConfiguration> sideConfigurationMap;
+
 	public UserConfiguration() {
 		currency = null;
+		sideConfigurationMap = new HashMap<>();
 		coinList = new ArrayList<>();
-
-		minimumBuyRate = null;
-		minimumSellRate = null;
-		breakdownBuyRate = null;
-		breakdownSellRate = null;
 	}
 
 	public String getKey() {
@@ -73,101 +67,12 @@ public class UserConfiguration {
 		this.coinList = coinList;
 	}
 
-	public List<CoinCurrencyPair> getCoinCurrencyPairList() {
-		List<CoinCurrencyPair> coinCurrencyPairList = new ArrayList<>();
-
-		coinList.stream().forEach((coin) -> coinCurrencyPairList.add(new CoinCurrencyPair(coin, getCurrency())));
-
-		return coinCurrencyPairList;
-	}
-
 	public Integer getDelayTime() {
 		return delayTime;
 	}
 
 	public void setDelayTime(Integer delayTime) {
 		this.delayTime = delayTime;
-	}
-
-	public RecordSideMode getMode(RecordSide side) {
-		RecordSideMode mode = RecordSideMode.NONE;
-		switch (side) {
-		case BUY:
-			mode = buyMode;
-			break;
-		case SELL:
-			mode = sellMode;
-			break;
-		}
-		return mode;
-	}
-
-	public RecordSideMode getBuyMode() {
-		return buyMode;
-	}
-
-	public void setBuyMode(RecordSideMode buyMode) {
-		this.buyMode = buyMode;
-	}
-
-	public RecordSideMode getSellMode() {
-		return sellMode;
-	}
-
-	public void setSellMode(RecordSideMode sellMode) {
-		this.sellMode = sellMode;
-	}
-
-	public Double getMinimumRate(RecordSide side) {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			rate = 1 - minimumBuyRate;
-			break;
-		case SELL:
-			rate = 1 + minimumSellRate;
-			break;
-		}
-		return rate;
-	}
-
-	public void setMinimumBuyRate(Double minimumBuyRate) {
-		this.minimumBuyRate = minimumBuyRate;
-	}
-
-	public void setMinimumSellRate(Double minimumSellRate) {
-		this.minimumSellRate = minimumSellRate;
-	}
-
-	public Double getBreakdownRate(RecordSide side) {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			if (breakdownBuyRate != null)
-				rate = 1 - breakdownBuyRate;
-			break;
-		case SELL:
-			if (breakdownSellRate != null)
-				rate = 1 + breakdownSellRate;
-			break;
-		}
-		return rate;
-	}
-
-	public Double getBreakdownBuyRate() {
-		return breakdownBuyRate;
-	}
-
-	public void setBreakdownBuyRate(Double breakdownBuyRate) {
-		this.breakdownBuyRate = breakdownBuyRate;
-	}
-
-	public Double getBreakdownSellRate() {
-		return breakdownSellRate;
-	}
-
-	public void setBreakdownSellRate(Double breakdownSellRate) {
-		this.breakdownSellRate = breakdownSellRate;
 	}
 
 	public Double getMinimumCoinAmount() {
@@ -178,8 +83,30 @@ public class UserConfiguration {
 		this.minimumCoinAmount = minimumCoinAmount;
 	}
 
+	public Double getIncDecPrice() {
+		return incDecPrice;
+	}
+
 	public void setIncDecPrice(Double incDecPrice) {
 		this.incDecPrice = incDecPrice;
+	}
+
+	// --------- Calculated Getters and Setters ----------
+
+	public List<CoinCurrencyPair> getCoinCurrencyPairList() {
+		List<CoinCurrencyPair> coinCurrencyPairList = new ArrayList<>();
+
+		coinList.stream().forEach((coin) -> coinCurrencyPairList.add(new CoinCurrencyPair(coin, getCurrency())));
+
+		return coinCurrencyPairList;
+	}
+
+	public UserSideConfiguration getSideConfiguration(RecordSide side) {
+		return sideConfigurationMap.containsKey(side) ? sideConfigurationMap.get(side) : null;
+	}
+
+	public void setSideConfiguration(RecordSide side, UserSideConfiguration sideConfiguration) {
+		this.sideConfigurationMap.put(side, sideConfiguration);
 	}
 
 	public Double getIncDecPrice(RecordSide side) {
@@ -211,27 +138,30 @@ public class UserConfiguration {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(this.getClass().getSimpleName() + ": [");
-		sb.append("\n  key: " + key.substring(0, 8) + "...");
-		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
-		sb.append(";\n  provider: " + provider);
-		sb.append(";\n  coinList: " + coinList);
-		sb.append(";\n  currency: " + currency);
-		sb.append(";\n  delayTime: " + delayTime);
-		sb.append(";\n  buyMode: " + buyMode);
-		sb.append(";\n  sellMode: " + sellMode);
 
-		if (minimumBuyRate != null)
-			sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
-		if (minimumSellRate != null)
-			sb.append(";\n  minimumSellRate: " + decFmt.format(minimumSellRate));
-		if (breakdownBuyRate != null)
-			sb.append(";\n  breakdownBuyRate: " + decFmt.format(breakdownBuyRate));
-		if (breakdownSellRate != null)
-			sb.append(";\n  breakdownSellRate: " + decFmt.format(breakdownSellRate));
+		if (key != null)
+			sb.append("\n  key: " + key.substring(0, 8) + "...");
+		if (secret != null)
+			sb.append("\n  secret: " + secret.substring(0, 8) + "...");
+		if (provider != null)
+			sb.append("\n  provider: " + provider);
+		if (coinList != null)
+			sb.append("\n  coinList: " + coinList);
+		if (currency != null)
+			sb.append("\n  currency: " + currency);
+		if (delayTime != null)
+			sb.append("\n  delayTime: " + delayTime);
 		if (minimumCoinAmount != null)
-			sb.append(";\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
+			sb.append("\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
 		if (incDecPrice != null)
-			sb.append(";\n  incDecPrice: " + decFmt.format(incDecPrice));
+			sb.append("\n  incDecPrice: " + decFmt.format(incDecPrice));
+
+		sb.append("\n  sideConfiguration: [");
+
+		for (Map.Entry<RecordSide, UserSideConfiguration> entry : sideConfigurationMap.entrySet())
+			sb.append("\n    " + entry.getValue());
+
+		sb.append("\n  ]");
 		sb.append("\n]");
 
 		return sb.toString();

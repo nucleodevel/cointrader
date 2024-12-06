@@ -55,4 +55,8 @@ public class OrderBook {
 		this.askOrders = askOrders;
 	}
 
+	public List<Order> getOrdersBySide(RecordSide side) {
+		return side == RecordSide.BUY ? bidOrders : (side == RecordSide.SELL ? askOrders : null);
+	}
+
 }

@@ -44,9 +44,10 @@ public class OtherOrdersRecordSideModeImplementer extends AbstractRecordSideMode
 		System.out.println("");
 		System.out.println("  ---- " + side + ": " + coinCurrencyPair);
 
+		Double effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRate();
 		BigDecimal lastRelevantPrice = providerReport
 				.getLastRelevantPriceByOrders(coinCurrencyPair, side.getOther(), true)
-				.multiply(new BigDecimal(userConfiguration.getMinimumRate(side)));
+				.multiply(new BigDecimal(effectiveRate));
 
 		System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 
