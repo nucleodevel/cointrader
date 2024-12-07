@@ -49,11 +49,11 @@ public class UserSideConfiguration {
 	}
 
 	public Double getEffeciveRegularRate() {
-		return 1 + side.getMultiplierFactorForRates().doubleValue() * regularRate;
+		return 1 + side.getMultiplierFactor().doubleValue() * regularRate;
 	}
 
 	public Double getEffeciveBreakdownRate() {
-		return 1 + side.getMultiplierFactorForRates().doubleValue() * breakdownRate;
+		return 1 + side.getMultiplierFactor().doubleValue() * breakdownRate;
 	}
 
 	@Override

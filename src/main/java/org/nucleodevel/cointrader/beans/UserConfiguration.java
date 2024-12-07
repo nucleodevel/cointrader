@@ -109,17 +109,8 @@ public class UserConfiguration {
 		this.sideConfigurationMap.put(side, sideConfiguration);
 	}
 
-	public Double getIncDecPrice(RecordSide side) {
-		Double incDecPrice = 0.0;
-		switch (side) {
-		case BUY:
-			incDecPrice = Math.abs(this.incDecPrice);
-			break;
-		case SELL:
-			incDecPrice = Math.abs(this.incDecPrice) * (-1);
-			break;
-		}
-		return incDecPrice;
+	public Double getEffectiveIncDecPrice(RecordSide side) {
+		return Math.abs(this.incDecPrice) * (-1) * side.getMultiplierFactor().doubleValue();
 	}
 
 	public boolean isSingleCoin() {

@@ -247,24 +247,25 @@ public class ProviderReport {
 		BigDecimal oldCoinAmount = new BigDecimal(0);
 		Double sumOfAmount = 0.0;
 
-		Double amountWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther()).doubleValue();
+		Double otherSideAmountWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther())
+				.doubleValue();
 
 		for (Operation operation : getUserOperations(coinCurrencyPair)) {
 			Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
 			if (operation.getSide() == side) {
-				if (sumOfAmount + otherSideAmount <= amountWithOpenOrders) {
+				if (sumOfAmount + otherSideAmount <= otherSideAmountWithOpenOrders) {
 					sumOfAmount += otherSideAmount;
 					groupOfOperations.add(operation);
 				} else {
 					oldCoinAmount = operation.getCoinAmount();
-					double restOfAmount = amountWithOpenOrders - sumOfAmount;
+					double otherSideRestOfAmount = otherSideAmountWithOpenOrders - sumOfAmount;
 					double operationPrice = operation.getCurrencyPrice().doubleValue();
-					double operationCoinAmount = side == RecordSide.BUY ? restOfAmount
-							: (side == RecordSide.SELL ? restOfAmount / operationPrice : null);
+					BigDecimal otherSideEstimatedCoinAmount = side.getOther().getEstimatedCoinAmountByAmountAndPrice(
+							BigDecimal.valueOf(otherSideRestOfAmount), BigDecimal.valueOf(operationPrice));
 
-					operation.setCoinAmount(new BigDecimal(operationCoinAmount));
+					operation.setCoinAmount(otherSideEstimatedCoinAmount);
 					groupOfOperations.add(operation);
-					sumOfAmount += amountWithOpenOrders - sumOfAmount;
+					sumOfAmount += otherSideAmountWithOpenOrders - sumOfAmount;
 					break;
 				}
 			}
@@ -430,12 +431,12 @@ public class ProviderReport {
 
 		Order order = activeOrders.get(orderIndex);
 
-		Double left = lastRelevantPrice == null ? null : order.getCurrencyPrice().doubleValue();
-		Double right = lastRelevantPrice == null ? null : lastRelevantPrice.doubleValue();
+		BigDecimal orderCurrencyPriceToCompare = lastRelevantPrice == null ? null : order.getCurrencyPrice();
 
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
-		if (!isAGoodOrder && left != null)
-			isAGoodOrder = side == RecordSide.BUY ? left <= right : (side == RecordSide.SELL ? left > right : null);
+		if (!isAGoodOrder && orderCurrencyPriceToCompare != null)
+			isAGoodOrder = side.isAGoodRecordByRecordCurrencyPriceAndLastRelevantPrice(orderCurrencyPriceToCompare,
+					lastRelevantPrice);
 
 		if (isAGoodOrder) {
 			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex);
@@ -470,12 +471,12 @@ public class ProviderReport {
 
 		Order order = activeOrders.get(orderIndex);
 
-		Double left = lastRelevantPrice == null ? null : order.getCurrencyPrice().doubleValue();
-		Double right = lastRelevantPrice == null ? null : lastRelevantPrice.doubleValue();
+		BigDecimal orderPriceToCompare = lastRelevantPrice == null ? null : order.getCurrencyPrice();
 
 		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
-		if (!isAGoodOrder && left != null)
-			isAGoodOrder = side == RecordSide.BUY ? left <= right : (side == RecordSide.SELL ? left > right : null);
+		if (!isAGoodOrder && orderPriceToCompare != null)
+			isAGoodOrder = side.isAGoodRecordByRecordCurrencyPriceAndLastRelevantPrice(orderPriceToCompare,
+					lastRelevantPrice);
 
 		if (isAGoodOrder) {
 			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex > 0 ? orderIndex - 1 : 0);
@@ -497,7 +498,7 @@ public class ProviderReport {
 		Order bestOtherSideOrder = getCurrentTopOrder(coinCurrencyPair, side.getOther());
 
 		BigDecimal currencyPrice = new BigDecimal(
-				order.getCurrencyPrice().doubleValue() + userConfiguration.getIncDecPrice(side));
+				order.getCurrencyPrice().doubleValue() + userConfiguration.getEffectiveIncDecPrice(side));
 		BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, currencyPrice);
 
 		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
@@ -511,9 +512,9 @@ public class ProviderReport {
 		if (myOrder == null
 				|| !decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))) {
 			Boolean isNearTheBestOtherSideOrder = Math.abs(
-					order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getIncDecPrice(side))).doubleValue()
+					order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getEffectiveIncDecPrice(side))).doubleValue()
 							- bestOtherSideOrder.getCurrencyPrice().doubleValue()) <= userConfiguration
-									.getIncDecPrice(side);
+									.getEffectiveIncDecPrice(side);
 			if (isNearTheBestOtherSideOrder)
 				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
 			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
@@ -525,7 +526,7 @@ public class ProviderReport {
 				&& Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration
 						.getMinimumCoinAmount()
 				&& Math.abs(order.getCurrencyPrice().doubleValue()
-						- nextOrder.getCurrencyPrice().doubleValue()) <= userConfiguration.getIncDecPrice(side))) {
+						- nextOrder.getCurrencyPrice().doubleValue()) <= userConfiguration.getEffectiveIncDecPrice(side))) {
 			myOrder.setPosition(orderIndex);
 			return myOrder;
 		}
