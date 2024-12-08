@@ -18,7 +18,7 @@ JAR_FILE=/usr/share/cointrader/cointrader.jar
 CONFIG_FILE=/data/conf/${HOSTNAME}.conf
 LOG_FILE=/data/log/${HOSTNAME}.log
 
-if [ -f "$EXTERNAL_CONFIG_FILE" ]; then
+if [ -f "$CONFIG_FILE" ]; then
 
 	echo "" >> ${EXTERNAL_LOG_FILE}	
 	java -jar ${JAR_FILE} -f ${CONFIG_FILE} >> ${LOG_FILE}
