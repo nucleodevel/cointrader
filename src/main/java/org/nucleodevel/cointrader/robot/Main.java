@@ -1,6 +1,7 @@
 package org.nucleodevel.cointrader.robot;
 
 import java.io.IOException;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
@@ -92,7 +93,7 @@ public class Main {
 					System.out.println("  Global 24 hour volume: " + decFmt.format(ticker.getVol()));
 
 					System.out.println("  My participation: " + decFmt
-							.format(report.getMy24hCoinVolume(ccp).doubleValue() / ticker.getVol().doubleValue()));
+							.format(report.getMy24hCoinVolume(ccp).divide(ticker.getVol(), 8, RoundingMode.HALF_EVEN)));
 
 					System.out.println("");
 					System.out.println(report.getBalance(ccp));

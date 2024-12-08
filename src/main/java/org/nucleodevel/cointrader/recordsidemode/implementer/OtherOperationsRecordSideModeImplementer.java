@@ -32,11 +32,9 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 			BigDecimal lastRelevantPriceByOperations = providerReport.getLastRelevantPriceByOperations(ccp,
 					side.getOther(), false);
 
-			Double effectiveBreakdownRate = userConfiguration.getSideConfiguration(side).getEffeciveBreakdownRate()
-					.doubleValue();
+			BigDecimal effectiveBreakdownRate = userConfiguration.getSideConfiguration(side).getEffeciveBreakdownRate();
 			if (effectiveBreakdownRate != null) {
-				BigDecimal breakdownPrice = lastRelevantPriceByOperations
-						.multiply(new BigDecimal(effectiveBreakdownRate));
+				BigDecimal breakdownPrice = lastRelevantPriceByOperations.multiply(effectiveBreakdownRate);
 
 				int compareBreakdownToOrders = breakdownPrice.compareTo(lastRelevantPriceByOrders);
 				isBreakdown = (side == RecordSide.BUY ? compareBreakdownToOrders < 0
@@ -55,10 +53,9 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 				lastRelevantPrice = providerReport.getLastRelevantPriceByOrders(ccp, side, true);
 				hasToWinCurrent = false;
 			} else {
-				Double effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRegularRate()
-						.doubleValue();
+				BigDecimal effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRegularRate();
 				lastRelevantPrice = providerReport.getLastRelevantPriceByOperations(ccp, side.getOther(), true)
-						.multiply(new BigDecimal(effectiveRate));
+						.multiply(effectiveRate);
 			}
 
 			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));

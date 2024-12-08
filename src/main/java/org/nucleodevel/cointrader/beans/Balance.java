@@ -1,6 +1,7 @@
 package org.nucleodevel.cointrader.beans;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
@@ -92,8 +93,7 @@ public class Balance {
 		BigDecimal amount = new BigDecimal(0);
 		switch (side) {
 		case BUY:
-			amount = new BigDecimal(
-					(currencyAmount.doubleValue() - CURRENCY_MARGIN.doubleValue()) / currencyPrice.doubleValue());
+			amount = currencyAmount.subtract(CURRENCY_MARGIN).divide(currencyPrice, 8, RoundingMode.HALF_EVEN);
 			break;
 		case SELL:
 			amount = coinAmount;
@@ -109,7 +109,7 @@ public class Balance {
 			amount = currencyAmount;
 			break;
 		case SELL:
-			amount = new BigDecimal(coinAmount.doubleValue() * currencyPrice.doubleValue());
+			amount = coinAmount.multiply(currencyPrice);
 			break;
 		}
 		return amount;

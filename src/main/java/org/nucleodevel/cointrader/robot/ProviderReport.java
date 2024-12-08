@@ -147,7 +147,7 @@ public class ProviderReport {
 			BigDecimal currentTopBuyPrice = currentTopBuyOrder.getCurrencyPrice();
 			BigDecimal currentTopSellPrice = currentTopSellOrder.getCurrencyPrice();
 
-			BigDecimal spread = currentTopSellPrice.divide(currentTopBuyPrice, 6, RoundingMode.HALF_EVEN)
+			BigDecimal spread = currentTopSellPrice.divide(currentTopBuyPrice, 8, RoundingMode.HALF_EVEN)
 					.subtract(new BigDecimal(1.0));
 			spreadMap.put(coinCurrencyPair.toString(), spread);
 		}
@@ -245,36 +245,35 @@ public class ProviderReport {
 		BigDecimal lastRelevantPriceByOperations = new BigDecimal(0);
 		List<Operation> groupOfOperations = new ArrayList<Operation>();
 		BigDecimal oldCoinAmount = new BigDecimal(0);
-		Double sumOfAmount = 0.0;
+		BigDecimal sumOfAmount = BigDecimal.valueOf(0);
 
-		Double otherSideAmountWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther())
-				.doubleValue();
+		BigDecimal otherSideAmountWithOpenOrders = getBalance(coinCurrencyPair).getSideAmount(side.getOther());
 
 		for (Operation operation : getUserOperations(coinCurrencyPair)) {
-			Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
+			BigDecimal otherSideAmount = operation.getSideAmount(side.getOther());
 			if (operation.getSide() == side) {
-				if (sumOfAmount + otherSideAmount <= otherSideAmountWithOpenOrders) {
-					sumOfAmount += otherSideAmount;
+				if (sumOfAmount.add(otherSideAmount).compareTo(otherSideAmountWithOpenOrders) <= 0) {
+					sumOfAmount = sumOfAmount.add(otherSideAmount);
 					groupOfOperations.add(operation);
 				} else {
 					oldCoinAmount = operation.getCoinAmount();
-					double otherSideRestOfAmount = otherSideAmountWithOpenOrders - sumOfAmount;
-					double operationPrice = operation.getCurrencyPrice().doubleValue();
-					BigDecimal otherSideEstimatedCoinAmount = side.getOther().getEstimatedCoinAmountByAmountAndPrice(
-							BigDecimal.valueOf(otherSideRestOfAmount), BigDecimal.valueOf(operationPrice));
+					BigDecimal otherSideRestOfAmount = otherSideAmountWithOpenOrders.subtract(sumOfAmount);
+					BigDecimal operationPrice = operation.getCurrencyPrice();
+					BigDecimal otherSideEstimatedCoinAmount = side.getOther()
+							.getEstimatedCoinAmountByAmountAndPrice(otherSideRestOfAmount, operationPrice);
 
 					operation.setCoinAmount(otherSideEstimatedCoinAmount);
 					groupOfOperations.add(operation);
-					sumOfAmount += otherSideAmountWithOpenOrders - sumOfAmount;
+					sumOfAmount = sumOfAmount.add(otherSideAmountWithOpenOrders).subtract(sumOfAmount);
 					break;
 				}
 			}
 		}
-		if (sumOfAmount != 0) {
+		if (sumOfAmount.compareTo(BigDecimal.ZERO) != 0) {
 			for (Operation operation : groupOfOperations) {
-				Double otherSideAmount = operation.getSideAmount(side.getOther()).doubleValue();
-				lastRelevantPriceByOperations = new BigDecimal(lastRelevantPriceByOperations.doubleValue()
-						+ (otherSideAmount * operation.getCurrencyPrice().doubleValue() / sumOfAmount));
+				BigDecimal otherSideAmount = operation.getSideAmount(side.getOther());
+				lastRelevantPriceByOperations = lastRelevantPriceByOperations.add(otherSideAmount
+						.multiply(operation.getCurrencyPrice()).divide(sumOfAmount, 8, RoundingMode.HALF_EVEN));
 			}
 		}
 		if (showMessages) {
@@ -295,20 +294,20 @@ public class ProviderReport {
 
 		BigDecimal lastRelevantPriceByOrders = new BigDecimal(0);
 
-		double sumOfCoin = 0;
-		double sumOfNumerators = 0;
+		BigDecimal sumOfCoin = BigDecimal.valueOf(0);
+		BigDecimal sumOfNumerators = BigDecimal.valueOf(0);
 
 		List<Order> groupOfOrders = new ArrayList<Order>();
 
 		for (int i = 0; i < numOfConsideredOrdersForLastRelevantPriceByOrders; i++) {
 			Order order = (Order) getOrderBookBySide(coinCurrencyPair, side).get(i);
-			sumOfCoin += order.getCoinAmount().doubleValue();
-			sumOfNumerators += order.getCoinAmount().doubleValue() * order.getCurrencyPrice().doubleValue();
+			sumOfCoin = sumOfCoin.add(order.getCoinAmount());
+			sumOfNumerators = sumOfNumerators.add(order.getCoinAmount().multiply(order.getCurrencyPrice()));
 			groupOfOrders.add(order);
 		}
 
-		if (sumOfCoin != 0) {
-			lastRelevantPriceByOrders = new BigDecimal(sumOfNumerators / sumOfCoin);
+		if (sumOfCoin.compareTo(BigDecimal.ZERO) != 0) {
+			lastRelevantPriceByOrders = sumOfNumerators.divide(sumOfCoin, 8, RoundingMode.HALF_EVEN);
 		}
 
 		if (showMessages) {
@@ -419,7 +418,7 @@ public class ProviderReport {
 				cancelOrder(myOrder);
 			BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, lastRelevantPrice);
 
-			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount().doubleValue()) {
+			if (coinAmount.compareTo(userConfiguration.getMinimumCoinAmount()) < 0) {
 				throw new NotAvailableMoneyException();
 			}
 
@@ -433,7 +432,7 @@ public class ProviderReport {
 
 		BigDecimal orderCurrencyPriceToCompare = lastRelevantPrice == null ? null : order.getCurrencyPrice();
 
-		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
+		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.compareTo(BigDecimal.ZERO) <= 0;
 		if (!isAGoodOrder && orderCurrencyPriceToCompare != null)
 			isAGoodOrder = side.isAGoodRecordByRecordCurrencyPriceAndLastRelevantPrice(orderCurrencyPriceToCompare,
 					lastRelevantPrice);
@@ -459,7 +458,7 @@ public class ProviderReport {
 				cancelOrder(myOrder);
 			BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, lastRelevantPrice);
 
-			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount().doubleValue()) {
+			if (coinAmount.compareTo(userConfiguration.getMinimumCoinAmount()) < 0) {
 				throw new NotAvailableMoneyException();
 			}
 
@@ -473,7 +472,7 @@ public class ProviderReport {
 
 		BigDecimal orderPriceToCompare = lastRelevantPrice == null ? null : order.getCurrencyPrice();
 
-		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.doubleValue() <= 0;
+		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.compareTo(BigDecimal.ZERO) <= 0;
 		if (!isAGoodOrder && orderPriceToCompare != null)
 			isAGoodOrder = side.isAGoodRecordByRecordCurrencyPriceAndLastRelevantPrice(orderPriceToCompare,
 					lastRelevantPrice);
@@ -497,39 +496,55 @@ public class ProviderReport {
 		Order nextOrder = activeOrders.size() - 1 == orderIndex ? null : activeOrders.get(orderIndex + 1);
 		Order bestOtherSideOrder = getCurrentTopOrder(coinCurrencyPair, side.getOther());
 
-		BigDecimal currencyPrice = new BigDecimal(
-				order.getCurrencyPrice().doubleValue() + userConfiguration.getEffectiveIncDecPrice(side).doubleValue());
-		BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, currencyPrice);
+		BigDecimal minimumCoinAmount = userConfiguration.getMinimumCoinAmount();
+		BigDecimal effectiveIncDecPrice = userConfiguration.getEffectiveIncDecPrice(side);
 
-		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount().doubleValue()) {
+		BigDecimal currencyPricePlusIncDec = order.getCurrencyPrice().add(effectiveIncDecPrice);
+		BigDecimal balanceCoinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side,
+				currencyPricePlusIncDec);
+
+		if (balanceCoinAmount.compareTo(minimumCoinAmount) < 0) {
 			throw new NotAvailableMoneyException();
 		}
 
 		// get the unique order or null
 		Order myOrder = userActiveOrders.size() > 0 ? userActiveOrders.get(0) : null;
+		boolean isOrderCurrencyPriceEqualsToMyOrderCurrencyPrice = myOrder != null
+				&& decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()));
 
 		// if my order isn't the best, delete it and create another
-		if (myOrder == null
-				|| !decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))) {
-			Boolean isNearTheBestOtherSideOrder = Math.abs(order.getCurrencyPrice()
-					.add(new BigDecimal(userConfiguration.getEffectiveIncDecPrice(side).doubleValue())).doubleValue()
-					- bestOtherSideOrder.getCurrencyPrice().doubleValue()) <= userConfiguration
-							.getEffectiveIncDecPrice(side).doubleValue();
+		if (myOrder == null || !isOrderCurrencyPriceEqualsToMyOrderCurrencyPrice) {
+
+			BigDecimal absDiffIncDecOrderAndBestOtherSideOrder = order.getCurrencyPrice().add(effectiveIncDecPrice)
+					.subtract(bestOtherSideOrder.getCurrencyPrice()).abs();
+
+			Boolean isNearTheBestOtherSideOrder = absDiffIncDecOrderAndBestOtherSideOrder
+					.compareTo(effectiveIncDecPrice) <= 0;
+
 			if (isNearTheBestOtherSideOrder)
-				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
-			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
-					currencyPrice);
+				currencyPricePlusIncDec = order.getCurrencyPrice();
+
+			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side,
+					balanceCoinAmount, currencyPricePlusIncDec);
 			newOrder.setType(OrderType.LIMITED);
 			newOrder.setPosition(orderIndex);
 			return newOrder;
-		} else if ((decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))
-				&& Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration
-						.getMinimumCoinAmount().doubleValue()
-				&& Math.abs(order.getCurrencyPrice().doubleValue()
-						- nextOrder.getCurrencyPrice().doubleValue()) <= userConfiguration.getEffectiveIncDecPrice(side)
-								.doubleValue())) {
-			myOrder.setPosition(orderIndex);
-			return myOrder;
+
+		} else {
+
+			BigDecimal absDiffOrderCoinAmountAndBalanceCoinAmount = order.getCoinAmount().subtract(balanceCoinAmount)
+					.abs();
+			BigDecimal absDiffOrderCurrencyPriceAndNextOrderCurrencyPrice = order.getCurrencyPrice()
+					.subtract(nextOrder.getCurrencyPrice()).abs();
+
+			if (isOrderCurrencyPriceEqualsToMyOrderCurrencyPrice
+					&& absDiffOrderCoinAmountAndBalanceCoinAmount.compareTo(minimumCoinAmount) <= 0
+					&& absDiffOrderCurrencyPriceAndNextOrderCurrencyPrice.compareTo(effectiveIncDecPrice) <= 0) {
+
+				myOrder.setPosition(orderIndex);
+				return myOrder;
+
+			}
 		}
 		return null;
 	}

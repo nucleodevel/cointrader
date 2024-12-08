@@ -162,8 +162,8 @@ public class PoloniexApiService extends AbstractApiService {
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
 
-			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").getAsDouble());
-			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("rate").getAsDouble());
+			BigDecimal coinAmount = jsonObject.get("amount").getAsBigDecimal();
+			BigDecimal currencyPrice = jsonObject.get("rate").getAsBigDecimal();
 
 			String sideString = jsonObject.get("type").getAsString();
 			RecordSide side = sideString.equals("buy") ? RecordSide.BUY
@@ -231,8 +231,8 @@ public class PoloniexApiService extends AbstractApiService {
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
 
-			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").getAsDouble());
-			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("rate").getAsDouble());
+			BigDecimal coinAmount = jsonObject.get("amount").getAsBigDecimal();
+			BigDecimal currencyPrice = jsonObject.get("rate").getAsBigDecimal();
 
 			String sideString = jsonObject.get("type").getAsString();
 			RecordSide side = sideString.equals("buy") ? RecordSide.BUY
@@ -419,8 +419,8 @@ public class PoloniexApiService extends AbstractApiService {
 		ArrayList<Order> askOrders = new ArrayList<Order>();
 		for (int i = 0; i < asking.size(); i++) {
 			JsonArray pairAmount = asking.get(i).getAsJsonArray();
-			BigDecimal coinAmount = new BigDecimal(pairAmount.get(1).getAsDouble());
-			BigDecimal currencyPrice = new BigDecimal(pairAmount.get(0).getAsDouble());
+			BigDecimal coinAmount = pairAmount.get(1).getAsBigDecimal();
+			BigDecimal currencyPrice = pairAmount.get(0).getAsBigDecimal();
 			Order order = new Order(getCoin(), getCurrency(), RecordSide.SELL, coinAmount, currencyPrice);
 			order.setStatus(OrderStatus.ACTIVE);
 			order.setPosition(i + 1);
@@ -433,7 +433,7 @@ public class PoloniexApiService extends AbstractApiService {
 		for (int i = 0; i < bidding.size(); i++) {
 			JsonArray pairAmount = bidding.get(i).getAsJsonArray();
 			BigDecimal coinAmount = new BigDecimal(pairAmount.get(1).toString());
-			BigDecimal currencyPrice = new BigDecimal(pairAmount.get(0).getAsDouble());
+			BigDecimal currencyPrice = pairAmount.get(0).getAsBigDecimal();
 			Order order = new Order(getCoin(), getCurrency(), RecordSide.BUY, coinAmount, currencyPrice);
 			order.setStatus(OrderStatus.ACTIVE);
 			order.setPosition(i + 1);
