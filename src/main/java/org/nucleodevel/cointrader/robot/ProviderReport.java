@@ -419,7 +419,7 @@ public class ProviderReport {
 				cancelOrder(myOrder);
 			BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, lastRelevantPrice);
 
-			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount().doubleValue()) {
 				throw new NotAvailableMoneyException();
 			}
 
@@ -459,7 +459,7 @@ public class ProviderReport {
 				cancelOrder(myOrder);
 			BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, lastRelevantPrice);
 
-			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+			if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount().doubleValue()) {
 				throw new NotAvailableMoneyException();
 			}
 
@@ -498,10 +498,10 @@ public class ProviderReport {
 		Order bestOtherSideOrder = getCurrentTopOrder(coinCurrencyPair, side.getOther());
 
 		BigDecimal currencyPrice = new BigDecimal(
-				order.getCurrencyPrice().doubleValue() + userConfiguration.getEffectiveIncDecPrice(side));
+				order.getCurrencyPrice().doubleValue() + userConfiguration.getEffectiveIncDecPrice(side).doubleValue());
 		BigDecimal coinAmount = getBalance(coinCurrencyPair).getEstimatedCoinAmount(side, currencyPrice);
 
-		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount()) {
+		if (coinAmount.doubleValue() < userConfiguration.getMinimumCoinAmount().doubleValue()) {
 			throw new NotAvailableMoneyException();
 		}
 
@@ -511,10 +511,10 @@ public class ProviderReport {
 		// if my order isn't the best, delete it and create another
 		if (myOrder == null
 				|| !decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))) {
-			Boolean isNearTheBestOtherSideOrder = Math.abs(
-					order.getCurrencyPrice().add(new BigDecimal(userConfiguration.getEffectiveIncDecPrice(side))).doubleValue()
-							- bestOtherSideOrder.getCurrencyPrice().doubleValue()) <= userConfiguration
-									.getEffectiveIncDecPrice(side);
+			Boolean isNearTheBestOtherSideOrder = Math.abs(order.getCurrencyPrice()
+					.add(new BigDecimal(userConfiguration.getEffectiveIncDecPrice(side).doubleValue())).doubleValue()
+					- bestOtherSideOrder.getCurrencyPrice().doubleValue()) <= userConfiguration
+							.getEffectiveIncDecPrice(side).doubleValue();
 			if (isNearTheBestOtherSideOrder)
 				currencyPrice = new BigDecimal(order.getCurrencyPrice().doubleValue());
 			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
@@ -524,9 +524,10 @@ public class ProviderReport {
 			return newOrder;
 		} else if ((decFmt.format(order.getCurrencyPrice()).equals(decFmt.format(myOrder.getCurrencyPrice()))
 				&& Math.abs(order.getCoinAmount().doubleValue() - coinAmount.doubleValue()) <= userConfiguration
-						.getMinimumCoinAmount()
+						.getMinimumCoinAmount().doubleValue()
 				&& Math.abs(order.getCurrencyPrice().doubleValue()
-						- nextOrder.getCurrencyPrice().doubleValue()) <= userConfiguration.getEffectiveIncDecPrice(side))) {
+						- nextOrder.getCurrencyPrice().doubleValue()) <= userConfiguration.getEffectiveIncDecPrice(side)
+								.doubleValue())) {
 			myOrder.setPosition(orderIndex);
 			return myOrder;
 		}

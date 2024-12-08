@@ -1,5 +1,6 @@
 package org.nucleodevel.cointrader.beans;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
@@ -8,8 +9,8 @@ public class UserSideConfiguration {
 	private RecordSide side;
 
 	private RecordSideMode mode;
-	private Double regularRate;
-	private Double breakdownRate;
+	private BigDecimal regularRate;
+	private BigDecimal breakdownRate;
 
 	public UserSideConfiguration(RecordSide side) {
 		super();
@@ -32,28 +33,28 @@ public class UserSideConfiguration {
 		this.mode = mode;
 	}
 
-	public Double getRegularRate() {
+	public BigDecimal getRegularRate() {
 		return regularRate;
 	}
 
-	public void setRegularRate(Double regularRate) {
+	public void setRegularRate(BigDecimal regularRate) {
 		this.regularRate = regularRate;
 	}
 
-	public Double getBreakdownRate() {
+	public BigDecimal getBreakdownRate() {
 		return breakdownRate;
 	}
 
-	public void setBreakdownRate(Double breakdownRate) {
+	public void setBreakdownRate(BigDecimal breakdownRate) {
 		this.breakdownRate = breakdownRate;
 	}
 
-	public Double getEffeciveRegularRate() {
-		return 1 + side.getMultiplierFactor().doubleValue() * regularRate;
+	public BigDecimal getEffeciveRegularRate() {
+		return side.getMultiplierFactor().multiply(regularRate).add(BigDecimal.valueOf(1));
 	}
 
-	public Double getEffeciveBreakdownRate() {
-		return 1 + side.getMultiplierFactor().doubleValue() * breakdownRate;
+	public BigDecimal getEffeciveBreakdownRate() {
+		return side.getMultiplierFactor().multiply(breakdownRate).add(BigDecimal.valueOf(1));
 	}
 
 	@Override

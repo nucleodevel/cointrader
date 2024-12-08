@@ -1,5 +1,6 @@
 package org.nucleodevel.cointrader.beans;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -16,8 +17,8 @@ public class UserConfiguration {
 	private Currency currency;
 	private List<Coin> coinList;
 	private Integer delayTime;
-	private Double minimumCoinAmount;
-	private Double incDecPrice;
+	private BigDecimal minimumCoinAmount;
+	private BigDecimal incDecPrice;
 
 	private Map<RecordSide, UserSideConfiguration> sideConfigurationMap;
 
@@ -75,19 +76,19 @@ public class UserConfiguration {
 		this.delayTime = delayTime;
 	}
 
-	public Double getMinimumCoinAmount() {
+	public BigDecimal getMinimumCoinAmount() {
 		return minimumCoinAmount;
 	}
 
-	public void setMinimumCoinAmount(Double minimumCoinAmount) {
+	public void setMinimumCoinAmount(BigDecimal minimumCoinAmount) {
 		this.minimumCoinAmount = minimumCoinAmount;
 	}
 
-	public Double getIncDecPrice() {
+	public BigDecimal getIncDecPrice() {
 		return incDecPrice;
 	}
 
-	public void setIncDecPrice(Double incDecPrice) {
+	public void setIncDecPrice(BigDecimal incDecPrice) {
 		this.incDecPrice = incDecPrice;
 	}
 
@@ -109,8 +110,8 @@ public class UserConfiguration {
 		this.sideConfigurationMap.put(side, sideConfiguration);
 	}
 
-	public Double getEffectiveIncDecPrice(RecordSide side) {
-		return Math.abs(this.incDecPrice) * (-1) * side.getMultiplierFactor().doubleValue();
+	public BigDecimal getEffectiveIncDecPrice(RecordSide side) {
+		return this.incDecPrice.abs().multiply(BigDecimal.valueOf(-1)).multiply(side.getMultiplierFactor());
 	}
 
 	public boolean isSingleCoin() {

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,7 +144,7 @@ public class ParamReader {
 					case "-buyRegularRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.BUY)
-									.setRegularRate(Double.parseDouble(paramValue));
+									.setRegularRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
@@ -151,7 +152,7 @@ public class ParamReader {
 					case "-sellRegularRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.SELL)
-									.setRegularRate(Double.parseDouble(paramValue));
+									.setRegularRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
@@ -159,7 +160,7 @@ public class ParamReader {
 					case "-buyBreakdownRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.BUY)
-									.setBreakdownRate(Double.parseDouble(paramValue));
+									.setBreakdownRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
@@ -167,21 +168,21 @@ public class ParamReader {
 					case "-sellBreakdownRate":
 						try {
 							userConfiguration.getSideConfiguration(RecordSide.SELL)
-									.setBreakdownRate(Double.parseDouble(paramValue));
+									.setBreakdownRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
 					case "-minimumCoinAmount":
 						try {
-							userConfiguration.setMinimumCoinAmount(Double.parseDouble(paramValue));
+							userConfiguration.setMinimumCoinAmount(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
 					case "-incDecPrice":
 						try {
-							userConfiguration.setIncDecPrice(Double.parseDouble(paramValue));
+							userConfiguration.setIncDecPrice(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}

@@ -368,7 +368,7 @@ public class MercadoBitcoinApiService extends AbstractApiService {
 	private JsonObject getParams(Order order) throws ApiProviderException {
 		JsonObject jsonObject = new JsonObject();
 		try {
-			Double incDecPrice = Math.abs(userConfiguration.getEffectiveIncDecPrice(order.getSide()));
+			Double incDecPrice = Math.abs(userConfiguration.getEffectiveIncDecPrice(order.getSide()).doubleValue());
 			Double log10 = Math.log10(incDecPrice);
 			int scale = Math.abs((int) Math.round(log10));
 
