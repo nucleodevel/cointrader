@@ -1,47 +1,31 @@
 package org.nucleodevel.cointrader.beans;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserConfiguration {
-
-	private static long MILISSECONDS_PER_3H = 10800000;
 
 	private String key;
 	private String secret;
 	private Provider provider;
-	private Broker broker;
 
 	private Currency currency;
 	private List<Coin> coinList;
 	private Integer delayTime;
-	private RecordSideMode buyMode;
-	private RecordSideMode sellMode;
-	private Double maximumBuyCoinAmountPercentage;
-	private Double maximumSellCoinAmountPercentage;
-	private Double minimumBuyRate;
-	private Double minimumSellRate;
-	private Double breakdownBuyRate;
-	private Double breakdownSellRate;
-	private Double maxBuyInterval;
-	private Double maxSellInterval;
-	private Double minimumCoinAmount;
-	private Double incDecPrice;
+	private BigDecimal minimumCoinAmount;
+	private BigDecimal incDecPrice;
+
+	private Map<RecordSide, UserSideConfiguration> sideConfigurationMap;
 
 	public UserConfiguration() {
 		currency = null;
+		sideConfigurationMap = new HashMap<>();
 		coinList = new ArrayList<>();
-
-		maximumBuyCoinAmountPercentage = 1.0;
-		maximumSellCoinAmountPercentage = 1.0;
-		minimumBuyRate = 0.8;
-		minimumSellRate = 1.2;
-		breakdownBuyRate = null;
-		breakdownSellRate = null;
-		maxBuyInterval = null;
-		maxSellInterval = null;
 	}
 
 	public String getKey() {
@@ -68,14 +52,6 @@ public class UserConfiguration {
 		this.provider = provider;
 	}
 
-	public Broker getBroker() {
-		return broker;
-	}
-
-	public void setBroker(Broker broker) {
-		this.broker = broker;
-	}
-
 	public Currency getCurrency() {
 		return currency;
 	}
@@ -92,14 +68,6 @@ public class UserConfiguration {
 		this.coinList = coinList;
 	}
 
-	public List<CoinCurrencyPair> getCoinCurrencyPairList() {
-		List<CoinCurrencyPair> coinCurrencyPairList = new ArrayList<>();
-
-		coinList.stream().forEach((coin) -> coinCurrencyPairList.add(new CoinCurrencyPair(coin, getCurrency())));
-
-		return coinCurrencyPairList;
-	}
-
 	public Integer getDelayTime() {
 		return delayTime;
 	}
@@ -108,152 +76,42 @@ public class UserConfiguration {
 		this.delayTime = delayTime;
 	}
 
-	public RecordSideMode getMode(RecordSide side) {
-		RecordSideMode mode = RecordSideMode.NONE;
-		switch (side) {
-		case BUY:
-			mode = buyMode;
-			break;
-		case SELL:
-			mode = sellMode;
-			break;
-		}
-		return mode;
-	}
-
-	public RecordSideMode getBuyMode() {
-		return buyMode;
-	}
-
-	public void setBuyMode(RecordSideMode buyMode) {
-		this.buyMode = buyMode;
-	}
-
-	public RecordSideMode getSellMode() {
-		return sellMode;
-	}
-
-	public void setSellMode(RecordSideMode sellMode) {
-		this.sellMode = sellMode;
-	}
-
-	public Double getMaximumCoinAmountPercentage(RecordSide side) {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			rate = maximumBuyCoinAmountPercentage;
-			break;
-		case SELL:
-			rate = maximumSellCoinAmountPercentage;
-			break;
-		}
-		return rate;
-	}
-
-	public void setMaximumBuyCoinAmountPercentage(Double maximumBuyCoinAmountPercentage) {
-		this.maximumBuyCoinAmountPercentage = maximumBuyCoinAmountPercentage;
-	}
-
-	public void setMaximumSellCoinAmountPercentage(Double maximumSellCoinAmountPercentage) {
-		this.maximumSellCoinAmountPercentage = maximumSellCoinAmountPercentage;
-	}
-
-	public Double getMinimumRate(RecordSide side) {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			rate = 1 - minimumBuyRate;
-			break;
-		case SELL:
-			rate = 1 + minimumSellRate;
-			break;
-		}
-		return rate;
-	}
-
-	public void setMinimumBuyRate(Double minimumBuyRate) {
-		this.minimumBuyRate = minimumBuyRate;
-	}
-
-	public void setMinimumSellRate(Double minimumSellRate) {
-		this.minimumSellRate = minimumSellRate;
-	}
-
-	public Double getBreakdownRate(RecordSide side) {
-		Double rate = 0.0;
-		switch (side) {
-		case BUY:
-			if (breakdownBuyRate != null)
-				rate = 1 - breakdownBuyRate;
-			break;
-		case SELL:
-			if (breakdownSellRate != null)
-				rate = 1 + breakdownSellRate;
-			break;
-		}
-		return rate;
-	}
-
-	public Double getBreakdownBuyRate() {
-		return breakdownBuyRate;
-	}
-
-	public void setBreakdownBuyRate(Double breakdownBuyRate) {
-		this.breakdownBuyRate = breakdownBuyRate;
-	}
-
-	public Double getBreakdownSellRate() {
-		return breakdownSellRate;
-	}
-
-	public void setBreakdownSellRate(Double breakdownSellRate) {
-		this.breakdownSellRate = breakdownSellRate;
-	}
-
-	public Double getMaxInterval(RecordSide side) {
-		Double interval = null;
-		switch (side) {
-		case BUY:
-			interval = maxBuyInterval == null ? null : MILISSECONDS_PER_3H * maxBuyInterval;
-			break;
-		case SELL:
-			interval = maxSellInterval == null ? null : MILISSECONDS_PER_3H * maxSellInterval;
-			break;
-		}
-		return interval;
-	}
-
-	public void setMaxBuyInterval(Double maxBuyInterval) {
-		this.maxBuyInterval = maxBuyInterval;
-	}
-
-	public void setMaxSellInterval(Double maxSellInterval) {
-		this.maxSellInterval = maxSellInterval;
-	}
-
-	public Double getMinimumCoinAmount() {
+	public BigDecimal getMinimumCoinAmount() {
 		return minimumCoinAmount;
 	}
 
-	public void setMinimumCoinAmount(Double minimumCoinAmount) {
+	public void setMinimumCoinAmount(BigDecimal minimumCoinAmount) {
 		this.minimumCoinAmount = minimumCoinAmount;
 	}
 
-	public void setIncDecPrice(Double incDecPrice) {
+	public BigDecimal getIncDecPrice() {
+		return incDecPrice;
+	}
+
+	public void setIncDecPrice(BigDecimal incDecPrice) {
 		this.incDecPrice = incDecPrice;
 	}
 
-	public Double getIncDecPrice(RecordSide side) {
-		Double incDecPrice = 0.0;
-		switch (side) {
-		case BUY:
-			incDecPrice = Math.abs(this.incDecPrice);
-			break;
-		case SELL:
-			incDecPrice = Math.abs(this.incDecPrice) * (-1);
-			break;
-		}
-		return incDecPrice;
+	// --------- Calculated Getters and Setters ----------
+
+	public List<CoinCurrencyPair> getCoinCurrencyPairList() {
+		List<CoinCurrencyPair> coinCurrencyPairList = new ArrayList<>();
+
+		coinList.stream().forEach((coin) -> coinCurrencyPairList.add(new CoinCurrencyPair(coin, getCurrency())));
+
+		return coinCurrencyPairList;
+	}
+
+	public UserSideConfiguration getSideConfiguration(RecordSide side) {
+		return sideConfigurationMap.containsKey(side) ? sideConfigurationMap.get(side) : null;
+	}
+
+	public void setSideConfiguration(RecordSide side, UserSideConfiguration sideConfiguration) {
+		this.sideConfigurationMap.put(side, sideConfiguration);
+	}
+
+	public BigDecimal getEffectiveIncDecPrice(RecordSide side) {
+		return this.incDecPrice.abs().multiply(BigDecimal.valueOf(-1)).multiply(side.getMultiplierFactor());
 	}
 
 	public boolean isSingleCoin() {
@@ -272,33 +130,30 @@ public class UserConfiguration {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(this.getClass().getSimpleName() + ": [");
-		sb.append("\n  key: " + key.substring(0, 8) + "...");
-		sb.append(";\n  secret: " + secret.substring(0, 8) + "...");
-		sb.append(";\n  provider: " + provider);
-		sb.append(";\n  broker: " + broker);
-		sb.append(";\n  coinList: " + coinList);
-		sb.append(";\n  currency: " + currency);
-		sb.append(";\n  delayTime: " + delayTime);
-		sb.append(";\n  buyMode: " + buyMode);
-		sb.append(";\n  sellMode: " + sellMode);
-		if (maximumBuyCoinAmountPercentage != null)
-			sb.append(";\n  maximumBuyCoinAmountPercentage: " + decFmt.format(maximumBuyCoinAmountPercentage));
-		if (maximumSellCoinAmountPercentage != null)
-			sb.append(";\n  maximumSellCoinAmountPercentage: " + decFmt.format(maximumSellCoinAmountPercentage));
-		if (minimumBuyRate != null)
-			sb.append(";\n  minimumBuyRate: " + decFmt.format(minimumBuyRate));
-		if (minimumSellRate != null)
-			sb.append(";\n  minimumSellRate: " + decFmt.format(minimumSellRate));
-		if (breakdownBuyRate != null)
-			sb.append(";\n  breakdownBuyRate: " + decFmt.format(breakdownBuyRate));
-		if (breakdownSellRate != null)
-			sb.append(";\n  breakdownSellRate: " + decFmt.format(breakdownSellRate));
-		sb.append(";\n  maxBuyInterval: " + maxBuyInterval);
-		sb.append(";\n  maxSellInterval: " + maxSellInterval);
+
+		if (key != null)
+			sb.append("\n  key: " + key.substring(0, 8) + "...");
+		if (secret != null)
+			sb.append("\n  secret: " + secret.substring(0, 8) + "...");
+		if (provider != null)
+			sb.append("\n  provider: " + provider);
+		if (coinList != null)
+			sb.append("\n  coinList: " + coinList);
+		if (currency != null)
+			sb.append("\n  currency: " + currency);
+		if (delayTime != null)
+			sb.append("\n  delayTime: " + delayTime);
 		if (minimumCoinAmount != null)
-			sb.append(";\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
+			sb.append("\n  minimumCoinAmount: " + decFmt.format(minimumCoinAmount));
 		if (incDecPrice != null)
-			sb.append(";\n  incDecPrice: " + decFmt.format(incDecPrice));
+			sb.append("\n  incDecPrice: " + decFmt.format(incDecPrice));
+
+		sb.append("\n  sideConfiguration: [");
+
+		for (Map.Entry<RecordSide, UserSideConfiguration> entry : sideConfigurationMap.entrySet())
+			sb.append("\n    " + entry.getValue());
+
+		sb.append("\n  ]");
 		sb.append("\n]");
 
 		return sb.toString();

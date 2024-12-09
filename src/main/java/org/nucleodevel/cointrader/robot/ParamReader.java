@@ -4,15 +4,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.nucleodevel.cointrader.beans.Broker;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.Currency;
 import org.nucleodevel.cointrader.beans.Provider;
+import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
+import org.nucleodevel.cointrader.beans.UserSideConfiguration;
 import org.nucleodevel.cointrader.exception.ParamLabelErrorException;
 import org.nucleodevel.cointrader.exception.ParamSyntaxErrorException;
 import org.nucleodevel.cointrader.exception.ParamValueErrorException;
@@ -81,6 +83,8 @@ public class ParamReader {
 			throws ParamLabelErrorException, ParamSyntaxErrorException, ParamValueErrorException, IOException {
 
 		userConfiguration = new UserConfiguration();
+		userConfiguration.setSideConfiguration(RecordSide.BUY, new UserSideConfiguration(RecordSide.BUY));
+		userConfiguration.setSideConfiguration(RecordSide.SELL, new UserSideConfiguration(RecordSide.SELL));
 
 		if (getFileName().equals(""))
 			return;
@@ -103,23 +107,25 @@ public class ParamReader {
 					String paramValue = args[1];
 
 					switch (paramLabel) {
-					case "-dt":
+					case "-delayTime":
 						try {
 							userConfiguration.setDelayTime(Integer.parseInt(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-bm":
+					case "-buyMode":
 						try {
-							userConfiguration.setBuyMode(RecordSideMode.valueOf(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.BUY)
+									.setMode(RecordSideMode.valueOf(paramValue));
 						} catch (Exception ex) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-sm":
+					case "-sellMode":
 						try {
-							userConfiguration.setSellMode(RecordSideMode.valueOf(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.SELL)
+									.setMode(RecordSideMode.valueOf(paramValue));
 						} catch (Exception ex) {
 							throw new ParamValueErrorException(paramLabel);
 						}
@@ -132,90 +138,63 @@ public class ParamReader {
 
 						userConfiguration.setCoinList(coinList);
 						break;
-					case "-curr":
+					case "-currency":
 						userConfiguration.setCurrency(Currency.valueOf(paramValue));
 						break;
-					case "-mbcap":
+					case "-buyRegularRate":
 						try {
-							userConfiguration.setMaximumBuyCoinAmountPercentage(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.BUY)
+									.setRegularRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-mscap":
+					case "-sellRegularRate":
 						try {
-							userConfiguration.setMaximumSellCoinAmountPercentage(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.SELL)
+									.setRegularRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-mbr":
+					case "-buyBreakdownRate":
 						try {
-							userConfiguration.setMinimumBuyRate(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.BUY)
+									.setBreakdownRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-msr":
+					case "-sellBreakdownRate":
 						try {
-							userConfiguration.setMinimumSellRate(Double.parseDouble(paramValue));
+							userConfiguration.getSideConfiguration(RecordSide.SELL)
+									.setBreakdownRate(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-bbr":
+					case "-minimumCoinAmount":
 						try {
-							userConfiguration.setBreakdownBuyRate(Double.parseDouble(paramValue));
+							userConfiguration.setMinimumCoinAmount(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-bsr":
+					case "-incDecPrice":
 						try {
-							userConfiguration.setBreakdownSellRate(Double.parseDouble(paramValue));
+							userConfiguration.setIncDecPrice(new BigDecimal(paramValue));
 						} catch (NumberFormatException e) {
 							throw new ParamValueErrorException(paramLabel);
 						}
 						break;
-					case "-mbi":
-						try {
-							userConfiguration.setMaxBuyInterval(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
-					case "-msi":
-						try {
-							userConfiguration.setMaxSellInterval(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
-					case "-mca":
-						try {
-							userConfiguration.setMinimumCoinAmount(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
-					case "-idp":
-						try {
-							userConfiguration.setIncDecPrice(Double.parseDouble(paramValue));
-						} catch (NumberFormatException e) {
-							throw new ParamValueErrorException(paramLabel);
-						}
-						break;
-					case "-uk":
+					case "-key":
 						userConfiguration.setKey(paramValue);
 						break;
-					case "-us":
+					case "-secret":
 						userConfiguration.setSecret(paramValue);
 						break;
-					case "-up":
+					case "-provider":
 						userConfiguration.setProvider(Provider.valueOf(paramValue));
-						break;
-					case "-ub":
-						userConfiguration.setBroker(Broker.valueOf(paramValue));
 						break;
 					default:
 						throw new ParamLabelErrorException(paramLabel);

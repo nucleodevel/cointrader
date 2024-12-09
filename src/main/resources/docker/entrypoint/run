@@ -7,20 +7,25 @@ if [ -n "${TIMEZONE}" ] && [ -f /usr/share/zoneinfo/${TIMEZONE} ]; then
 	ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 	dpkg-reconfigure -f noninteractive tzdata
 	
-else 
+else
+
 	echo "TIMEZONE ${TIMEZONE} not defined or not present."
     exit
+    
 fi
 
-CONFFILE_IN_VOLUME=/data/conf/${CONFFILE}
+JAR_FILE=/usr/share/cointrader/cointrader.jar
+CONFIG_FILE=/data/conf/${HOSTNAME}.conf
+LOG_FILE=/data/log/${HOSTNAME}.log
 
-if [ -f "$CONFFILE_IN_VOLUME" ]; then
+if [ -f "$CONFIG_FILE" ]; then
 
-	ln -s /data/conf/${CONFFILE} /etc/cointrader/cointrader.conf
+	echo "" >> ${LOG_FILE}	
+	java -jar ${JAR_FILE} -f ${CONFIG_FILE} >> ${LOG_FILE}
 	
-	java -jar /usr/share/cointrader/cointrader.jar -f /etc/cointrader/cointrader.conf >> /var/log/cointrader.log
-	
-else 
-    echo "The file ${CONFFILE} does not exist."
+else
+
+    echo "The file ${CONFIG_FILE} does not exist."
     exit
+    
 fi

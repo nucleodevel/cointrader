@@ -63,7 +63,7 @@ public class Authorization {
 		String expirationStr = expiration.getTime().toString();
 		Calendar now = Calendar.getInstance();
 		long secondsToExpire = (expiration.getTimeInMillis() - now.getTimeInMillis()) / 1000;
-		return "Authorizaztion [expiration=" + expirationStr + ", secondsToExpire=" + secondsToExpire + ", accessToken="
+		return "Authorization [expiration=" + expirationStr + ", secondsToExpire=" + secondsToExpire + ", accessToken="
 				+ accessToken + "]";
 	}
 

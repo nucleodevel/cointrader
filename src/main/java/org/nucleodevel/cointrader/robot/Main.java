@@ -1,6 +1,7 @@
 package org.nucleodevel.cointrader.robot;
 
 import java.io.IOException;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
@@ -10,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.Order;
 import org.nucleodevel.cointrader.beans.RecordSide;
-import org.nucleodevel.cointrader.beans.RecordSideMode;
 import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
@@ -93,9 +93,7 @@ public class Main {
 					System.out.println("  Global 24 hour volume: " + decFmt.format(ticker.getVol()));
 
 					System.out.println("  My participation: " + decFmt
-							.format(report.getMy24hCoinVolume(ccp).doubleValue() / ticker.getVol().doubleValue()));
-
-					System.out.println("  Last 3 hour volume: " + decFmt.format(ticker.getLast3HourVolume()));
+							.format(report.getMy24hCoinVolume(ccp).divide(ticker.getVol(), 8, RoundingMode.HALF_EVEN)));
 
 					System.out.println("");
 					System.out.println(report.getBalance(ccp));
@@ -136,52 +134,18 @@ public class Main {
 					}
 
 					System.out.println("");
-					System.out.println("Last 3 hour volume: " + ticker.getLast3HourVolume() + " " + ccp.getCoin());
-					if (userConfiguration.getMaxInterval(RecordSide.BUY) != null)
-						System.out
-								.println("  Max accepted inactivity time for buying: "
-										+ (double) (userConfiguration.getMaxInterval(RecordSide.BUY)
-												/ (ticker.getLast3HourVolume().doubleValue()) / (60 * 1000))
-										+ " minutes");
-					if (userConfiguration.getMaxInterval(RecordSide.SELL) != null)
-						System.out
-								.println("  Max accepted inactivity time for selling: "
-										+ (double) (userConfiguration.getMaxInterval(RecordSide.SELL)
-												/ (ticker.getLast3HourVolume().doubleValue()) / (60 * 1000))
-										+ " minutes");
-
-					System.out.println("");
 					System.out.println("Current spread: " + report.getSpread(ccp));
 					System.out.println("");
 					System.out.println("Current top orders by type");
-					System.out.println("  " + report.getActiveOrders(ccp, RecordSide.BUY).get(0));
-					System.out.println("  " + report.getActiveOrders(ccp, RecordSide.SELL).get(0));
+					System.out.println("  " + report.getOrderBookBySide(ccp, RecordSide.BUY).get(0));
+					System.out.println("  " + report.getOrderBookBySide(ccp, RecordSide.SELL).get(0));
 				}
 
 				System.out.println("");
 				System.out.println("---- Analise and make orders");
 
-				if (userConfiguration.isSingleCoin()) {
-
-					// analise and make orders
-
-					RecordSideMode buyMode = userConfiguration.getBuyMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.BUY, buyMode);
-
-					RecordSideMode sellMode = userConfiguration.getSellMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.SELL, sellMode);
-
-				} else {
-
-					// analise and make orders
-
-					RecordSideMode buyMode = userConfiguration.getBuyMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.BUY, buyMode);
-
-					RecordSideMode sellMode = userConfiguration.getSellMode();
-					report.makeOrdersByLastRelevantPrice(RecordSide.SELL, sellMode);
-
-				}
+				for (RecordSide side : RecordSide.values())
+					report.makeOrdersByLastRelevantPrice(userConfiguration.getSideConfiguration(side));
 
 				System.out.println("\n---- Finish reading: " + (new Date()));
 			} catch (ApiProviderException e) {

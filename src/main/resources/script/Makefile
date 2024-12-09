@@ -26,7 +26,7 @@ publish_local_image:
 # -- Container --
 
 start_container_mercadobitcoin_local_image:
-	export HOSTNAME=mercadobitcoin && export CONFFILE=mercadobitcoin.conf && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker compose -f src/main/resources/docker/compose/container-local-image-docker-compose.yml up
+	export HOSTNAME=mercadobitcoin && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker compose -f src/main/resources/docker/compose/container-local-image-docker-compose.yml up
 
 
 # -- Stack --
@@ -38,7 +38,7 @@ stop_stack_mercadobitcoin_local_image:
 	docker stack rm mercadobitcoin	
 	
 start_stack_mercadobitcoin_local_image:
-	export HOSTNAME=mercadobitcoin && export CONFFILE=mercadobitcoin.conf && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker stack deploy -c src/main/resources/docker/compose/stack-local-image-docker-compose.yml mercadobitcoin
+	export HOSTNAME=mercadobitcoin && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker stack deploy -c src/main/resources/docker/compose/stack-local-image-docker-compose.yml mercadobitcoin
 	
 update_stack_mercadobitcoin_local_image:
 	docker service update mercadobitcoin_app --force
@@ -49,7 +49,7 @@ update_stack_mercadobitcoin_local_image:
 # -- Container --
 
 start_container_foxbit_local_image:
-	export HOSTNAME=foxbit && export CONFFILE=foxbit.conf && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker compose -f src/main/resources/docker/compose/container-local-image-docker-compose.yml up
+	export HOSTNAME=foxbit && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker compose -f src/main/resources/docker/compose/container-local-image-docker-compose.yml up
 
 
 # -- Stack --
@@ -61,7 +61,7 @@ stop_stack_foxbit_local_image:
 	docker stack rm foxbit	
 	
 start_stack_foxbit_local_image:
-	export HOSTNAME=foxbit && export CONFFILE=foxbit.conf && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker stack deploy -c src/main/resources/docker/compose/stack-local-image-docker-compose.yml foxbit
+	export HOSTNAME=foxbit && export TIMEZONE=$(TIMEZONE) && cd $(ROOT_DIR) && docker stack deploy -c src/main/resources/docker/compose/stack-local-image-docker-compose.yml foxbit
 	
 update_stack_foxbit_local_image:
 	docker service update foxbit_app --force

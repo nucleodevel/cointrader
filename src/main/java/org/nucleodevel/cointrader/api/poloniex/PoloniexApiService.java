@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.nucleodevel.cointrader.api.ApiService;
+import org.nucleodevel.cointrader.api.AbstractApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
@@ -43,7 +44,6 @@ import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.beans.Ticker;
 import org.nucleodevel.cointrader.beans.UserConfiguration;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
-import org.nucleodevel.cointrader.utils.JsonHashMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -57,7 +57,7 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-public class PoloniexApiService extends ApiService {
+public class PoloniexApiService extends AbstractApiService {
 
 	private Client client = ClientBuilder.newClient();
 
@@ -109,7 +109,7 @@ public class PoloniexApiService extends ApiService {
 
 	@Override
 	public Ticker getTicker() throws ApiProviderException {
-		JsonObject tickerJsonObject = (JsonObject) makePublicRequest("returnTicker", new JsonHashMap());
+		JsonObject tickerJsonObject = (JsonObject) makePublicRequest("returnTicker", new HashMap<>());
 
 		JsonObject jsonObject = tickerJsonObject.getAsJsonObject(getCurrency().getValue() + "_" + getCoin().getValue());
 
@@ -131,14 +131,12 @@ public class PoloniexApiService extends ApiService {
 		for (Operation operation : last3HourOperations)
 			last3HourVolume = last3HourVolume.add(operation.getCoinAmount());
 
-		ticker.setLast3HourVolume(last3HourVolume);
-
 		return ticker;
 	}
 
 	@Override
 	public Balance getBalance() throws ApiProviderException {
-		JsonHashMap args = new JsonHashMap();
+		Map<String, Object> args = new HashMap<>();
 		args.put("command", "returnCompleteBalances");
 
 		JsonObject balanceJsonObject = (JsonObject) makePrivateRequest("returnBalances", args);
@@ -147,13 +145,13 @@ public class PoloniexApiService extends ApiService {
 
 	@Override
 	public OrderBook getOrderBook() throws ApiProviderException {
-		JsonObject orderBookJsonObject = (JsonObject) makePublicRequest("returnOrderBook", new JsonHashMap());
+		JsonObject orderBookJsonObject = (JsonObject) makePublicRequest("returnOrderBook", new HashMap<>());
 		return getOrderBook(orderBookJsonObject);
 	}
 
 	@Override
 	public List<Operation> getOperationList(Calendar from, Calendar to) throws ApiProviderException {
-		JsonHashMap args = new JsonHashMap();
+		Map<String, Object> args = new HashMap<>();
 		args.put("start", (Long) (from.getTimeInMillis() / 1000));
 		args.put("end", (Long) (to.getTimeInMillis() / 1000));
 
@@ -164,8 +162,8 @@ public class PoloniexApiService extends ApiService {
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
 
-			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").getAsDouble());
-			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("rate").getAsDouble());
+			BigDecimal coinAmount = jsonObject.get("amount").getAsBigDecimal();
+			BigDecimal currencyPrice = jsonObject.get("rate").getAsBigDecimal();
 
 			String sideString = jsonObject.get("type").getAsString();
 			RecordSide side = sideString.equals("buy") ? RecordSide.BUY
@@ -195,7 +193,7 @@ public class PoloniexApiService extends ApiService {
 
 	@Override
 	public List<Order> getUserActiveOrders() throws ApiProviderException {
-		JsonHashMap args = new JsonHashMap();
+		Map<String, Object> args = new HashMap<>();
 		args.put("command", "returnOpenOrders");
 		args.put("currencyPair", getCurrency() + "_" + getCoin());
 
@@ -213,7 +211,7 @@ public class PoloniexApiService extends ApiService {
 
 	@Override
 	public List<Operation> getUserOperations() throws ApiProviderException {
-		JsonHashMap args = new JsonHashMap();
+		Map<String, Object> args = new HashMap<>();
 
 		Calendar from = Calendar.getInstance();
 		Calendar to = Calendar.getInstance();
@@ -233,8 +231,8 @@ public class PoloniexApiService extends ApiService {
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
 
-			BigDecimal coinAmount = new BigDecimal(jsonObject.get("amount").getAsDouble());
-			BigDecimal currencyPrice = new BigDecimal(jsonObject.get("rate").getAsDouble());
+			BigDecimal coinAmount = jsonObject.get("amount").getAsBigDecimal();
+			BigDecimal currencyPrice = jsonObject.get("rate").getAsBigDecimal();
 
 			String sideString = jsonObject.get("type").getAsString();
 			RecordSide side = sideString.equals("buy") ? RecordSide.BUY
@@ -268,7 +266,7 @@ public class PoloniexApiService extends ApiService {
 			throw new ApiProviderException("Invalid order.");
 		}
 
-		JsonHashMap args = new JsonHashMap();
+		Map<String, Object> args = new HashMap<>();
 		args.put("command", "cancelOrder");
 		args.put("currencyPair", getCurrency() + "_" + getCoin());
 		args.put("orderNumber", order.getId().toString());
@@ -293,7 +291,7 @@ public class PoloniexApiService extends ApiService {
 		symbols.setGroupingSeparator(',');
 		decFmt.setDecimalFormatSymbols(symbols);
 
-		JsonHashMap args = new JsonHashMap();
+		Map<String, Object> args = new HashMap<>();
 		String command = order.getSide().getValue().toLowerCase();
 
 		args.put("command", command);
@@ -308,7 +306,7 @@ public class PoloniexApiService extends ApiService {
 
 	// --------------------- Request methods
 
-	private JsonElement makePublicRequest(String method, JsonHashMap args) throws ApiProviderException {
+	private JsonElement makePublicRequest(String method, Map<String, Object> args) throws ApiProviderException {
 
 		// putting delay time
 		try {
@@ -323,7 +321,7 @@ public class PoloniexApiService extends ApiService {
 
 		// add method and nonce to args
 		if (args == null) {
-			args = new JsonHashMap();
+			args = new HashMap<>();
 		}
 
 		String argsVar = "";
@@ -339,7 +337,7 @@ public class PoloniexApiService extends ApiService {
 	}
 
 	@SuppressWarnings("deprecation")
-	private JsonElement makePrivateRequest(String method, JsonHashMap args) throws ApiProviderException {
+	private JsonElement makePrivateRequest(String method, Map<String, Object> args) throws ApiProviderException {
 
 		// putting delay time
 		try {
@@ -359,7 +357,7 @@ public class PoloniexApiService extends ApiService {
 
 		// add method and nonce to args
 		if (args == null) {
-			args = new JsonHashMap();
+			args = new HashMap<>();
 		}
 		long nonce = System.currentTimeMillis() * 1000;
 		args.put("method", method);
@@ -421,8 +419,8 @@ public class PoloniexApiService extends ApiService {
 		ArrayList<Order> askOrders = new ArrayList<Order>();
 		for (int i = 0; i < asking.size(); i++) {
 			JsonArray pairAmount = asking.get(i).getAsJsonArray();
-			BigDecimal coinAmount = new BigDecimal(pairAmount.get(1).getAsDouble());
-			BigDecimal currencyPrice = new BigDecimal(pairAmount.get(0).getAsDouble());
+			BigDecimal coinAmount = pairAmount.get(1).getAsBigDecimal();
+			BigDecimal currencyPrice = pairAmount.get(0).getAsBigDecimal();
 			Order order = new Order(getCoin(), getCurrency(), RecordSide.SELL, coinAmount, currencyPrice);
 			order.setStatus(OrderStatus.ACTIVE);
 			order.setPosition(i + 1);
@@ -435,7 +433,7 @@ public class PoloniexApiService extends ApiService {
 		for (int i = 0; i < bidding.size(); i++) {
 			JsonArray pairAmount = bidding.get(i).getAsJsonArray();
 			BigDecimal coinAmount = new BigDecimal(pairAmount.get(1).toString());
-			BigDecimal currencyPrice = new BigDecimal(pairAmount.get(0).getAsDouble());
+			BigDecimal currencyPrice = pairAmount.get(0).getAsBigDecimal();
 			Order order = new Order(getCoin(), getCurrency(), RecordSide.BUY, coinAmount, currencyPrice);
 			order.setStatus(OrderStatus.ACTIVE);
 			order.setPosition(i + 1);

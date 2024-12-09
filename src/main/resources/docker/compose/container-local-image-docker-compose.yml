@@ -8,7 +8,7 @@ services:
     volumes:
      - cointrader:/data
     environment:
-      - CONFFILE=${CONFFILE}
+      - HOSTNAME=${HOSTNAME}
       - TIMEZONE=${TIMEZONE}
     extra_hosts:
       - "host.docker.internal:host-gateway"

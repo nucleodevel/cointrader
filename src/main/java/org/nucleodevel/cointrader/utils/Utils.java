@@ -1,7 +1,7 @@
 package org.nucleodevel.cointrader.utils;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -12,29 +12,6 @@ import java.util.TimeZone;
  * Funções utilitárias
  */
 public class Utils {
-
-	private Utils() {
-	}
-
-	public static BigInteger getBigInteger(Object o) {
-
-		if (o instanceof Number) {
-			return new BigInteger(Integer.valueOf(((Number) o).intValue()).toString());
-		}
-
-		return new BigDecimal(o.toString()).toBigInteger();
-
-	}
-
-	public static BigDecimal getBigDecimal(Object o) {
-
-		if (o instanceof Number) {
-			return new BigDecimal(((Number) o).doubleValue());
-		}
-
-		return new BigDecimal(o.toString());
-
-	}
 
 	public static String getString(Object o) {
 		if (o == null)
@@ -97,6 +74,23 @@ public class Utils {
 		}
 
 		return null;
+	}
+
+	public static DecimalFormat getCustomDecimalFormat(int maximumFractionDigits) {
+
+		DecimalFormat decFmt = new DecimalFormat();
+		decFmt.setMaximumFractionDigits(maximumFractionDigits);
+
+		DecimalFormatSymbols symbols = decFmt.getDecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator(',');
+		decFmt.setDecimalFormatSymbols(symbols);
+
+		return decFmt;
+	}
+
+	public static DecimalFormat getDefaultDecimalFormat() {
+		return getCustomDecimalFormat(8);
 	}
 
 }

@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.nucleodevel.cointrader.api.ApiService;
+import org.nucleodevel.cointrader.api.AbstractApiService;
 import org.nucleodevel.cointrader.beans.Balance;
 import org.nucleodevel.cointrader.beans.Coin;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
@@ -46,7 +46,7 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-public class FoxbitApiService extends ApiService {
+public class FoxbitApiService extends AbstractApiService {
 
 	private Client client = ClientBuilder.newClient();
 
@@ -97,10 +97,6 @@ public class FoxbitApiService extends ApiService {
 
 		if (userConfiguration.getSecret() == null) {
 			throw new ApiProviderException("Secret cannot be null");
-		}
-
-		if (userConfiguration.getBroker() == null) {
-			throw new ApiProviderException("Broker cannot be null");
 		}
 	}
 
@@ -393,8 +389,6 @@ public class FoxbitApiService extends ApiService {
 		ticker.setHigh(rolling24hJsonObj.getAsJsonPrimitive("high").getAsBigDecimal());
 		ticker.setLow(rolling24hJsonObj.getAsJsonPrimitive("low").getAsBigDecimal());
 		ticker.setVol(rolling24hJsonObj.getAsJsonPrimitive("volume").getAsBigDecimal());
-
-		ticker.setLast3HourVolume(ticker.getVol().divide(BigDecimal.valueOf(8L)));
 
 		return ticker;
 	}
