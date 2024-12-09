@@ -5,26 +5,26 @@ import java.text.DecimalFormat;
 
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
+import org.nucleodevel.cointrader.recordsidemode.AbstractRecordSideModeImplementer;
 import org.nucleodevel.cointrader.robot.ProviderReport;
 import org.nucleodevel.cointrader.utils.Utils;
 
 public class OrdersRecordSideModeImplementer extends AbstractRecordSideModeImplementer {
 
-	public OrdersRecordSideModeImplementer(ProviderReport providerReport) throws ApiProviderException {
-		super(providerReport);
+	public OrdersRecordSideModeImplementer(ProviderReport providerReport, RecordSide side) throws ApiProviderException {
+		super(providerReport, side);
 	}
 
 	@Override
-	public void makeOrdersByLastRelevantPrice(ProviderReport providerReport, RecordSide side, boolean hasToWinCurrent)
-			throws ApiProviderException {
+	public void tryToMakeOrders() throws ApiProviderException {
 
 		DecimalFormat decFmt = Utils.getDefaultDecimalFormat();
+		boolean hasToWinCurrent = true;
 
-		BigDecimal lastRelevantPrice = providerReport.getLastRelevantPriceByOrdersAndTheirPositions(coinCurrencyPair,
-				side, true);
+		BigDecimal lastRelevantPrice = getLastRelevantPriceByOrdersAndTheirPositions(coinCurrencyPair, side, true);
 
 		System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-		providerReport.makeOrdersByLastRelevantPrice(coinCurrencyPair, side, lastRelevantPrice, hasToWinCurrent);
+		makeOrdersByLastRelevantPrice(coinCurrencyPair, side, lastRelevantPrice, hasToWinCurrent);
 	}
 
 }

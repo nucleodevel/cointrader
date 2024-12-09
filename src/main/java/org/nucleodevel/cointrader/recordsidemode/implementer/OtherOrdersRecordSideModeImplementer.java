@@ -6,20 +6,22 @@ import java.text.DecimalFormat;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
+import org.nucleodevel.cointrader.recordsidemode.AbstractRecordSideModeImplementer;
 import org.nucleodevel.cointrader.robot.ProviderReport;
 import org.nucleodevel.cointrader.utils.Utils;
 
 public class OtherOrdersRecordSideModeImplementer extends AbstractRecordSideModeImplementer {
 
-	public OtherOrdersRecordSideModeImplementer(ProviderReport providerReport) throws ApiProviderException {
-		super(providerReport);
+	public OtherOrdersRecordSideModeImplementer(ProviderReport providerReport, RecordSide side)
+			throws ApiProviderException {
+		super(providerReport, side);
 	}
 
 	@Override
-	public void makeOrdersByLastRelevantPrice(ProviderReport providerReport, RecordSide side, boolean hasToWinCurrent)
-			throws ApiProviderException {
+	public void tryToMakeOrders() throws ApiProviderException {
 
 		DecimalFormat decFmt = Utils.getDefaultDecimalFormat();
+		boolean hasToWinCurrent = true;
 
 		CoinCurrencyPair bestCoinCurrencyPairBySpread = null;
 		BigDecimal bestSpread = new BigDecimal(0.0);
@@ -45,14 +47,13 @@ public class OtherOrdersRecordSideModeImplementer extends AbstractRecordSideMode
 		System.out.println("  ---- " + side + ": " + coinCurrencyPair);
 
 		BigDecimal effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRegularRate();
-		BigDecimal lastRelevantPrice = providerReport
-				.getLastRelevantPriceByOrdersAndTheirAmounts(coinCurrencyPair, side.getOther(), true)
-				.multiply(effectiveRate);
+		BigDecimal lastRelevantPrice = getLastRelevantPriceByOrdersAndTheirAmounts(coinCurrencyPair, side.getOther(),
+				true).multiply(effectiveRate);
 
 		System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 
-		providerReport.cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(coinCurrencyPair, side);
-		providerReport.makeOrdersByLastRelevantPrice(coinCurrencyPair, side, lastRelevantPrice, hasToWinCurrent);
+		cancelAllOrdersOfOtherCoinCurrencyPairsButSameSide(coinCurrencyPair, side);
+		makeOrdersByLastRelevantPrice(coinCurrencyPair, side, lastRelevantPrice, hasToWinCurrent);
 	}
 
 }

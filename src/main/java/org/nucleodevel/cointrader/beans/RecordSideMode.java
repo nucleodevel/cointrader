@@ -1,6 +1,6 @@
 package org.nucleodevel.cointrader.beans;
 
-import org.nucleodevel.cointrader.recordsidemode.implementer.AbstractRecordSideModeImplementer;
+import org.nucleodevel.cointrader.recordsidemode.AbstractRecordSideModeImplementer;
 import org.nucleodevel.cointrader.recordsidemode.implementer.NoneRecordSideModeImplementer;
 import org.nucleodevel.cointrader.recordsidemode.implementer.OperationsRecordSideModeImplementer;
 import org.nucleodevel.cointrader.recordsidemode.implementer.OrdersRecordSideModeImplementer;

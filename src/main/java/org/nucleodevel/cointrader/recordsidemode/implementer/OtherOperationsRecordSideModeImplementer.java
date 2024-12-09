@@ -6,20 +6,22 @@ import java.text.DecimalFormat;
 import org.nucleodevel.cointrader.beans.CoinCurrencyPair;
 import org.nucleodevel.cointrader.beans.RecordSide;
 import org.nucleodevel.cointrader.exception.ApiProviderException;
+import org.nucleodevel.cointrader.recordsidemode.AbstractRecordSideModeImplementer;
 import org.nucleodevel.cointrader.robot.ProviderReport;
 import org.nucleodevel.cointrader.utils.Utils;
 
 public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSideModeImplementer {
 
-	public OtherOperationsRecordSideModeImplementer(ProviderReport providerReport) throws ApiProviderException {
-		super(providerReport);
+	public OtherOperationsRecordSideModeImplementer(ProviderReport providerReport, RecordSide side)
+			throws ApiProviderException {
+		super(providerReport, side);
 	}
 
 	@Override
-	public void makeOrdersByLastRelevantPrice(ProviderReport providerReport, RecordSide side, boolean hasToWinCurrent)
-			throws ApiProviderException {
+	public void tryToMakeOrders() throws ApiProviderException {
 
 		DecimalFormat decFmt = Utils.getDefaultDecimalFormat();
+		boolean hasToWinCurrent = true;
 
 		for (CoinCurrencyPair ccp : providerReport.getCoinCurrencyPairList()) {
 
@@ -28,10 +30,9 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 
 			Boolean isBreakdown = false;
 
-			BigDecimal lastRelevantPriceByOrders = providerReport.getLastRelevantPriceByOrdersAndTheirPositions(ccp,
-					side, false);
-			BigDecimal lastRelevantPriceByOperations = providerReport
-					.getLastRelevantPriceByOperationsAndTheirAmounts(ccp, side.getOther(), false);
+			BigDecimal lastRelevantPriceByOrders = getLastRelevantPriceByOrdersAndTheirPositions(ccp, side, false);
+			BigDecimal lastRelevantPriceByOperations = getLastRelevantPriceByOperationsAndTheirAmounts(ccp,
+					side.getOther(), false);
 
 			BigDecimal effectiveBreakdownRate = userConfiguration.getSideConfiguration(side).getEffeciveBreakdownRate();
 			if (effectiveBreakdownRate != null) {
@@ -51,17 +52,16 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 
 			BigDecimal lastRelevantPrice = BigDecimal.ZERO;
 			if (isBreakdown) {
-				lastRelevantPrice = providerReport.getLastRelevantPriceByOrdersAndTheirPositions(ccp, side, true);
+				lastRelevantPrice = getLastRelevantPriceByOrdersAndTheirPositions(ccp, side, true);
 				hasToWinCurrent = false;
 			} else {
 				BigDecimal effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRegularRate();
-				lastRelevantPrice = providerReport
-						.getLastRelevantPriceByOperationsAndTheirAmounts(ccp, side.getOther(), true)
+				lastRelevantPrice = getLastRelevantPriceByOperationsAndTheirAmounts(ccp, side.getOther(), true)
 						.multiply(effectiveRate);
 			}
 
 			System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
-			providerReport.makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
+			makeOrdersByLastRelevantPrice(ccp, side, lastRelevantPrice, hasToWinCurrent);
 		}
 	}
 

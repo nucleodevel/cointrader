@@ -142,10 +142,10 @@ public class Main {
 				}
 
 				System.out.println("");
-				System.out.println("---- Analise and make orders");
+				System.out.println("---- Try to make orders");
 
 				for (RecordSide side : RecordSide.values())
-					report.makeOrdersByLastRelevantPrice(userConfiguration.getSideConfiguration(side));
+					report.tryToMakeOrders(userConfiguration.getSideConfiguration(side));
 
 				System.out.println("\n---- Finish reading: " + (new Date()));
 			} catch (ApiProviderException e) {
