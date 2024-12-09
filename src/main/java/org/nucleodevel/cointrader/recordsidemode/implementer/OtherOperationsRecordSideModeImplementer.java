@@ -28,9 +28,10 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 
 			Boolean isBreakdown = false;
 
-			BigDecimal lastRelevantPriceByOrders = providerReport.getLastRelevantPriceByOrders(ccp, side, false);
-			BigDecimal lastRelevantPriceByOperations = providerReport.getLastRelevantPriceByOperations(ccp,
-					side.getOther(), false);
+			BigDecimal lastRelevantPriceByOrders = providerReport.getLastRelevantPriceByOrdersAndTheirPositions(ccp,
+					side, false);
+			BigDecimal lastRelevantPriceByOperations = providerReport
+					.getLastRelevantPriceByOperationsAndTheirAmounts(ccp, side.getOther(), false);
 
 			BigDecimal effectiveBreakdownRate = userConfiguration.getSideConfiguration(side).getEffeciveBreakdownRate();
 			if (effectiveBreakdownRate != null) {
@@ -50,11 +51,12 @@ public class OtherOperationsRecordSideModeImplementer extends AbstractRecordSide
 
 			BigDecimal lastRelevantPrice = BigDecimal.ZERO;
 			if (isBreakdown) {
-				lastRelevantPrice = providerReport.getLastRelevantPriceByOrders(ccp, side, true);
+				lastRelevantPrice = providerReport.getLastRelevantPriceByOrdersAndTheirPositions(ccp, side, true);
 				hasToWinCurrent = false;
 			} else {
 				BigDecimal effectiveRate = userConfiguration.getSideConfiguration(side).getEffeciveRegularRate();
-				lastRelevantPrice = providerReport.getLastRelevantPriceByOperations(ccp, side.getOther(), true)
+				lastRelevantPrice = providerReport
+						.getLastRelevantPriceByOperationsAndTheirAmounts(ccp, side.getOther(), true)
 						.multiply(effectiveRate);
 			}
 

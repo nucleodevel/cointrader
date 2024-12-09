@@ -1,6 +1,7 @@
 package org.nucleodevel.cointrader.beans;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public enum RecordSide {
 	BUY("BUY", BigDecimal.valueOf(-1)), SELL("SELL", BigDecimal.valueOf(1));
@@ -32,7 +33,8 @@ public enum RecordSide {
 	}
 
 	public BigDecimal getEstimatedCoinAmountByAmountAndPrice(BigDecimal amount, BigDecimal price) {
-		return this == RecordSide.BUY ? amount.divide(price) : (this == RecordSide.SELL ? amount : null);
+		return this == RecordSide.BUY ? amount.divide(price, 8, RoundingMode.HALF_EVEN)
+				: (this == RecordSide.SELL ? amount : null);
 	}
 
 }

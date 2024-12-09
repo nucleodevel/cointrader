@@ -20,7 +20,8 @@ public class OperationsRecordSideModeImplementer extends AbstractRecordSideModeI
 
 		DecimalFormat decFmt = Utils.getDefaultDecimalFormat();
 
-		BigDecimal lastRelevantPrice = providerReport.getLastRelevantPriceByOrders(coinCurrencyPair, side, true);
+		BigDecimal lastRelevantPrice = providerReport
+				.getLastRelevantPriceByOperationsAndTheirPositions(coinCurrencyPair, side, true);
 
 		System.out.println("  Price to win: " + decFmt.format(lastRelevantPrice));
 		providerReport.makeOrdersByLastRelevantPrice(coinCurrencyPair, side, lastRelevantPrice, hasToWinCurrent);
