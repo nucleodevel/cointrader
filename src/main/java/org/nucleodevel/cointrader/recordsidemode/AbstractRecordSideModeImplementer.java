@@ -42,8 +42,7 @@ public abstract class AbstractRecordSideModeImplementer {
 			BigDecimal lastRelevantPrice, Boolean hasToWinCurrent) throws ApiProviderException {
 
 		try {
-			Order newOrder = hasToWinCurrent ? winTheCurrentOrder(coinCurrencyPair, side, 0, lastRelevantPrice)
-					: winThePreviousOrder(coinCurrencyPair, side, 0, lastRelevantPrice);
+			Order newOrder = winTheOrder(coinCurrencyPair, side, 0, lastRelevantPrice, hasToWinCurrent);
 
 			List<Order> userActiveOrders = providerReport.getUserActiveOrders(coinCurrencyPair, side);
 			Order myOrder = userActiveOrders.size() > 0 ? userActiveOrders.get(0) : null;
@@ -198,8 +197,9 @@ public abstract class AbstractRecordSideModeImplementer {
 		return lastRelevantPriceByRecords;
 	}
 
-	private Order winTheCurrentOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
-			BigDecimal lastRelevantPrice) throws ApiProviderException, NotAvailableMoneyException {
+	private Order winTheOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
+			BigDecimal lastRelevantPrice, Boolean hasToWinCurrent)
+			throws ApiProviderException, NotAvailableMoneyException {
 
 		List<Order> activeOrders = providerReport.getOrderBookBySide(coinCurrencyPair, side);
 		if (orderIndex >= activeOrders.size() - 1) {
@@ -231,53 +231,13 @@ public abstract class AbstractRecordSideModeImplementer {
 					lastRelevantPrice);
 
 		if (isAGoodOrder) {
-			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex);
+			Integer effectiveOrderIndex = hasToWinCurrent ? orderIndex : (orderIndex > 0 ? orderIndex - 1 : 0);
+			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, effectiveOrderIndex);
 			if (newOrder != null)
 				return newOrder;
 		}
 
-		return winTheCurrentOrder(coinCurrencyPair, side, orderIndex + 1, lastRelevantPrice);
-	}
-
-	private Order winThePreviousOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex,
-			BigDecimal lastRelevantPrice) throws ApiProviderException, NotAvailableMoneyException {
-
-		List<Order> activeOrders = providerReport.getOrderBookBySide(coinCurrencyPair, side);
-		if (orderIndex >= activeOrders.size() - 1) {
-			Order myOrder = providerReport.getUserActiveOrders(coinCurrencyPair, side).size() > 0
-					? providerReport.getUserActiveOrders(coinCurrencyPair, side).get(0)
-					: null;
-			if (myOrder != null)
-				providerReport.cancelOrder(myOrder);
-			BigDecimal coinAmount = providerReport.getBalance(coinCurrencyPair).getEstimatedCoinAmount(side,
-					lastRelevantPrice);
-
-			if (coinAmount.compareTo(userConfiguration.getMinimumCoinAmount()) < 0) {
-				throw new NotAvailableMoneyException();
-			}
-
-			Order newOrder = new Order(coinCurrencyPair.getCoin(), coinCurrencyPair.getCurrency(), side, coinAmount,
-					lastRelevantPrice);
-			newOrder.setType(OrderType.LIMITED);
-			return newOrder;
-		}
-
-		Order order = activeOrders.get(orderIndex);
-
-		BigDecimal orderPriceToCompare = lastRelevantPrice == null ? null : order.getCurrencyPrice();
-
-		boolean isAGoodOrder = lastRelevantPrice == null || lastRelevantPrice.compareTo(BigDecimal.ZERO) <= 0;
-		if (!isAGoodOrder && orderPriceToCompare != null)
-			isAGoodOrder = side.isAGoodRecordByRecordCurrencyPriceAndLastRelevantPrice(orderPriceToCompare,
-					lastRelevantPrice);
-
-		if (isAGoodOrder) {
-			Order newOrder = tryToWinAnOrder(coinCurrencyPair, side, orderIndex > 0 ? orderIndex - 1 : 0);
-			if (newOrder != null)
-				return newOrder;
-		}
-
-		return winThePreviousOrder(coinCurrencyPair, side, orderIndex + 1, lastRelevantPrice);
+		return winTheOrder(coinCurrencyPair, side, orderIndex + 1, lastRelevantPrice, hasToWinCurrent);
 	}
 
 	private Order tryToWinAnOrder(CoinCurrencyPair coinCurrencyPair, RecordSide side, Integer orderIndex)
